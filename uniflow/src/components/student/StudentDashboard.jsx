@@ -11,7 +11,7 @@ import {
   FiCheckCircle, 
   FiBell, 
   FiTarget, 
-  FiRocket, 
+  FiZap, 
   FiClipboard, 
   FiCalendar as FiCalendarAlt,
   FiClock,
@@ -475,7 +475,7 @@ const StudentDashboard = () => {
 
         {/* Quick Actions */}
         <div style={styles.quickActions}>
-          <h3 style={styles.sectionTitle}><FiRocket size={18} style={{marginRight: '8px'}} /> Quick Actions</h3>
+          <h3 style={styles.sectionTitle}><FiZap size={18} style={{marginRight: '8px'}} /> Quick Actions</h3>
           <div style={styles.actionsGrid}>
             {[
               { icon: <FiClipboard size={20} />, label: 'My Events', color: '#4F46E5' },
