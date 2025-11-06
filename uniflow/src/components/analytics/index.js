@@ -1,0 +1,10 @@
+export { default as SuperAdminAnalytics } from './SuperAdminAnalytics';
+export { default as UniversityAnalytics } from './UniversityAnalytics';
+export { default as DepartmentAnalytics } from './DepartmentAnalytics';
+export { default as StudentBodyAnalytics } from './StudentBodyAnalytics';
+export { default as EventAnalytics } from './EventAnalytics';
+export { default as AttendanceReport } from './AttendanceReport';
+export { default as FeedbackReport } from './FeedbackReport';
+export { default as StudentPerformanceReport } from './StudentPerformanceReport';
+export { default as ComparativeAnalytics } from './ComparativeAnalytics';
+export { default as ExportReport } from './ExportReport';

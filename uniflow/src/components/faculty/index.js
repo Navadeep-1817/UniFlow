@@ -1,0 +1,11 @@
+export { default as FacultyDashboard } from './FacultyDashboard';
+export { default as MyAssignedEvents } from './MyAssignedEvents';
+export { default as SessionManagement } from './SessionManagement';
+export { default as AttendanceMarking } from './AttendanceMarking';
+export { default as AttendanceSheet } from './AttendanceSheet';
+export { default as UploadMaterials } from './UploadMaterials';
+export { default as StudentProgress } from './StudentProgress';
+export { default as EventFeedback } from './EventFeedback';
+export { default as GenerateReport } from './GenerateReport';
+export { default as LeaveRequest } from './LeaveRequest';
+export { default as NotificationCenter } from './NotificationCenter';

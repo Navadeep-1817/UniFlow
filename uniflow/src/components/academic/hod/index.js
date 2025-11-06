@@ -1,0 +1,11 @@
+export { default as HODDashboard } from './HODDashboard';
+export { default as DepartmentEvents } from './DepartmentEvents';
+export { default as FacultyManagement } from './FacultyManagement';
+export { default as StudentManagement } from './StudentManagement';
+export { default as DepartmentAttendance } from './DepartmentAttendance';
+export { default as FacultyAllocation } from './FacultyAllocation';
+export { default as DepartmentAnalytics } from './DepartmentAnalytics';
+export { default as ResourceManagement } from './ResourceManagement';
+export { default as TrainerRequest } from './TrainerRequest';
+export { default as VenueBooking } from './VenueBooking';
+export { default as TimetableManagement } from './TimetableManagement';

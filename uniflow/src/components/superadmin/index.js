@@ -1,0 +1,9 @@
+export { default as SuperAdminDashboard } from './SuperAdminDashboard';
+export { default as UniversityManagement } from './UniversityManagement';
+export { default as AdminApprovalQueue } from './AdminApprovalQueue';
+export { default as GlobalUserManagement } from './GlobalUserManagement';
+export { default as GlobalEventCalendar } from './GlobalEventCalendar';
+export { default as SystemLogs } from './SystemLogs';
+export { default as GlobalAnalytics } from './GlobalAnalytics';
+export { default as RoleAssignment } from './RoleAssignment';
+export { default as SystemConfiguration } from './SystemConfiguration';

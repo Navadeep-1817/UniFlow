@@ -1,0 +1,14 @@
+export { default as StudentDashboard } from './StudentDashboard';
+export { default as EventCalendar } from './EventCalendar';
+export { default as BrowseEvents } from './BrowseEvents';
+export { default as EventDetails } from './EventDetails';
+export { default as RegisterEvent } from './RegisterEvent';
+export { default as MyRegistrations } from './MyRegistrations';
+export { default as AttendanceHistory } from './AttendanceHistory';
+export { default as SubmitFeedback } from './SubmitFeedback';
+export { default as DownloadCertificates } from './DownloadCertificates';
+export { default as PlacementProfile } from './PlacementProfile';
+export { default as StudentBodyMembership } from './StudentBodyMembership';
+export { default as MyTeams } from './MyTeams';
+export { default as Notifications } from './Notifications';
+export { default as MyProfile } from './MyProfile';

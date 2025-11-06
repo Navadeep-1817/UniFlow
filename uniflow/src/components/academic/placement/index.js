@@ -1,0 +1,10 @@
+export { default as TPDashboard } from './TPDashboard';
+export { default as PlacementDrives } from './PlacementDrives';
+export { default as CompanyManagement } from './CompanyManagement';
+export { default as CRTSessionManagement } from './CRTSessionManagement';
+export { default as StudentPlacementStatus } from './StudentPlacementStatus';
+export { default as PlacementReports } from './PlacementReports';
+export { default as InterviewScheduling } from './InterviewScheduling';
+export { default as EligibilityCriteria } from './EligibilityCriteria';
+export { default as OfferManagement } from './OfferManagement';
+export { default as PlacementAnalytics } from './PlacementAnalytics';
