@@ -1,0 +1,154 @@
+import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { 
+  FiHome,
+  FiDollarSign,
+  FiCheckSquare,
+  FiCalendar,
+  FiUsers,
+  FiTrendingUp,
+  FiMapPin,
+  FiLogOut,
+  FiBookOpen
+} from 'react-icons/fi';
+
+const FacultyHeadTopNav = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleLogout = () => {
+    sessionStorage.clear();
+    localStorage.clear();
+    navigate('/login');
+  };
+
+  const navItems = [
+    { path: '/student-body/faculty-head/dashboard', label: 'Dashboard', icon: <FiHome size={16} /> },
+    { path: '/student-body/faculty-head/budget-management', label: 'Budget Management', icon: <FiDollarSign size={16} /> },
+    { path: '/student-body/faculty-head/event-approval', label: 'Event Approval', icon: <FiCheckSquare size={16} /> },
+    { path: '/student-body/faculty-head/events', label: 'Student Body Events', icon: <FiCalendar size={16} /> },
+    { path: '/student-body/faculty-head/team-management', label: 'Team Management', icon: <FiUsers size={16} /> },
+    { path: '/student-body/faculty-head/performance-review', label: 'Team Performance Review', icon: <FiTrendingUp size={16} /> },
+    { path: '/student-body/faculty-head/venue-approval', label: 'Venue Approval', icon: <FiMapPin size={16} /> }
+  ];
+
+  const isActive = (path) => location.pathname === path;
+
+  return (
+    <div style={styles.header}>
+      <div style={styles.logo}>
+        <FiBookOpen size={28} />
+        UniFlow Faculty Head
+      </div>
+      <div style={styles.nav}>
+        {navItems.map((item) => (
+          <button
+            key={item.path}
+            onClick={() => navigate(item.path)}
+            style={{
+              ...styles.navBtn,
+              ...(isActive(item.path) ? styles.navBtnActive : {})
+            }}
+            onMouseEnter={(e) => {
+              if (!isActive(item.path)) {
+                e.currentTarget.style.backgroundColor = '#F3F4F6';
+                e.currentTarget.style.transform = 'scale(1.05)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isActive(item.path)) {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.transform = 'scale(1)';
+              }
+            }}
+          >
+            {item.icon} {item.label}
+          </button>
+        ))}
+        <button 
+          onClick={handleLogout} 
+          style={styles.logoutBtn}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#FCA5A5';
+            e.currentTarget.style.transform = 'scale(1.05)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = '#FEE2E2';
+            e.currentTarget.style.transform = 'scale(1)';
+          }}
+        >
+          <FiLogOut size={16} /> Logout
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const styles = {
+  header: {
+    backgroundColor: '#FFFFFF',
+    borderBottom: '1px solid #E5E7EB',
+    padding: '16px 24px',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    position: 'sticky',
+    top: 0,
+    zIndex: 100,
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+    gap: '20px',
+    flexWrap: 'wrap'
+  },
+  logo: {
+    fontSize: '24px',
+    fontWeight: '700',
+    color: '#4F46E5',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    flexShrink: 0
+  },
+  nav: {
+    display: 'flex',
+    gap: '8px',
+    alignItems: 'center',
+    flexWrap: 'wrap'
+  },
+  navBtn: {
+    padding: '8px 12px',
+    backgroundColor: 'transparent',
+    border: '1px solid #E5E7EB',
+    borderRadius: '8px',
+    color: '#6B7280',
+    cursor: 'pointer',
+    fontSize: '13px',
+    fontWeight: '500',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+    whiteSpace: 'nowrap'
+  },
+  navBtnActive: {
+    backgroundColor: '#4F46E5',
+    color: '#FFFFFF',
+    borderColor: '#4F46E5'
+  },
+  logoutBtn: {
+    padding: '8px 12px',
+    backgroundColor: '#FEE2E2',
+    border: 'none',
+    borderRadius: '8px',
+    color: '#DC2626',
+    cursor: 'pointer',
+    fontSize: '13px',
+    fontWeight: '500',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+    whiteSpace: 'nowrap'
+  }
+};
+
+export default FacultyHeadTopNav;

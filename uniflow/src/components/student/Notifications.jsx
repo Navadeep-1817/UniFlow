@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { FiBell, FiCalendar, FiBriefcase, FiCheckCircle, FiAlertCircle, FiInfo, FiTrash2, FiCheck, FiFilter, FiMail, FiAward, FiUsers, FiX } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
+import { FiBell, FiCalendar, FiBriefcase, FiCheckCircle, FiAlertCircle, FiInfo, FiTrash2, FiCheck, FiFilter, FiMail, FiAward, FiUsers, FiX, FiArrowLeft } from 'react-icons/fi';
 import { colors, commonStyles, hoverEffects } from '../../styles/globalStyles';
 
 const Notifications = () => {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [filter, setFilter] = useState('all');
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
@@ -123,9 +125,16 @@ const Notifications = () => {
 
       <div style={commonStyles.content}>
         <div style={commonStyles.pageHeader}>
-          <div>
-            <h1 style={commonStyles.pageTitle}>Notifications</h1>
-            <p style={commonStyles.pageSubtitle}>Stay updated with all your alerts and reminders</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <button onClick={() => navigate('/student/dashboard')} style={{ ...commonStyles.secondaryBtn, padding: '10px 12px' }}
+              onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = colors.gray200; e.currentTarget.style.transform = 'translateX(-2px)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = colors.gray100; e.currentTarget.style.transform = 'translateX(0)'; }}>
+              <FiArrowLeft size={18} />
+            </button>
+            <div>
+              <h1 style={commonStyles.pageTitle}>Notifications</h1>
+              <p style={commonStyles.pageSubtitle}>Stay updated with all your alerts and reminders</p>
+            </div>
           </div>
           <div style={{ display: 'flex', gap: '12px' }}>
             <button onClick={handleClearAll} style={commonStyles.secondaryBtn}

@@ -167,6 +167,11 @@ const MyRegistrations = () => {
     setSelectedEvent(null);
   };
 
+  const handleDownloadCertificate = (eventName) => {
+    showToast(`🎓 Downloading certificate for ${eventName}...`, 'success');
+    console.log('Downloading certificate for:', eventName);
+  };
+
   const stats = {
     total: registrations.filter(r => r.status === 'confirmed').length,
     upcoming: registrations.filter(r => r.status === 'confirmed' && new Date(r.date) > new Date()).length,
@@ -197,9 +202,7 @@ const MyRegistrations = () => {
         <button onClick={()=>navigate('/student/my-teams')} style={{padding:'14px 16px',border:'none',borderBottom:'3px solid transparent',fontSize:'13px',fontWeight:'600',color:'#6B7280',cursor:'pointer',backgroundColor:'transparent',transition:'all 0.3s'}} onMouseOver={(e)=>{e.target.style.color='#4F46E5';e.target.style.borderBottomColor='#4F46E5';}} onMouseOut={(e)=>{e.target.style.color='#6B7280';e.target.style.borderBottomColor='transparent';}}>👥 My Teams</button>
         <button onClick={()=>navigate('/student/attendance')} style={{padding:'14px 16px',border:'none',borderBottom:'3px solid transparent',fontSize:'13px',fontWeight:'600',color:'#6B7280',cursor:'pointer',backgroundColor:'transparent',transition:'all 0.3s'}} onMouseOver={(e)=>{e.target.style.color='#4F46E5';e.target.style.borderBottomColor='#4F46E5';}} onMouseOut={(e)=>{e.target.style.color='#6B7280';e.target.style.borderBottomColor='transparent';}}>📊 Attendance</button>
         <button onClick={()=>navigate('/student/certificates')} style={{padding:'14px 16px',border:'none',borderBottom:'3px solid transparent',fontSize:'13px',fontWeight:'600',color:'#6B7280',cursor:'pointer',backgroundColor:'transparent',transition:'all 0.3s'}} onMouseOver={(e)=>{e.target.style.color='#4F46E5';e.target.style.borderBottomColor='#4F46E5';}} onMouseOut={(e)=>{e.target.style.color='#6B7280';e.target.style.borderBottomColor='transparent';}}>🎓 Certificates</button>
-        <button onClick={()=>navigate('/student/feedback')} style={{padding:'14px 16px',border:'none',borderBottom:'3px solid transparent',fontSize:'13px',fontWeight:'600',color:'#6B7280',cursor:'pointer',backgroundColor:'transparent',transition:'all 0.3s'}} onMouseOver={(e)=>{e.target.style.color='#4F46E5';e.target.style.borderBottomColor='#4F46E5';}} onMouseOut={(e)=>{e.target.style.color='#6B7280';e.target.style.borderBottomColor='transparent';}}>💬 Feedback</button>
         <button onClick={()=>navigate('/student/notifications')} style={{padding:'14px 16px',border:'none',borderBottom:'3px solid transparent',fontSize:'13px',fontWeight:'600',color:'#6B7280',cursor:'pointer',backgroundColor:'transparent',transition:'all 0.3s'}} onMouseOver={(e)=>{e.target.style.color='#4F46E5';e.target.style.borderBottomColor='#4F46E5';}} onMouseOut={(e)=>{e.target.style.color='#6B7280';e.target.style.borderBottomColor='transparent';}}>🔔 Notifications</button>
-        <button onClick={()=>navigate('/student/student-body')} style={{padding:'14px 16px',border:'none',borderBottom:'3px solid transparent',fontSize:'13px',fontWeight:'600',color:'#6B7280',cursor:'pointer',backgroundColor:'transparent',transition:'all 0.3s'}} onMouseOver={(e)=>{e.target.style.color='#4F46E5';e.target.style.borderBottomColor='#4F46E5';}} onMouseOut={(e)=>{e.target.style.color='#6B7280';e.target.style.borderBottomColor='transparent';}}>🎯 Student Body</button>
         <button onClick={()=>navigate('/student/placement-profile')} style={{padding:'14px 16px',border:'none',borderBottom:'3px solid transparent',fontSize:'13px',fontWeight:'600',color:'#6B7280',cursor:'pointer',backgroundColor:'transparent',transition:'all 0.3s'}} onMouseOver={(e)=>{e.target.style.color='#4F46E5';e.target.style.borderBottomColor='#4F46E5';}} onMouseOut={(e)=>{e.target.style.color='#6B7280';e.target.style.borderBottomColor='transparent';}}>💼 Placement</button>
         <button onClick={()=>navigate('/student/profile')} style={{padding:'14px 16px',border:'none',borderBottom:'3px solid transparent',fontSize:'13px',fontWeight:'600',color:'#6B7280',cursor:'pointer',backgroundColor:'transparent',transition:'all 0.3s'}} onMouseOver={(e)=>{e.target.style.color='#4F46E5';e.target.style.borderBottomColor='#4F46E5';}} onMouseOut={(e)=>{e.target.style.color='#6B7280';e.target.style.borderBottomColor='transparent';}}>👤 My Profile</button>
       </div>
@@ -283,9 +286,8 @@ const MyRegistrations = () => {
                   )}
 
                   <div style={{display:'flex',gap:'8px',flexWrap:'wrap'}}>
-                    <button style={{flex:1,padding:'10px 16px',backgroundColor:'white',color:'#4F46E5',border:'2px solid #4F46E5',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}} onClick={()=>navigate(`/student/event/${reg.eventId}`)}>📄 View Details</button>
                     {reg.certificateAvailable && (
-                      <button style={{flex:1,padding:'10px 16px',backgroundColor:'#10B981',color:'white',border:'none',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}}>🎓 Download Certificate</button>
+                      <button style={{flex:1,padding:'10px 16px',backgroundColor:'#10B981',color:'white',border:'none',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}} onClick={()=>handleDownloadCertificate(reg.eventName)}>🎓 Download Certificate</button>
                     )}
                     {reg.status === 'confirmed' && !isPast && (
                       <button style={{flex:1,padding:'10px 16px',backgroundColor:'#FEE2E2',color:'#991B1B',border:'none',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}} onClick={()=>handleCancelRegistration(reg)}>❌ Cancel</button>

@@ -24,7 +24,8 @@ import {
   FiTrendingUp,
   FiMessageSquare,
   FiFileText,
-  FiSend
+  FiSend,
+  FiBarChart2
 } from 'react-icons/fi';
 
 const FacultyDashboard = () => {
@@ -433,6 +434,7 @@ const FacultyDashboard = () => {
           <NavButton icon={FiFileText} label="Reports" path="/faculty/reports" />
           <NavButton icon={FiSend} label="Leave" path="/faculty/leave-request" />
           <NavButton icon={FiBell} label="Notifications" path="/faculty/notifications" />
+          <NavButton icon={FiBarChart2} label="Analytics" path="/faculty/analytics" />
           <button onClick={handleLogout} style={{padding: '10px 16px', backgroundColor: '#FEE2E2', border: 'none', borderRadius: '8px', color: '#DC2626', cursor: 'pointer', fontSize: '14px', fontWeight: '500', transition: 'all 0.2s ease'}} onMouseEnter={(e) => {e.currentTarget.style.backgroundColor = '#FCA5A5'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 6px rgba(220, 38, 38, 0.2)';}} onMouseLeave={(e) => {e.currentTarget.style.backgroundColor = '#FEE2E2'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none';}}>Logout</button>
         </div>
       </div>
