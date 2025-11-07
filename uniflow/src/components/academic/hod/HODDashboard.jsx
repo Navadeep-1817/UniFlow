@@ -45,24 +45,132 @@ const HODDashboard = () => {
   }, [user]);
 
   useEffect(() => {
-    // Fetch real data from API
-    const fetchDashboardData = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      try {
-        // TODO: Implement backend API endpoints
-        // For now, initialize with empty/zero values
-        setStats({});
-        setQuickStats({});
-        setRecentActivities([]);
-      } catch (error) {
-        console.error('Error fetching HOD dashboard data:', error);
-      }
-    };
-
     fetchDashboardData();
   }, []);
+
+  const fetchDashboardData = async () => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    
+    if (!token) return;
+
+    try {
+      // Fetch dashboard stats
+      const statsResponse = await fetch(`${API_BASE_URL}/hod/dashboard-stats`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (statsResponse.ok) {
+        const data = await statsResponse.json();
+        setStats({
+          totalFaculty: data.data.totalFaculty || 0,
+          totalStudents: data.data.totalStudents || 0,
+          ongoingEvents: data.data.ongoingEvents || 0,
+          upcomingEvents: data.data.upcomingEvents || 0,
+          completedEvents: data.data.totalEvents - data.data.ongoingEvents - data.data.upcomingEvents || 0,
+          pendingApprovals: 0,
+          resourceUtilization: 0,
+          attendanceRate: 0
+        });
+        setQuickStats({
+          todayEvents: 0,
+          pendingLeaves: 0,
+          venueBookings: 0,
+          trainerRequests: 0
+        });
+      }
+
+      // Fetch department events for recent activities
+      const eventsResponse = await fetch(`${API_BASE_URL}/hod/events`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (eventsResponse.ok) {
+        const eventsData = await eventsResponse.json();
+        
+        // Transform events into recent activities
+        const activities = eventsData.data.slice(0, 5).map((event, index) => {
+          const eventDate = new Date(event.date?.startDate || event.createdAt);
+          const now = new Date();
+          const diffTime = Math.abs(now - eventDate);
+          const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+          const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+          
+          let timeAgo;
+          if (diffDays === 0) {
+            if (diffHours === 0) {
+              timeAgo = 'Just now';
+            } else if (diffHours === 1) {
+              timeAgo = '1 hour ago';
+            } else {
+              timeAgo = `${diffHours} hours ago`;
+            }
+          } else if (diffDays === 1) {
+            timeAgo = 'Yesterday';
+          } else {
+            timeAgo = `${diffDays} days ago`;
+          }
+
+          let activityType = 'event';
+          let activityTitle = '';
+          let activityDesc = '';
+
+          if (event.status === 'Pending') {
+            activityType = 'approval';
+            activityTitle = 'Event Created';
+            activityDesc = `${event.title} is pending approval`;
+          } else if (event.status === 'Approved') {
+            activityType = 'event';
+            activityTitle = 'Event Approved';
+            activityDesc = `${event.title} has been approved`;
+          } else if (event.status === 'Ongoing') {
+            activityType = 'event';
+            activityTitle = 'Event Ongoing';
+            activityDesc = `${event.title} is currently happening`;
+          } else if (event.status === 'Completed') {
+            activityType = 'event';
+            activityTitle = 'Event Completed';
+            activityDesc = `${event.title} has been completed`;
+          } else {
+            activityType = 'event';
+            activityTitle = 'Event Update';
+            activityDesc = event.title;
+          }
+
+          // Add trainer allocation activity
+          if (event.trainer) {
+            activityType = 'faculty';
+            activityTitle = 'Trainer Allocated';
+            activityDesc = `Trainer assigned to ${event.title}`;
+          }
+
+          return {
+            id: event._id || index,
+            type: activityType,
+            title: activityTitle,
+            description: activityDesc,
+            timestamp: timeAgo,
+            eventData: event
+          };
+        });
+
+        setRecentActivities(activities);
+      }
+    } catch (error) {
+      console.error('Error fetching HOD dashboard data:', error);
+      // Set default zero values on error
+      setStats({
+        totalFaculty: 0,
+        totalStudents: 0,
+        ongoingEvents: 0,
+        upcomingEvents: 0,
+        completedEvents: 0,
+        pendingApprovals: 0,
+        resourceUtilization: 0,
+        attendanceRate: 0
+      });
+    }
+  };
 
 
   const getActivityIcon = (type) => {
@@ -81,12 +189,9 @@ const HODDashboard = () => {
     { name: 'Student Management', icon: <FiUserCheck size={20} />, route: '/hod/students', color: '#10B981', desc: 'View student records' },
     { name: 'Department Events', icon: <FiCalendar size={20} />, route: '/hod/events', color: '#F59E0B', desc: 'Manage events' },
     { name: 'Faculty Allocation', icon: <FiGrid size={20} />, route: '/hod/allocation', color: '#3B82F6', desc: 'Assign faculty to events' },
-    { name: 'Venue Booking', icon: <FiMapPin size={20} />, route: '/hod/venue', color: '#8B5CF6', desc: 'Book venues' },
     { name: 'Trainer Requests', icon: <FiAward size={20} />, route: '/hod/trainers', color: '#EC4899', desc: 'Manage trainer requests' },
     { name: 'Analytics', icon: <FiBarChart size={20} />, route: '/hod/analytics', color: '#06B6D4', desc: 'View department analytics' },
-    { name: 'Attendance', icon: <FiCheckCircle size={20} />, route: '/hod/attendance', color: '#84CC16', desc: 'Track attendance' },
-    { name: 'Resource Management', icon: <FiSettings size={20} />, route: '/hod/resources', color: '#6366F1', desc: 'Manage resources' },
-    { name: 'Timetable', icon: <FiClock size={20} />, route: '/hod/timetable', color: '#EAB308', desc: 'Manage timetables' }
+    { name: 'Attendance', icon: <FiCheckCircle size={20} />, route: '/hod/attendance', color: '#84CC16', desc: 'Track attendance' }
   ];
 
   return (
@@ -222,48 +327,59 @@ const HODDashboard = () => {
           {/* Recent Activities */}
           <div style={styles.activitiesSection}>
             <h3 style={styles.sectionTitle}>Recent Activities</h3>
-            <div style={styles.activitiesList}>
-              {recentActivities.map((activity) => (
-                <div
-                  key={activity.id}
-                  style={styles.activityItem}
+            {recentActivities.length > 0 ? (
+              <>
+                <div style={styles.activitiesList}>
+                  {recentActivities.map((activity) => (
+                    <div
+                      key={activity.id}
+                      style={styles.activityItem}
+                      onClick={() => navigate('/hod/events')}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#F9FAFB';
+                        e.currentTarget.style.transform = 'translateX(4px)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = '#FFFFFF';
+                        e.currentTarget.style.transform = 'translateX(0)';
+                      }}
+                    >
+                      <div style={styles.activityIcon}>
+                        {getActivityIcon(activity.type)}
+                      </div>
+                      <div style={styles.activityContent}>
+                        <div style={styles.activityTitle}>{activity.title}</div>
+                        <div style={styles.activityDesc}>{activity.description}</div>
+                        <div style={styles.activityTime}>
+                          <FiClock size={12} />
+                          <span>{activity.timestamp}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  style={styles.viewAllBtn}
+                  onClick={() => navigate('/hod/events')}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#F9FAFB';
-                    e.currentTarget.style.transform = 'translateX(4px)';
+                    e.currentTarget.style.backgroundColor = '#4338CA';
+                    e.currentTarget.style.transform = 'scale(1.02)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = '#FFFFFF';
-                    e.currentTarget.style.transform = 'translateX(0)';
+                    e.currentTarget.style.backgroundColor = '#4F46E5';
+                    e.currentTarget.style.transform = 'scale(1)';
                   }}
                 >
-                  <div style={styles.activityIcon}>
-                    {getActivityIcon(activity.type)}
-                  </div>
-                  <div style={styles.activityContent}>
-                    <div style={styles.activityTitle}>{activity.title}</div>
-                    <div style={styles.activityDesc}>{activity.description}</div>
-                    <div style={styles.activityTime}>
-                      <FiClock size={12} />
-                      <span>{activity.timestamp}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <button
-              style={styles.viewAllBtn}
-              onClick={() => navigate('/hod/notifications')}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#4338CA';
-                e.currentTarget.style.transform = 'scale(1.02)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#4F46E5';
-                e.currentTarget.style.transform = 'scale(1)';
-              }}
-            >
-              View All Activities
-            </button>
+                  View All Activities
+                </button>
+              </>
+            ) : (
+              <div style={styles.emptyState}>
+                <FiActivity size={48} color="#D1D5DB" />
+                <p style={styles.emptyStateText}>No recent activities</p>
+                <p style={styles.emptyStateSubtext}>Events and updates will appear here</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -521,6 +637,25 @@ const styles = {
     fontWeight: '600',
     cursor: 'pointer',
     transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+  },
+  emptyState: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '48px 24px',
+    textAlign: 'center'
+  },
+  emptyStateText: {
+    fontSize: '16px',
+    fontWeight: '600',
+    color: '#6B7280',
+    margin: '16px 0 8px 0'
+  },
+  emptyStateSubtext: {
+    fontSize: '14px',
+    color: '#9CA3AF',
+    margin: 0
   }
 };
 

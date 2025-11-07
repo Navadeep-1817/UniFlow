@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import HODTopNav from './HODTopNav';
 import { 
   FiUsers,
@@ -16,98 +17,91 @@ import {
   FiRefreshCw
 } from 'react-icons/fi';
 
+const API_BASE_URL = 'http://localhost:5000/api';
+
 const FacultyAllocation = () => {
   const [events, setEvents] = useState([]);
   const [faculty, setFaculty] = useState([]);
-  const [allocations, setAllocations] = useState([]);
+  const [trainers, setTrainers] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [showAllocationModal, setShowAllocationModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [selectedTrainer, setSelectedTrainer] = useState(null);
   const [selectedFaculty, setSelectedFaculty] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [registrations, setRegistrations] = useState([]);
+  const [allocations, setAllocations] = useState([]);
 
   useEffect(() => {
-    // Mock faculty data with current workload
-    const mockFaculty = [
-      { id: 1, name: 'Dr. Priya Sharma', specialization: 'AI & ML', currentWorkload: 85, maxWorkload: 100, allocatedEvents: 8 },
-      { id: 2, name: 'Prof. Rajesh Kumar', specialization: 'Web Development', currentWorkload: 65, maxWorkload: 100, allocatedEvents: 5 },
-      { id: 3, name: 'Dr. Anita Desai', specialization: 'Data Science', currentWorkload: 75, maxWorkload: 100, allocatedEvents: 6 },
-      { id: 4, name: 'Prof. Suresh Patel', specialization: 'Database Systems', currentWorkload: 40, maxWorkload: 100, allocatedEvents: 3 },
-      { id: 5, name: 'Dr. Meena Singh', specialization: 'Machine Learning', currentWorkload: 92, maxWorkload: 100, allocatedEvents: 7 }
-    ];
-
-    // Mock events data
-    const mockEvents = [
-      {
-        id: 1,
-        name: 'AI & ML Workshop',
-        type: 'FDP',
-        startDate: '2024-11-25',
-        endDate: '2024-11-27',
-        sessions: 6,
-        venue: 'Conference Hall A',
-        status: 'allocated',
-        workloadPoints: 15
-      },
-      {
-        id: 2,
-        name: 'Data Science SDP',
-        type: 'SDP',
-        startDate: '2024-12-01',
-        endDate: '2024-12-05',
-        sessions: 10,
-        venue: 'Lab 201',
-        status: 'pending',
-        workloadPoints: 20
-      },
-      {
-        id: 3,
-        name: 'Campus Recruitment Training',
-        type: 'CRT',
-        startDate: '2024-12-10',
-        endDate: '2024-12-15',
-        sessions: 8,
-        venue: 'Auditorium B',
-        status: 'pending',
-        workloadPoints: 18
-      },
-      {
-        id: 4,
-        name: 'React Advanced Workshop',
-        type: 'FDP',
-        startDate: '2024-12-08',
-        endDate: '2024-12-10',
-        sessions: 5,
-        venue: 'Lab 305',
-        status: 'allocated',
-        workloadPoints: 12
-      },
-      {
-        id: 5,
-        name: 'Python Programming SDP',
-        type: 'SDP',
-        startDate: '2024-11-28',
-        endDate: '2024-12-02',
-        sessions: 8,
-        venue: 'Lab 202',
-        status: 'pending',
-        workloadPoints: 16
-      }
-    ];
-
-    // Mock allocations
-    const mockAllocations = [
-      { id: 1, eventId: 1, facultyId: 1, eventName: 'AI & ML Workshop', facultyName: 'Dr. Priya Sharma', allocatedOn: '2024-11-15' },
-      { id: 2, eventId: 4, facultyId: 2, eventName: 'React Advanced Workshop', facultyName: 'Prof. Rajesh Kumar', allocatedOn: '2024-11-18' }
-    ];
-
-    setFaculty(mockFaculty);
-    setEvents(mockEvents);
-    setAllocations(mockAllocations);
-    setFilteredEvents(mockEvents);
+    fetchAllData();
   }, []);
+
+  const fetchAllData = async () => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    if (!token) {
+      setError('Authentication required');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+
+      // Fetch events, faculty, and trainers in parallel
+      const [eventsRes, facultyRes, trainersRes] = await Promise.all([
+        axios.get(`${API_BASE_URL}/hod/events`, config),
+        axios.get(`${API_BASE_URL}/hod/faculty`, config),
+        axios.get(`${API_BASE_URL}/trainers`, config)
+      ]);
+
+      const eventsData = (eventsRes.data.data || eventsRes.data || []).map(event => ({
+        id: event._id,
+        name: event.title,
+        type: event.subType,
+        startDate: new Date(event.date.startDate).toISOString().split('T')[0],
+        endDate: new Date(event.date.endDate).toISOString().split('T')[0],
+        venue: event.venue?.name || 'TBD',
+        status: event.status.toLowerCase(),
+        sessions: event.sessions?.length || 0,
+        workloadPoints: 10,
+        trainer: event.trainer,
+        trainerId: event.trainer?._id
+      }));
+      
+      const facultyData = (facultyRes.data.data || facultyRes.data || []).map(fac => ({
+        id: fac._id,
+        name: `${fac.firstName} ${fac.lastName}`,
+        email: fac.email,
+        specialization: fac.specialization || 'General',
+        currentWorkload: 30,
+        maxWorkload: 100,
+        allocatedEvents: 2
+      }));
+      
+      const trainersData = trainersRes.data.data || trainersRes.data || [];
+
+      setEvents(eventsData);
+      setFaculty(facultyData);
+      setTrainers(trainersData);
+      setFilteredEvents(eventsData);
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching data:', err);
+      setError(err.response?.data?.message || 'Failed to load data');
+      setLoading(false);
+      setEvents([]);
+      setFaculty([]);
+      setTrainers([]);
+      setFilteredEvents([]);
+    }
+  };
 
   useEffect(() => {
     let filtered = events;
@@ -131,45 +125,34 @@ const FacultyAllocation = () => {
     setTimeout(() => setToast({ show: false, message: '', type: '' }), 3000);
   };
 
-  const handleAllocate = () => {
-    if (!selectedEvent || !selectedFaculty) {
-      showToast('Please select both event and faculty', 'error');
+  const handleAllocate = async () => {
+    if (!selectedEvent || !selectedTrainer) {
+      showToast('Please select both event and trainer', 'error');
       return;
     }
 
-    const selectedFacultyData = faculty.find(f => f.id === selectedFaculty);
-    const selectedEventData = events.find(e => e.id === selectedEvent);
-
-    if (selectedFacultyData.currentWorkload + selectedEventData.workloadPoints > selectedFacultyData.maxWorkload) {
-      showToast('Faculty workload exceeds maximum capacity!', 'error');
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    if (!token) {
+      showToast('Authentication required', 'error');
       return;
     }
 
-    const newAllocation = {
-      id: allocations.length + 1,
-      eventId: selectedEvent,
-      facultyId: selectedFaculty,
-      eventName: selectedEventData.name,
-      facultyName: selectedFacultyData.name,
-      allocatedOn: new Date().toISOString().split('T')[0]
-    };
+    try {
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      
+      await axios.put(
+        `${API_BASE_URL}/hod/events/${selectedEvent}/allocate-trainer`,
+        { trainerId: selectedTrainer },
+        config
+      );
 
-    setAllocations([...allocations, newAllocation]);
-    
-    setEvents(events.map(e => 
-      e.id === selectedEvent ? { ...e, status: 'allocated' } : e
-    ));
-
-    setFaculty(faculty.map(f =>
-      f.id === selectedFaculty ? { 
-        ...f, 
-        currentWorkload: f.currentWorkload + selectedEventData.workloadPoints,
-        allocatedEvents: f.allocatedEvents + 1
-      } : f
-    ));
-
-    showToast('Faculty allocated successfully!', 'success');
-    closeModal();
+      showToast('Trainer allocated successfully!', 'success');
+      closeModal();
+      await fetchAllData();
+    } catch (error) {
+      console.error('Error allocating trainer:', error);
+      showToast(error.response?.data?.message || 'Failed to allocate trainer', 'error');
+    }
   };
 
   const handleRemoveAllocation = (allocationId) => {
@@ -198,14 +181,14 @@ const FacultyAllocation = () => {
 
   const openAllocationModal = (event) => {
     setSelectedEvent(event.id);
-    setSelectedFaculty(null);
+    setSelectedTrainer(event.trainerId || null);
     setShowAllocationModal(true);
   };
 
   const closeModal = () => {
     setShowAllocationModal(false);
     setSelectedEvent(null);
-    setSelectedFaculty(null);
+    setSelectedTrainer(null);
   };
 
   const getWorkloadColor = (workload) => {
@@ -310,8 +293,8 @@ const FacultyAllocation = () => {
               ) : (
                 filteredEvents.map(event => {
                   const statusStyle = getStatusStyle(event.status);
-                  const isAllocated = allocations.some(a => a.eventId === event.id);
-                  const allocatedFaculty = isAllocated ? allocations.find(a => a.eventId === event.id) : null;
+                  const isAllocated = !!event.trainer;
+                  const allocatedTrainer = event.trainer;
                   return (
                     <div key={event.id} style={styles.eventCard} onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.12)'; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)'; }}>
                       <div style={styles.eventHeader}>
@@ -340,11 +323,11 @@ const FacultyAllocation = () => {
                       {isAllocated ? (
                         <div style={styles.allocatedInfo}>
                           <FiUserPlus size={16} color="#10B981" />
-                          <span>Assigned to: <strong>{allocatedFaculty.facultyName}</strong></span>
+                          <span>Trainer: <strong>{allocatedTrainer?.name || 'TBD'}</strong></span>
                         </div>
                       ) : (
                         <button onClick={() => openAllocationModal(event)} style={styles.allocateBtn} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#4338CA'; e.currentTarget.style.transform = 'scale(1.02)'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#4F46E5'; e.currentTarget.style.transform = 'scale(1)'; }}>
-                          <FiUserPlus size={16} /> Allocate Faculty
+                          <FiUserPlus size={16} /> Allocate Trainer
                         </button>
                       )}
                     </div>
@@ -388,7 +371,7 @@ const FacultyAllocation = () => {
           <div style={styles.modalOverlay} onClick={closeModal}>
             <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
               <div style={styles.modalHeader}>
-                <h3 style={styles.modalTitle}>Allocate Faculty to Event</h3>
+                <h3 style={styles.modalTitle}>Allocate Trainer to Event</h3>
                 <button onClick={closeModal} style={styles.closeBtn} onMouseEnter={(e) => { e.currentTarget.style.transform = 'rotate(90deg) scale(1.1)'; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'rotate(0deg) scale(1)'; }}>
                   <FiX size={20} />
                 </button>
@@ -403,37 +386,24 @@ const FacultyAllocation = () => {
                   </div>
                 </div>
                 <div style={styles.facultySelection}>
-                  <h4 style={{marginBottom: '16px'}}>Select Faculty:</h4>
+                  <h4 style={{marginBottom: '16px'}}>Select Trainer:</h4>
                   <div style={styles.facultyGrid}>
-                    {faculty.map(f => {
-                      const workloadInfo = getWorkloadColor(f.currentWorkload);
-                      const selectedEventData = events.find(e => e.id === selectedEvent);
-                      const willExceed = f.currentWorkload + (selectedEventData?.workloadPoints || 0) > f.maxWorkload;
-                      const isSelected = selectedFaculty === f.id;
+                    {trainers.map(t => {
+                      const isSelected = selectedTrainer === t._id;
                       return (
-                        <div key={f.id} onClick={() => !willExceed && setSelectedFaculty(f.id)} style={{ ...styles.facultyCard, borderColor: isSelected ? '#4F46E5' : '#E5E7EB', backgroundColor: isSelected ? '#EEF2FF' : willExceed ? '#FEE2E2' : '#FFFFFF', cursor: willExceed ? 'not-allowed' : 'pointer', opacity: willExceed ? 0.6 : 1 }} onMouseEnter={(e) => { if (!willExceed) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.12)'; } }} onMouseLeave={(e) => { if (!willExceed) { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)'; } }}>
+                        <div key={t._id} onClick={() => setSelectedTrainer(t._id)} style={{ ...styles.facultyCard, borderColor: isSelected ? '#4F46E5' : '#E5E7EB', backgroundColor: isSelected ? '#EEF2FF' : '#FFFFFF', cursor: 'pointer' }} onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.12)'; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)'; }}>
                           <div style={styles.facultyCardHeader}>
                             <div>
-                              <div style={styles.facultyCardName}>{f.name}</div>
-                              <div style={styles.facultyCardSpec}>{f.specialization}</div>
+                              <div style={styles.facultyCardName}>{t.name}</div>
+                              <div style={styles.facultyCardSpec}>{t.organization || 'External Trainer'}</div>
+                              {t.expertise && t.expertise.length > 0 && (
+                                <div style={{fontSize: '11px', color: '#9CA3AF', marginTop: '4px'}}>
+                                  {t.expertise.slice(0, 2).join(', ')}
+                                </div>
+                              )}
                             </div>
                             {isSelected && <FiCheckCircle size={20} color="#4F46E5" />}
                           </div>
-                          <div style={{...styles.workloadBadge, backgroundColor: workloadInfo.bg, color: workloadInfo.color, marginTop: '8px'}}>
-                            {workloadInfo.label}
-                          </div>
-                          <div style={styles.workloadProgress}>
-                            <div style={styles.workloadBar}>
-                              <div style={{...styles.workloadFill, width: `${f.currentWorkload}%`, backgroundColor: f.currentWorkload >= 90 ? '#EF4444' : f.currentWorkload >= 70 ? '#F59E0B' : '#10B981'}}></div>
-                            </div>
-                            <span style={styles.workloadText}>{f.currentWorkload}/{f.maxWorkload}</span>
-                          </div>
-                          {willExceed && (
-                            <div style={styles.exceedWarning}>
-                              <FiAlertCircle size={14} />
-                              <span>Exceeds capacity</span>
-                            </div>
-                          )}
                         </div>
                       );
                     })}
@@ -444,7 +414,7 @@ const FacultyAllocation = () => {
                 <button onClick={closeModal} style={styles.cancelBtn} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#E5E7EB'; e.currentTarget.style.transform = 'scale(1.02)'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#F3F4F6'; e.currentTarget.style.transform = 'scale(1)'; }}>
                   Cancel
                 </button>
-                <button onClick={handleAllocate} disabled={!selectedFaculty} style={{...styles.submitBtn, opacity: !selectedFaculty ? 0.5 : 1, cursor: !selectedFaculty ? 'not-allowed' : 'pointer'}} onMouseEnter={(e) => { if (selectedFaculty) { e.currentTarget.style.backgroundColor = '#4338CA'; e.currentTarget.style.transform = 'scale(1.02)'; } }} onMouseLeave={(e) => { if (selectedFaculty) { e.currentTarget.style.backgroundColor = '#4F46E5'; e.currentTarget.style.transform = 'scale(1)'; } }}>
+                <button onClick={handleAllocate} disabled={!selectedTrainer} style={{...styles.submitBtn, opacity: !selectedTrainer ? 0.5 : 1, cursor: !selectedTrainer ? 'not-allowed' : 'pointer'}} onMouseEnter={(e) => { if (selectedTrainer) { e.currentTarget.style.backgroundColor = '#4338CA'; e.currentTarget.style.transform = 'scale(1.02)'; } }} onMouseLeave={(e) => { if (selectedTrainer) { e.currentTarget.style.backgroundColor = '#4F46E5'; e.currentTarget.style.transform = 'scale(1)'; } }}>
                   <FiSave size={16} /> Allocate
                 </button>
               </div>

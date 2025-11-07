@@ -23,7 +23,8 @@ const Login = () => {
     { value: 'placement', label: 'Training & Placement Head' },
     { value: 'faculty_head', label: 'Student Body - Faculty Head' },
     { value: 'team_rep', label: 'Student Body - Team Representative' },
-    { value: 'sports', label: 'Sports Administrator' }
+    { value: 'sports', label: 'Sports Administrator' },
+    { value: 'trainer', label: 'Trainer' }
   ];
 
   const validateForm = () => {
@@ -53,6 +54,12 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
+
+    // Redirect to trainer login if trainer role is selected
+    if (formData.role === 'trainer') {
+      navigate('/trainer/login');
+      return;
+    }
 
     setIsLoading(true);
     try {

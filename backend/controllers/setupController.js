@@ -175,7 +175,12 @@ exports.getUniversities = async (req, res) => {
 exports.getDepartments = async (req, res) => {
   try {
     const Department = require('../models/Department');
-    const departments = await Department.find()
+    const { universityId } = req.query;
+    
+    // Build query - if universityId is provided, filter by it
+    const query = universityId ? { university: universityId } : {};
+    
+    const departments = await Department.find(query)
       .populate('university', 'name code')
       .select('_id name code university');
     

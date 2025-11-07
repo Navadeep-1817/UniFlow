@@ -51,6 +51,8 @@ app.use(helmet());
 const allowedOrigins = [
   'http://localhost:3000',  // React default
   'http://localhost:5173',  // Vite default
+  'http://localhost:5174',  // Vite alternate
+  'http://localhost:5175',  // Vite alternate
   process.env.FRONTEND_URL
 ].filter(Boolean);
 
@@ -66,7 +68,7 @@ app.use(cors({
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
@@ -130,6 +132,7 @@ app.use('/api/trainers', require('./routes/trainerRoutes'));
 app.use('/api/superadmin', require('./routes/superAdminRoutes'));
 app.use('/api/academic', require('./routes/academicAdminRoutes'));
 app.use('/api/non-academic', require('./routes/nonAcademicAdminRoutes'));
+app.use('/api/hod', require('./routes/hodRoutes'));
 
 // Role-based Routes
 app.use('/api/faculty', require('./routes/facultyRoutes'));

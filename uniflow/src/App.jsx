@@ -41,7 +41,6 @@ import DepartmentEvents from './components/academic/hod/DepartmentEvents';
 import FacultyManagement from './components/academic/hod/FacultyManagement';
 import StudentManagement from './components/academic/hod/StudentManagement';
 import FacultyAllocation from './components/academic/hod/FacultyAllocation';
-import VenueBooking from './components/academic/hod/VenueBooking';
 import TrainerRequest from './components/academic/hod/TrainerRequest';
 import DepartmentAnalytics from './components/academic/hod/DepartmentAnalytics';
 import DepartmentAttendance from './components/academic/hod/DepartmentAttendance';
@@ -76,6 +75,12 @@ import {
   ActivityReport,
   ResourceRequest
 } from './components/nonacademic/studentbody/teamrep';
+
+// Trainer Components
+import TrainerRegister from './components/trainer/TrainerRegister';
+import TrainerLogin from './components/trainer/TrainerLogin';
+import TrainerDashboard from './components/trainer/TrainerDashboard';
+import TrainerProfile from './components/trainer/TrainerProfile';
 
 // Analytics Components - Global Access
 import AttendanceReport from './components/analytics/AttendanceReport';
@@ -139,7 +144,6 @@ function App() {
         <Route path="/hod/students" element={<StudentManagement />} />
         <Route path="/hod/events" element={<DepartmentEvents />} />
         <Route path="/hod/allocation" element={<FacultyAllocation />} />
-        <Route path="/hod/venue" element={<VenueBooking />} />
         <Route path="/hod/trainers" element={<TrainerRequest />} />
         <Route path="/hod/analytics" element={<DepartmentAnalytics />} />
         <Route path="/hod/attendance" element={<DepartmentAttendance />} />
@@ -187,6 +191,12 @@ function App() {
         <Route path="/sports/athletics-report" element={<AthleticsReport />} />
         <Route path="/sports/results-management" element={<ResultsManagement />} />
         <Route path="/sports/fixture-scheduling" element={<FixtureScheduling />} />
+        
+        {/* Trainer Routes */}
+        <Route path="/trainer/register" element={<TrainerRegister />} />
+        <Route path="/trainer/login" element={<TrainerLogin />} />
+        <Route path="/trainer/dashboard" element={<TrainerDashboard />} />
+        <Route path="/trainer/profile" element={<TrainerProfile />} />
         
         {/* Global Analytics Routes - Accessible by all roles */}
         <Route path="/analytics/attendance" element={<AttendanceReport />} />

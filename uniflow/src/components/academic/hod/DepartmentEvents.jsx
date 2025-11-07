@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useAuth } from '../../../context/AuthContext';
 import HODTopNav from './HODTopNav';
 import { 
   FiCalendar,
@@ -34,32 +36,57 @@ const DepartmentEvents = () => {
     type: 'FDP',
     description: '',
     startDate: '',
-    endDate: '',
-    venue: '',
-    capacity: '',
-    coordinator: '',
-    status: 'pending'
+    endDate: ''
   });
 
   useEffect(() => {
-    // Fetch real events data from API
-    const fetchEvents = async () => {
-      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-      if (!token) return;
-      
-      try {
-        // TODO: Implement API endpoint
-        setEvents([]);
-        setFilteredEvents([]);
-        console.log('Department events data ready for API integration');
-      } catch (error) {
-        console.error('Error fetching department events:', error);
-        setEvents([]);
-        setFilteredEvents([]);
-      }
-    };
     fetchEvents();
   }, []);
+
+  const fetchEvents = async () => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    
+    if (!token) {
+      showToast('Authentication required', 'error');
+      return;
+    }
+    
+    try {
+      const response = await axios.get(`${API_BASE_URL}/hod/events`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const eventsData = response.data.data || [];
+      // Transform backend data to match frontend structure
+      const transformedEvents = eventsData.map(event => ({
+        id: event._id,
+        name: event.title,
+        type: event.subType,
+        description: event.description,
+        startDate: new Date(event.date.startDate).toISOString().split('T')[0],
+        endDate: new Date(event.date.endDate).toISOString().split('T')[0],
+        venue: event.venue?.name || 'TBD',
+        venueId: event.venue?._id,
+        capacity: event.registration.maxParticipants,
+        registered: event.registration.currentParticipants,
+        coordinator: event.coordinators?.[0] ? `${event.coordinators[0].firstName} ${event.coordinators[0].lastName}` : 'N/A',
+        status: event.status.toLowerCase(),
+        createdOn: new Date(event.createdAt).toISOString().split('T')[0],
+        sessions: event.sessions?.length || 0,
+        trainer: event.trainer,
+        trainerId: event.trainer?._id
+      }));
+      
+      setEvents(transformedEvents);
+      setFilteredEvents(transformedEvents);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      showToast(error.response?.data?.message || 'Failed to fetch events', 'error');
+      setEvents([]);
+      setFilteredEvents([]);
+    }
+  };
 
   useEffect(() => {
     let filtered = events;
@@ -67,9 +94,7 @@ const DepartmentEvents = () => {
     // Search filter
     if (searchQuery) {
       filtered = filtered.filter(e =>
-        e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        e.coordinator.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        e.venue.toLowerCase().includes(searchQuery.toLowerCase())
+        e.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
@@ -96,27 +121,50 @@ const DepartmentEvents = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleCreateEvent = (e) => {
+  const handleCreateEvent = async (e) => {
     e.preventDefault();
     
-    if (editingEvent) {
-      setEvents(events.map(ev => 
-        ev.id === editingEvent.id ? { ...ev, ...formData } : ev
-      ));
-      showToast('Event updated successfully!', 'success');
-    } else {
-      const newEvent = {
-        id: events.length + 1,
-        ...formData,
-        registered: 0,
-        createdOn: new Date().toISOString().split('T')[0],
-        sessions: 0
-      };
-      setEvents([newEvent, ...events]);
-      showToast('Event created successfully!', 'success');
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    
+    if (!token) {
+      showToast('Authentication required', 'error');
+      return;
     }
     
-    resetForm();
+    try {
+      // Prepare data - only send required fields
+      const eventPayload = {
+        name: formData.name,
+        type: formData.type,
+        description: formData.description,
+        startDate: formData.startDate,
+        endDate: formData.endDate
+      };
+      
+      if (editingEvent) {
+        // Update event
+        await axios.put(`${API_BASE_URL}/hod/events/${editingEvent.id}`, eventPayload, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        showToast('Event updated successfully!', 'success');
+      } else {
+        // Create new event
+        await axios.post(`${API_BASE_URL}/hod/events`, eventPayload, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        showToast('Event created successfully!', 'success');
+      }
+      
+      // Refresh events list
+      await fetchEvents();
+      resetForm();
+    } catch (error) {
+      console.error('Error saving event:', error);
+      console.error('Error details:', error.response?.data);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to save event';
+      showToast(errorMessage, 'error');
+    }
   };
 
   const resetForm = () => {
@@ -125,11 +173,7 @@ const DepartmentEvents = () => {
       type: 'FDP',
       description: '',
       startDate: '',
-      endDate: '',
-      venue: '',
-      capacity: '',
-      coordinator: '',
-      status: 'pending'
+      endDate: ''
     });
     setShowForm(false);
     setEditingEvent(null);
@@ -141,20 +185,32 @@ const DepartmentEvents = () => {
       type: event.type,
       description: event.description,
       startDate: event.startDate,
-      endDate: event.endDate,
-      venue: event.venue,
-      capacity: event.capacity,
-      coordinator: event.coordinator,
-      status: event.status
+      endDate: event.endDate
     });
     setEditingEvent(event);
     setShowForm(true);
   };
 
-  const handleDelete = (eventId) => {
-    if (window.confirm('Are you sure you want to delete this event?')) {
-      setEvents(events.filter(e => e.id !== eventId));
+  const handleDelete = async (eventId) => {
+    if (!window.confirm('Are you sure you want to delete this event?')) return;
+    
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    
+    if (!token) {
+      showToast('Authentication required', 'error');
+      return;
+    }
+    
+    try {
+      await axios.delete(`${API_BASE_URL}/hod/events/${eventId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       showToast('Event deleted successfully!', 'success');
+      await fetchEvents();
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      showToast(error.response?.data?.message || 'Failed to delete event', 'error');
     }
   };
 
@@ -252,26 +308,6 @@ const DepartmentEvents = () => {
                 <label style={styles.label}>End Date *</label>
                 <input type="date" name="endDate" value={formData.endDate} onChange={handleInputChange} required style={styles.input} />
               </div>
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Venue *</label>
-                <input type="text" name="venue" value={formData.venue} onChange={handleInputChange} required style={styles.input} placeholder="Conference Hall, Lab, etc." />
-              </div>
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Capacity *</label>
-                <input type="number" name="capacity" value={formData.capacity} onChange={handleInputChange} required style={styles.input} placeholder="Max participants" min="1" />
-              </div>
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Coordinator *</label>
-                <input type="text" name="coordinator" value={formData.coordinator} onChange={handleInputChange} required style={styles.input} placeholder="Faculty coordinator name" />
-              </div>
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Status</label>
-                <select name="status" value={formData.status} onChange={handleInputChange} style={styles.input}>
-                  <option value="pending">Pending</option>
-                  <option value="ongoing">Ongoing</option>
-                  <option value="completed">Completed</option>
-                </select>
-              </div>
             </div>
             <div style={styles.formGroup}>
               <label style={styles.label}>Description *</label>
@@ -292,14 +328,14 @@ const DepartmentEvents = () => {
         <div style={styles.filtersBar}>
           <div style={styles.searchBox}>
             <FiSearch size={18} color="#6B7280" />
-            <input type="text" placeholder="Search by event name, coordinator, or venue..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={styles.searchInput} />
+            <input type="text" placeholder="Search by event name..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={styles.searchInput} />
           </div>
           <div style={styles.filterGroup}>
             <FiFilter size={16} color="#6B7280" />
             <span style={{fontSize: '14px', fontWeight: '600', color: '#374151'}}>Type:</span>
             <div style={styles.filterButtons}>
               {['all', 'FDP', 'SDP', 'CRT'].map(type => (
-                <button key={type} onClick={() => setFilterType(type)} style={{ ...styles.filterBtn, backgroundColor: filterType === type ? '#4F46E5' : '#FFFFFF', color: filterType === type ? '#FFFFFF' : '#6B7280', border: filterType === type ? 'none' : '1px solid #E5E7EB' }} onMouseEnter={(e) => { if (filterType !== type) { e.currentTarget.style.backgroundColor = '#F3F4F6'; e.currentTarget.style.transform = 'scale(1.05)'; } }} onMouseLeave={(e) => { if (filterType !== type) { e.currentTarget.style.backgroundColor = '#FFFFFF'; e.currentTarget.style.transform = 'scale(1)'; } }}>
+                <button key={type} onClick={() => setFilterType(type)} style={{ padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '500', transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)', backgroundColor: filterType === type ? '#4F46E5' : '#FFFFFF', color: filterType === type ? '#FFFFFF' : '#6B7280', border: filterType === type ? 'none' : '1px solid #E5E7EB' }} onMouseEnter={(e) => { if (filterType !== type) { e.currentTarget.style.backgroundColor = '#F3F4F6'; e.currentTarget.style.transform = 'scale(1.05)'; } }} onMouseLeave={(e) => { if (filterType !== type) { e.currentTarget.style.backgroundColor = '#FFFFFF'; e.currentTarget.style.transform = 'scale(1)'; } }}>
                   {type === 'all' ? 'All' : type}
                 </button>
               ))}
@@ -309,7 +345,7 @@ const DepartmentEvents = () => {
             <span style={{fontSize: '14px', fontWeight: '600', color: '#374151'}}>Status:</span>
             <div style={styles.filterButtons}>
               {['all', 'pending', 'ongoing', 'completed'].map(status => (
-                <button key={status} onClick={() => setFilterStatus(status)} style={{ ...styles.filterBtn, backgroundColor: filterStatus === status ? '#4F46E5' : '#FFFFFF', color: filterStatus === status ? '#FFFFFF' : '#6B7280', border: filterStatus === status ? 'none' : '1px solid #E5E7EB' }} onMouseEnter={(e) => { if (filterStatus !== status) { e.currentTarget.style.backgroundColor = '#F3F4F6'; e.currentTarget.style.transform = 'scale(1.05)'; } }} onMouseLeave={(e) => { if (filterStatus !== status) { e.currentTarget.style.backgroundColor = '#FFFFFF'; e.currentTarget.style.transform = 'scale(1)'; } }}>
+                <button key={status} onClick={() => setFilterStatus(status)} style={{ padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '500', transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)', backgroundColor: filterStatus === status ? '#4F46E5' : '#FFFFFF', color: filterStatus === status ? '#FFFFFF' : '#6B7280', border: filterStatus === status ? 'none' : '1px solid #E5E7EB' }} onMouseEnter={(e) => { if (filterStatus !== status) { e.currentTarget.style.backgroundColor = '#F3F4F6'; e.currentTarget.style.transform = 'scale(1.05)'; } }} onMouseLeave={(e) => { if (filterStatus !== status) { e.currentTarget.style.backgroundColor = '#FFFFFF'; e.currentTarget.style.transform = 'scale(1)'; } }}>
                   {status.charAt(0).toUpperCase() + status.slice(1)}
                 </button>
               ))}
@@ -331,7 +367,6 @@ const DepartmentEvents = () => {
               {filteredEvents.map(event => {
                 const statusStyle = getStatusStyle(event.status);
                 const typeColor = getTypeColor(event.type);
-                const fillPercentage = (event.registered / event.capacity) * 100;
                 return (
                   <div key={event.id} style={styles.eventCard} onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.15)'; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)'; }}>
                     <div style={styles.eventHeader}>
@@ -349,40 +384,14 @@ const DepartmentEvents = () => {
                         <span>{event.startDate} to {event.endDate}</span>
                       </div>
                       <div style={styles.detailItem}>
-                        <FiMapPin size={14} color="#6B7280" />
-                        <span>{event.venue}</span>
-                      </div>
-                      <div style={styles.detailItem}>
                         <FiUsers size={14} color="#6B7280" />
-                        <span>{event.registered}/{event.capacity} registered</span>
+                        <span>{event.registered || 0} participants</span>
                       </div>
-                    </div>
-                    <div style={styles.progressContainer}>
-                      <div style={styles.progressBar}>
-                        <div style={{...styles.progressFill, width: `${fillPercentage}%`, backgroundColor: fillPercentage >= 90 ? '#EF4444' : fillPercentage >= 70 ? '#F59E0B' : '#10B981'}}></div>
-                      </div>
-                      <span style={styles.progressText}>{fillPercentage.toFixed(0)}% filled</span>
-                    </div>
-                    <div style={styles.eventFooter}>
-                      <span style={styles.coordinator}>Coordinator: {event.coordinator}</span>
                     </div>
                     <div style={styles.eventActions}>
-                      <button onClick={() => setSelectedEvent(event)} style={styles.viewBtn} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#EEF2FF'; e.currentTarget.style.transform = 'scale(1.05)'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#F3F4F6'; e.currentTarget.style.transform = 'scale(1)'; }}>
-                        <FiEye size={16} /> View
-                      </button>
                       <button onClick={() => handleEdit(event)} style={styles.editBtn} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#DBEAFE'; e.currentTarget.style.transform = 'scale(1.05)'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#F3F4F6'; e.currentTarget.style.transform = 'scale(1)'; }}>
                         <FiEdit size={16} /> Edit
                       </button>
-                      {event.status === 'pending' && (
-                        <>
-                          <button onClick={() => handleApprove(event.id)} style={styles.approveBtn} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#BBF7D0'; e.currentTarget.style.transform = 'scale(1.05)'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#D1FAE5'; e.currentTarget.style.transform = 'scale(1)'; }}>
-                            <FiCheckCircle size={16} /> Approve
-                          </button>
-                          <button onClick={() => handleReject(event.id)} style={styles.rejectBtn} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#FCA5A5'; e.currentTarget.style.transform = 'scale(1.05)'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#FEE2E2'; e.currentTarget.style.transform = 'scale(1)'; }}>
-                            <FiXCircle size={16} /> Reject
-                          </button>
-                        </>
-                      )}
                       <button onClick={() => handleDelete(event.id)} style={styles.deleteBtn} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#FCA5A5'; e.currentTarget.style.transform = 'scale(1.1)'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.transform = 'scale(1)'; }}>
                         <FiTrash2 size={16} />
                       </button>
@@ -394,74 +403,6 @@ const DepartmentEvents = () => {
           )}
         </div>
 
-        {/* Event Details Modal */}
-        {selectedEvent && (
-          <div style={styles.modalOverlay} onClick={() => setSelectedEvent(null)}>
-            <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-              <div style={styles.modalHeader}>
-                <h3 style={styles.modalTitle}>{selectedEvent.name}</h3>
-                <button onClick={() => setSelectedEvent(null)} style={styles.closeBtn} onMouseEnter={(e) => { e.currentTarget.style.transform = 'rotate(90deg) scale(1.1)'; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'rotate(0deg) scale(1)'; }}>
-                  <FiX size={20} />
-                </button>
-              </div>
-              <div style={styles.modalBody}>
-                <div style={styles.modalSection}>
-                  <h4 style={styles.sectionTitle}>Event Information</h4>
-                  <div style={styles.infoGrid}>
-                    <div style={styles.infoItem}>
-                      <span style={styles.infoLabel}>Type:</span>
-                      <span style={{...styles.eventTypeBadge, backgroundColor: getTypeColor(selectedEvent.type)}}>{selectedEvent.type}</span>
-                    </div>
-                    <div style={styles.infoItem}>
-                      <span style={styles.infoLabel}>Status:</span>
-                      <div style={{...styles.eventStatusBadge, ...getStatusStyle(selectedEvent.status), backgroundColor: getStatusStyle(selectedEvent.status).bg, color: getStatusStyle(selectedEvent.status).color}}>
-                        {getStatusStyle(selectedEvent.status).icon}
-                        <span>{selectedEvent.status.charAt(0).toUpperCase() + selectedEvent.status.slice(1)}</span>
-                      </div>
-                    </div>
-                    <div style={styles.infoItem}>
-                      <span style={styles.infoLabel}>Duration:</span>
-                      <span>{selectedEvent.startDate} to {selectedEvent.endDate}</span>
-                    </div>
-                    <div style={styles.infoItem}>
-                      <span style={styles.infoLabel}>Venue:</span>
-                      <span>{selectedEvent.venue}</span>
-                    </div>
-                    <div style={styles.infoItem}>
-                      <span style={styles.infoLabel}>Capacity:</span>
-                      <span>{selectedEvent.capacity} participants</span>
-                    </div>
-                    <div style={styles.infoItem}>
-                      <span style={styles.infoLabel}>Registered:</span>
-                      <span>{selectedEvent.registered} participants</span>
-                    </div>
-                    <div style={styles.infoItem}>
-                      <span style={styles.infoLabel}>Coordinator:</span>
-                      <span>{selectedEvent.coordinator}</span>
-                    </div>
-                    <div style={styles.infoItem}>
-                      <span style={styles.infoLabel}>Total Sessions:</span>
-                      <span>{selectedEvent.sessions} sessions</span>
-                    </div>
-                  </div>
-                </div>
-                <div style={styles.modalSection}>
-                  <h4 style={styles.sectionTitle}>Description</h4>
-                  <p style={{margin: 0, color: '#374151', lineHeight: 1.6}}>{selectedEvent.description}</p>
-                </div>
-                <div style={styles.modalSection}>
-                  <h4 style={styles.sectionTitle}>Registration Progress</h4>
-                  <div style={styles.progressContainer}>
-                    <div style={styles.progressBar}>
-                      <div style={{...styles.progressFill, width: `${(selectedEvent.registered / selectedEvent.capacity) * 100}%`, backgroundColor: '#4F46E5'}}></div>
-                    </div>
-                    <span style={styles.progressText}>{((selectedEvent.registered / selectedEvent.capacity) * 100).toFixed(0)}% filled</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

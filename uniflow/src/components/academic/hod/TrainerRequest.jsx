@@ -3,45 +3,72 @@ import HODTopNav from './HODTopNav';
 import { FiUserPlus, FiUsers, FiEdit, FiTrash2, FiX, FiSave, FiFilter, FiSearch, FiCalendar, FiClock, FiCheckCircle, FiAlertCircle, FiBriefcase, FiMapPin, FiPhone, FiMail } from 'react-icons/fi';
 
 const TrainerRequest = () => {
-  const [requests, setRequests] = useState([]);
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showDetailModal, setShowDetailModal] = useState(false);
-  const [editingRequest, setEditingRequest] = useState(null);
-  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [trainers, setTrainers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
-  const [formData, setFormData] = useState({ trainerName: '', organization: '', domain: '', email: '', phone: '', programName: '', programType: 'FDP', date: '', startTime: '09:00', endTime: '17:00', venue: '', expectedAudience: '', budget: '', description: '' });
+
+  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
   useEffect(() => {
-    // Fetch real trainer requests from API
-    const fetchRequests = async () => {
-      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-      if (!token) return;
-      
-      try {
-        // TODO: Implement API endpoint
-        setRequests([]);
-        console.log('Trainer requests ready for API integration');
-      } catch (error) {
-        console.error('Error fetching trainer requests:', error);
-        setRequests([]);
-      }
-    };
-    fetchRequests();
+    fetchTrainers();
   }, []);
 
-  const showToast = (message, type = 'success') => { setToast({ show: true, message, type }); setTimeout(() => setToast({ show: false, message: '', type: '' }), 3000); };
-  const handleInputChange = (e) => { setFormData(prev => ({ ...prev, [e.target.name]: e.target.value })); };
-  const handleAddRequest = (e) => { e.preventDefault(); const newRequest = { id: Date.now(), ...formData, status: 'pending', requestedOn: new Date().toISOString().split('T')[0] }; setRequests([newRequest, ...requests]); showToast('Request submitted!'); setShowAddModal(false); setFormData({ trainerName: '', organization: '', domain: '', email: '', phone: '', programName: '', programType: 'FDP', date: '', startTime: '09:00', endTime: '17:00', venue: '', expectedAudience: '', budget: '', description: '' }); };
-  const handleEditRequest = (e) => { e.preventDefault(); setRequests(requests.map(r => r.id === editingRequest.id ? { ...r, ...formData } : r)); showToast('Updated!'); setShowEditModal(false); };
-  const handleDeleteRequest = (id) => { if (window.confirm('Delete?')) { setRequests(requests.filter(r => r.id !== id)); showToast('Deleted!'); } };
-  const handleApprove = (id) => { setRequests(requests.map(r => r.id === id ? { ...r, status: 'approved' } : r)); showToast('Approved!'); };
-  const handleReject = (id) => { const reason = prompt('Reason:'); if (reason) { setRequests(requests.map(r => r.id === id ? { ...r, status: 'rejected', rejectionReason: reason } : r)); showToast('Rejected!', 'error'); } };
-  const openEditModal = (request) => { setEditingRequest(request); setFormData({ trainerName: request.trainerName, organization: request.organization, domain: request.domain, email: request.email, phone: request.phone, programName: request.programName, programType: request.programType, date: request.date, startTime: request.startTime, endTime: request.endTime, venue: request.venue, expectedAudience: request.expectedAudience, budget: request.budget, description: request.description }); setShowEditModal(true); };
-  const getStatusColor = (status) => { switch(status) { case 'pending': return { bg: '#FEF3C7', color: '#92400E', icon: <FiClock size={14} /> }; case 'approved': return { bg: '#D1FAE5', color: '#065F46', icon: <FiCheckCircle size={14} /> }; case 'rejected': return { bg: '#FEE2E2', color: '#991B1B', icon: <FiAlertCircle size={14} /> }; default: return { bg: '#F3F4F6', color: '#6B7280', icon: <FiClock size={14} /> }; } };
-  const filteredRequests = requests.filter(r => { const matchesStatus = filterStatus === 'all' || r.status === filterStatus; const matchesSearch = r.trainerName.toLowerCase().includes(searchQuery.toLowerCase()) || r.organization.toLowerCase().includes(searchQuery.toLowerCase()); return matchesStatus && matchesSearch; });
+  const fetchTrainers = async () => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    if (!token) {
+      showToast('Please login to continue', 'error');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_BASE_URL}/hod/trainers`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+      
+      if (response.ok && data.success) {
+        setTrainers(data.data || []);
+      } else {
+        showToast(data.message || 'Failed to fetch trainers', 'error');
+        setTrainers([]);
+      }
+    } catch (error) {
+      console.error('Error fetching trainers:', error);
+      showToast('Unable to fetch trainers', 'error');
+      setTrainers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const showToast = (message, type = 'success') => { 
+    setToast({ show: true, message, type }); 
+    setTimeout(() => setToast({ show: false, message: '', type: '' }), 3000); 
+  };
+
+  const getStatusColor = (isVerified) => { 
+    if (isVerified) {
+      return { bg: '#D1FAE5', color: '#065F46', icon: <FiCheckCircle size={14} /> }; 
+    }
+    return { bg: '#FEF3C7', color: '#92400E', icon: <FiClock size={14} /> }; 
+  };
+
+  const filteredTrainers = trainers.filter(trainer => {
+    const matchesStatus = filterStatus === 'all' || 
+      (filterStatus === 'verified' && trainer.isVerified) ||
+      (filterStatus === 'pending' && !trainer.isVerified);
+    const matchesSearch = trainer.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                         trainer.organization?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         trainer.email?.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesStatus && matchesSearch;
+  });
 
   return (
     <div style={styles.container}>
@@ -49,19 +76,125 @@ const TrainerRequest = () => {
       {toast.show && <div style={{...styles.toast, backgroundColor: toast.type === 'success' ? '#10B981' : '#EF4444'}}>{toast.message}</div>}
       <div style={styles.content}>
         <div style={styles.pageHeader}>
-          <div><h1 style={styles.pageTitle}>Trainer Requests</h1><p style={styles.pageSubtitle}>Request external trainers</p></div>
-          <button onClick={() => setShowAddModal(true)} style={styles.addBtn} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#4338CA'; e.currentTarget.style.transform = 'scale(1.05)'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#4F46E5'; e.currentTarget.style.transform = 'scale(1)'; }}><FiUserPlus size={18} /> New Request</button>
+          <div>
+            <h1 style={styles.pageTitle}>Department Trainers</h1>
+            <p style={styles.pageSubtitle}>View and manage trainers in your department</p>
+          </div>
         </div>
+        
         <div style={styles.statsRow}>
-          {[{icon: <FiUsers size={24} />, value: requests.length, label: 'Total', bg: '#EEF2FF', color: '#4F46E5'}, {icon: <FiClock size={24} />, value: requests.filter(r => r.status === 'pending').length, label: 'Pending', bg: '#FEF3C7', color: '#F59E0B'}, {icon: <FiCheckCircle size={24} />, value: requests.filter(r => r.status === 'approved').length, label: 'Approved', bg: '#D1FAE5', color: '#10B981'}, {icon: <FiAlertCircle size={24} />, value: requests.filter(r => r.status === 'rejected').length, label: 'Rejected', bg: '#FEE2E2', color: '#EF4444'}].map((stat, i) => (
-            <div key={i} style={styles.statCard} onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.15)'; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)'; }}><div style={{...styles.statIcon, backgroundColor: stat.bg, color: stat.color}}>{stat.icon}</div><div style={styles.statContent}><div style={styles.statValue}>{stat.value}</div><div style={styles.statLabel}>{stat.label}</div></div></div>
+          {[
+            {icon: <FiUsers size={24} />, value: trainers.length, label: 'Total Trainers', bg: '#EEF2FF', color: '#4F46E5'}, 
+            {icon: <FiCheckCircle size={24} />, value: trainers.filter(t => t.isVerified).length, label: 'Verified', bg: '#D1FAE5', color: '#10B981'}, 
+            {icon: <FiClock size={24} />, value: trainers.filter(t => !t.isVerified).length, label: 'Pending', bg: '#FEF3C7', color: '#F59E0B'},
+            {icon: <FiBriefcase size={24} />, value: trainers.filter(t => t.eventsDelivered > 0).length, label: 'Active', bg: '#DBEAFE', color: '#3B82F6'}
+          ].map((stat, i) => (
+            <div key={i} style={styles.statCard} onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.15)'; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)'; }}>
+              <div style={{...styles.statIcon, backgroundColor: stat.bg, color: stat.color}}>{stat.icon}</div>
+              <div style={styles.statContent}>
+                <div style={styles.statValue}>{stat.value}</div>
+                <div style={styles.statLabel}>{stat.label}</div>
+              </div>
+            </div>
           ))}
         </div>
+        
         <div style={styles.controlsBar}>
-          <div style={styles.searchBox}><FiSearch size={18} color="#6B7280" /><input type="text" placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={styles.searchInput} /></div>
-          <div style={styles.filterGroup}><FiFilter size={16} /><span>Status:</span><div style={styles.filterButtons}>{['all', 'pending', 'approved', 'rejected'].map(status => (<button key={status} onClick={() => setFilterStatus(status)} style={{...styles.filterBtn, backgroundColor: filterStatus === status ? '#4F46E5' : '#FFF', color: filterStatus === status ? '#FFF' : '#6B7280'}} onMouseEnter={(e) => { if (filterStatus !== status) { e.currentTarget.style.backgroundColor = '#F3F4F6'; e.currentTarget.style.transform = 'scale(1.05)'; }}} onMouseLeave={(e) => { if (filterStatus !== status) { e.currentTarget.style.backgroundColor = '#FFF'; e.currentTarget.style.transform = 'scale(1)'; }}}>{status.charAt(0).toUpperCase() + status.slice(1)}</button>))}</div></div>
+          <div style={styles.searchBox}>
+            <FiSearch size={18} color="#6B7280" />
+            <input type="text" placeholder="Search by name, organization, or email..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={styles.searchInput} />
+          </div>
+          <div style={styles.filterGroup}>
+            <FiFilter size={16} />
+            <span>Status:</span>
+            <div style={styles.filterButtons}>
+              {['all', 'verified', 'pending'].map(status => (
+                <button 
+                  key={status} 
+                  onClick={() => setFilterStatus(status)} 
+                  style={{...styles.filterBtn, backgroundColor: filterStatus === status ? '#4F46E5' : '#FFF', color: filterStatus === status ? '#FFF' : '#6B7280'}} 
+                  onMouseEnter={(e) => { if (filterStatus !== status) { e.currentTarget.style.backgroundColor = '#F3F4F6'; e.currentTarget.style.transform = 'scale(1.05)'; }}} 
+                  onMouseLeave={(e) => { if (filterStatus !== status) { e.currentTarget.style.backgroundColor = '#FFF'; e.currentTarget.style.transform = 'scale(1)'; }}}
+                >
+                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
-        <div style={styles.requestsList}>{filteredRequests.length === 0 ? <div style={styles.emptyState}><FiUsers size={48} color="#9CA3AF" /><p>No requests</p></div> : filteredRequests.map(request => { const statusStyle = getStatusColor(request.status); return (<div key={request.id} style={styles.requestCard} onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.12)'; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)'; }}><div style={styles.requestHeader}><div><h3 style={styles.trainerName}>{request.trainerName}</h3><div style={styles.trainerMeta}><span><FiBriefcase size={14} /> {request.organization}</span><span>{request.domain}</span></div></div><div style={{...styles.statusBadge, backgroundColor: statusStyle.bg, color: statusStyle.color}}>{statusStyle.icon}<span>{request.status}</span></div></div><div><h4>{request.programName}</h4><div style={styles.programDetails}><div style={styles.detailItem}><FiCalendar size={14} /><span>{request.date}</span></div><div style={styles.detailItem}><FiClock size={14} /><span>{request.startTime} - {request.endTime}</span></div><div style={styles.detailItem}><FiMapPin size={14} /><span>{request.venue}</span></div></div></div><div style={styles.requestFooter}><div>Budget: \u20b9{request.budget.toLocaleString()}</div><div style={styles.actionButtons}>{request.status === 'pending' && (<><button onClick={() => handleApprove(request.id)} style={styles.approveBtn} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#059669'; e.currentTarget.style.transform = 'scale(1.05)'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#10B981'; e.currentTarget.style.transform = 'scale(1)'; }}><FiCheckCircle size={14} /> Approve</button><button onClick={() => handleReject(request.id)} style={styles.rejectBtn} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#DC2626'; e.currentTarget.style.transform = 'scale(1.05)'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#EF4444'; e.currentTarget.style.transform = 'scale(1)'; }}><FiAlertCircle size={14} /> Reject</button></>)}<button onClick={() => openEditModal(request)} style={styles.editBtn} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#DBEAFE'; e.currentTarget.style.transform = 'scale(1.1)'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#F3F4F6'; e.currentTarget.style.transform = 'scale(1)'; }}><FiEdit size={16} /></button><button onClick={() => handleDeleteRequest(request.id)} style={styles.deleteBtn} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#FCA5A5'; e.currentTarget.style.transform = 'scale(1.1)'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.transform = 'scale(1)'; }}><FiTrash2 size={16} /></button></div></div></div>); })}</div>
+        
+        <div style={styles.requestsList}>
+          {loading ? (
+            <div style={styles.emptyState}>
+              <FiUsers size={48} color="#9CA3AF" />
+              <p>Loading trainers...</p>
+            </div>
+          ) : filteredTrainers.length === 0 ? (
+            <div style={styles.emptyState}>
+              <FiUsers size={48} color="#9CA3AF" />
+              <p>No trainers found in your department</p>
+              <p style={{fontSize: '14px', color: '#9CA3AF', marginTop: '8px'}}>
+                Trainers will appear here once they register with your department
+              </p>
+            </div>
+          ) : (
+            filteredTrainers.map(trainer => {
+              const statusStyle = getStatusColor(trainer.isVerified);
+              return (
+                <div key={trainer._id} style={styles.requestCard} onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.12)'; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)'; }}>
+                  <div style={styles.requestHeader}>
+                    <div>
+                      <h3 style={styles.trainerName}>{trainer.name}</h3>
+                      <div style={styles.trainerMeta}>
+                        <span><FiBriefcase size={14} /> {trainer.organization || 'N/A'}</span>
+                        <span>{trainer.designation || 'Trainer'}</span>
+                      </div>
+                    </div>
+                    <div style={{...styles.statusBadge, backgroundColor: statusStyle.bg, color: statusStyle.color}}>
+                      {statusStyle.icon}
+                      <span>{trainer.isVerified ? 'Verified' : 'Pending'}</span>
+                    </div>
+                  </div>
+                  
+                  <div style={{marginTop: '16px'}}>
+                    <div style={styles.programDetails}>
+                      <div style={styles.detailItem}>
+                        <FiMail size={14} />
+                        <span>{trainer.email}</span>
+                      </div>
+                      <div style={styles.detailItem}>
+                        <FiPhone size={14} />
+                        <span>{trainer.phone}</span>
+                      </div>
+                      {trainer.experience && (
+                        <div style={styles.detailItem}>
+                          <FiBriefcase size={14} />
+                          <span>{trainer.experience} years experience</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {trainer.expertise && trainer.expertise.length > 0 && (
+                      <div style={{marginTop: '12px'}}>
+                        <strong style={{fontSize: '13px', color: '#6B7280'}}>Expertise: </strong>
+                        <span style={{fontSize: '13px', color: '#374151'}}>
+                          {trainer.expertise.map(e => e.domain).join(', ')}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div style={styles.requestFooter}>
+                    <div style={{fontSize: '14px', color: '#6B7280'}}>
+                      <strong>Events Delivered:</strong> {trainer.eventsDelivered || 0} | 
+                      <strong style={{marginLeft: '12px'}}>Rating:</strong> {trainer.ratings?.averageRating?.toFixed(1) || 'N/A'} ⭐
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
       </div>
     </div>
   );

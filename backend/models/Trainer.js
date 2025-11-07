@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
 const trainerSchema = new mongoose.Schema(
   {
@@ -11,8 +12,15 @@ const trainerSchema = new mongoose.Schema(
     email: {
       type: String,
       required: true,
+      unique: true,
       lowercase: true,
       match: [/^\S+@\S+\.\S+$/, 'Please provide a valid email'],
+    },
+    password: {
+      type: String,
+      required: [true, 'Please provide a password'],
+      minlength: [6, 'Password must be at least 6 characters'],
+      select: false, // Don't return password by default
     },
     phone: {
       type: String,
@@ -24,6 +32,16 @@ const trainerSchema = new mongoose.Schema(
       type: String,
       enum: ['Internal', 'External', 'Guest'],
       default: 'External',
+    },
+    university: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'University',
+      required: [true, 'University is required'],
+    },
+    department: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Department',
+      required: [true, 'Department is required'],
     },
     organization: {
       type: String,
@@ -135,7 +153,18 @@ const trainerSchema = new mongoose.Schema(
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
+    },
+    lastLogin: {
+      type: Date,
+    },
+    passwordChangedAt: {
+      type: Date,
+    },
+    passwordResetToken: {
+      type: String,
+    },
+    passwordResetExpires: {
+      type: Date,
     },
   },
   {
@@ -147,5 +176,19 @@ trainerSchema.index({ email: 1 });
 trainerSchema.index({ phone: 1 });
 trainerSchema.index({ type: 1 });
 trainerSchema.index({ 'expertise.domain': 1 });
+
+// Encrypt password before saving
+trainerSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) {
+    next();
+  }
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+});
+
+// Match trainer entered password to hashed password in database
+trainerSchema.methods.matchPassword = async function (enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
+};
 
 module.exports = mongoose.model('Trainer', trainerSchema);

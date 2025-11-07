@@ -46,38 +46,64 @@ const StudentManagement = () => {
   });
 
   useEffect(() => {
-    // Fetch real students data from API
-    const fetchStudents = async () => {
-      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-      
-      if (!token) {
-        console.error('No authentication token found');
-        return;
-      }
-
-      try {
-        // TODO: Implement backend API endpoint
-        // const response = await fetch(`${API_BASE_URL}/hod/students`, {
-        //   headers: {
-        //     'Authorization': `Bearer ${token}`,
-        //     'Content-Type': 'application/json'
-        //   }
-        // });
-        
-        // For now, set empty array until API is implemented
-        setStudents([]);
-        setFilteredStudents([]);
-        console.log('Students data ready for API integration');
-      } catch (error) {
-        console.error('Error fetching students:', error);
-        setStudents([]);
-        setFilteredStudents([]);
-      }
-    };
-
     fetchStudents();
   }, []);
+
+  const fetchStudents = async () => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    
+    if (!token) {
+      showToast('Authentication required', 'error');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/hod/students`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch students');
+      }
+
+      const data = await response.json();
+      console.log('Students data received:', data);
+      
+      // Transform data to match component structure
+      const studentsData = (data.data || []).map(student => ({
+        id: student._id,
+        rollNo: student.rollNumber || 'N/A',
+        name: `${student.firstName || ''} ${student.lastName || ''}`.trim() || student.name || 'Unknown',
+        email: student.email || 'N/A',
+        phone: student.phone || 'N/A',
+        year: student.year?.toString() || '1',
+        section: student.section || 'A',
+        department: student.department?.name || 'N/A',
+        cgpa: student.cgpa || 'N/A',
+        profilePicture: student.profilePicture,
+        eventsParticipated: 0,
+        performanceMetrics: {
+          averageScore: 0
+        }
+      }));
+
+      setStudents(studentsData);
+      setFilteredStudents(studentsData);
+      
+      if (studentsData.length === 0) {
+        showToast('No students found in your department', 'info');
+      }
+    } catch (error) {
+      console.error('Error fetching students:', error);
+      showToast(error.message || 'Failed to fetch students', 'error');
+      setStudents([]);
+      setFilteredStudents([]);
+    }
+  };
 
   useEffect(() => {
     let filtered = students;
@@ -215,22 +241,8 @@ const StudentManagement = () => {
         <div style={styles.pageHeader}>
           <div>
             <h1 style={styles.pageTitle}>Student Management</h1>
-            <p style={styles.pageSubtitle}>Manage department students and track their performance</p>
+            <p style={styles.pageSubtitle}>View and track department students and their performance</p>
           </div>
-          <button 
-            onClick={() => openModal()}
-            style={styles.addBtn}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#4338CA';
-              e.currentTarget.style.transform = 'scale(1.05)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#4F46E5';
-              e.currentTarget.style.transform = 'scale(1)';
-            }}
-          >
-            <FiUserPlus size={18} /> Add Student
-          </button>
         </div>
 
         {/* Stats Cards */}
@@ -346,12 +358,6 @@ const StudentManagement = () => {
                           <div style={styles.actionButtons}>
                             <button onClick={() => handleViewDetails(s)} style={styles.viewDetailsBtn} title="View Details" onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#EEF2FF'; e.currentTarget.style.transform = 'scale(1.1)'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#F3F4F6'; e.currentTarget.style.transform = 'scale(1)'; }}>
                               <FiEye size={16} />
-                            </button>
-                            <button onClick={() => openModal(s)} style={styles.editBtn} title="Edit" onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#DBEAFE'; e.currentTarget.style.transform = 'scale(1.1)'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#F3F4F6'; e.currentTarget.style.transform = 'scale(1)'; }}>
-                              <FiEdit size={16} />
-                            </button>
-                            <button onClick={() => handleDelete(s.id)} style={styles.deleteBtn} title="Delete" onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#FCA5A5'; e.currentTarget.style.transform = 'scale(1.1)'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.transform = 'scale(1)'; }}>
-                              <FiTrash2 size={16} />
                             </button>
                           </div>
                         </td>

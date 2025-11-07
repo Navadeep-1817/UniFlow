@@ -29,6 +29,16 @@ const {
   getTrainerById,
   updateTrainer,
   deleteTrainer,
+  // Trainer Auth Functions
+  registerTrainer,
+  loginTrainer,
+  getProfile,
+  updateTrainerProfile,
+  getAssignedEvents,
+  getSchedule,
+  updateAvailability,
+  getStatistics,
+  updatePassword,
 } = require('../controllers/trainerController');
 
 const {
@@ -38,7 +48,31 @@ const {
   canAccessResource,
 } = require('../middleware/authMiddleware');
 
+const { protectTrainer, requireVerified } = require('../middleware/trainerAuth');
+
 const router = express.Router();
+
+// ==================== TRAINER AUTH ROUTES (PUBLIC) ====================
+router.post('/register', registerTrainer);
+router.post('/login', loginTrainer);
+
+// ==================== TRAINER PORTAL ROUTES (PROTECTED) ====================
+// Profile management
+router.get('/profile', protectTrainer, getProfile);
+router.put('/profile', protectTrainer, updateTrainerProfile);
+router.put('/update-password', protectTrainer, updatePassword);
+
+// Statistics
+router.get('/statistics', protectTrainer, getStatistics);
+
+// Events & Schedule (Require verification)
+router.get('/events', protectTrainer, requireVerified, getAssignedEvents);
+router.get('/schedule', protectTrainer, requireVerified, getSchedule);
+
+// Availability
+router.put('/availability', protectTrainer, updateAvailability);
+
+// ==================== ADMIN ROUTES (PROTECTED) ====================
 
 /**
  * 🔒 Protect all trainer routes (JWT required)
@@ -46,23 +80,13 @@ const router = express.Router();
 router.use(protect);
 
 /**
- * @route   POST /api/trainers
- * @desc    Create a new trainer
- * @access  Private (Super Admin, HOD, Faculty)
- */
-router.post(
-  '/',
-  authorize('superadmin', 'academic_admin_hod', 'faculty'),
-  createTrainer
-);
-
-/**
- * @route   GET /api/trainers
- * @desc    Get all trainers
+ * @route   GET /api/trainers/admin/all
+ * @desc    Get all trainers (Admin view)
  * @access  Private (Admin roles + Faculty)
  */
 router.get(
-  '/',
+  '/admin/all',
+  protect,
   authorize(
     'superadmin',
     'academic_admin_hod',
@@ -75,12 +99,13 @@ router.get(
 );
 
 /**
- * @route   GET /api/trainers/:id
- * @desc    Get trainer by ID
+ * @route   GET /api/trainers/admin/:id
+ * @desc    Get trainer by ID (Admin view)
  * @access  Private (All authorized users)
  */
 router.get(
-  '/:id',
+  '/admin/:id',
+  protect,
   authorize(
     'superadmin',
     'academic_admin_hod',
@@ -93,22 +118,35 @@ router.get(
 );
 
 /**
- * @route   PUT /api/trainers/:id
- * @desc    Update a trainer
+ * @route   POST /api/trainers/admin/create
+ * @desc    Create a new trainer (Admin function)
+ * @access  Private (Super Admin, HOD, Faculty)
+ */
+router.post(
+  '/admin/create',
+  protect,
+  authorize('superadmin', 'academic_admin_hod', 'faculty'),
+  createTrainer
+);
+
+/**
+ * @route   PUT /api/trainers/admin/:id
+ * @desc    Update a trainer (Admin function)
  * @access  Private (Super Admin, HOD, Faculty)
  */
 router.put(
-  '/:id',
+  '/admin/:id',
+  protect,
   authorize('superadmin', 'academic_admin_hod', 'faculty'),
   sameDepartment,
   updateTrainer
 );
 
 /**
- * @route   DELETE /api/trainers/:id
+ * @route   DELETE /api/trainers/admin/:id
  * @desc    Delete a trainer
  * @access  Private (Super Admin only)
  */
-router.delete('/:id', authorize('superadmin'), deleteTrainer);
+router.delete('/admin/:id', protect, authorize('superadmin'), deleteTrainer);
 
 module.exports = router;

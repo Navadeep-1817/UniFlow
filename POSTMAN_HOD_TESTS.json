@@ -1,0 +1,329 @@
+{
+  "info": {
+    "name": "HOD Department APIs",
+    "description": "Test collection for HOD faculty and student endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Login as HOD",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "    var jsonData = pm.response.json();",
+              "    pm.environment.set('hod_token', jsonData.token);",
+              "    pm.environment.set('hod_user_id', jsonData.data.user._id);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"hod.cse@tui.edu.in\",\n  \"password\": \"hod123\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:5000/api/auth/login",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        },
+        "description": "Login as HOD of Computer Science department"
+      },
+      "response": []
+    },
+    {
+      "name": "2. Get Department Faculty",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response has success field', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('success');",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "});",
+              "",
+              "pm.test('Response has data array', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('data');",
+              "    pm.expect(jsonData.data).to.be.an('array');",
+              "});",
+              "",
+              "pm.test('Faculty has required fields', function () {",
+              "    var jsonData = pm.response.json();",
+              "    if (jsonData.data.length > 0) {",
+              "        var faculty = jsonData.data[0];",
+              "        pm.expect(faculty).to.have.property('firstName');",
+              "        pm.expect(faculty).to.have.property('lastName');",
+              "        pm.expect(faculty).to.have.property('email');",
+              "        pm.expect(faculty).to.have.property('phone');",
+              "    }",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{hod_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:5000/api/hod/faculty",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "hod",
+            "faculty"
+          ]
+        },
+        "description": "Get all faculty members from HOD's department (Computer Science)"
+      },
+      "response": []
+    },
+    {
+      "name": "3. Get Department Students",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response has success field', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('success');",
+              "    pm.expect(jsonData.success).to.be.true;",
+              "});",
+              "",
+              "pm.test('Response has data array', function () {",
+              "    var jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.have.property('data');",
+              "    pm.expect(jsonData.data).to.be.an('array');",
+              "});",
+              "",
+              "pm.test('Students has required fields', function () {",
+              "    var jsonData = pm.response.json();",
+              "    if (jsonData.data.length > 0) {",
+              "        var student = jsonData.data[0];",
+              "        pm.expect(student).to.have.property('firstName');",
+              "        pm.expect(student).to.have.property('lastName');",
+              "        pm.expect(student).to.have.property('email');",
+              "        pm.expect(student).to.have.property('rollNumber');",
+              "        pm.expect(student).to.have.property('year');",
+              "        pm.expect(student).to.have.property('section');",
+              "    }",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{hod_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:5000/api/hod/students",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "hod",
+            "students"
+          ]
+        },
+        "description": "Get all students from HOD's department (Computer Science)"
+      },
+      "response": []
+    },
+    {
+      "name": "4. Get Students - Filter by Year",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{hod_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:5000/api/hod/students?year=1",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "hod",
+            "students"
+          ],
+          "query": [
+            {
+              "key": "year",
+              "value": "1",
+              "description": "Filter by year (1, 2, 3, or 4)"
+            }
+          ]
+        },
+        "description": "Get students filtered by year"
+      },
+      "response": []
+    },
+    {
+      "name": "5. Get Students - Filter by Section",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{hod_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:5000/api/hod/students?section=A",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "hod",
+            "students"
+          ],
+          "query": [
+            {
+              "key": "section",
+              "value": "A",
+              "description": "Filter by section (A, B, C, etc.)"
+            }
+          ]
+        },
+        "description": "Get students filtered by section"
+      },
+      "response": []
+    },
+    {
+      "name": "6. Get Students - Search",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{hod_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:5000/api/hod/students?search=john",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "hod",
+            "students"
+          ],
+          "query": [
+            {
+              "key": "search",
+              "value": "john",
+              "description": "Search by name, email, or roll number"
+            }
+          ]
+        },
+        "description": "Search students by name, email, or roll number"
+      },
+      "response": []
+    },
+    {
+      "name": "7. Get Dashboard Stats",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{hod_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "http://localhost:5000/api/hod/dashboard-stats",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "api",
+            "hod",
+            "dashboard-stats"
+          ]
+        },
+        "description": "Get HOD dashboard statistics including faculty count, student count, events count"
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000/api"
+    }
+  ]
+}

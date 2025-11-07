@@ -32,7 +32,6 @@ const HODTopNav = () => {
     { path: '/hod/students', label: 'Students', icon: <FiUserCheck size={16} /> },
     { path: '/hod/events', label: 'Events', icon: <FiCalendar size={16} /> },
     { path: '/hod/allocation', label: 'Allocation', icon: <FiGrid size={16} /> },
-    { path: '/hod/venue', label: 'Venue', icon: <FiMapPin size={16} /> },
     { path: '/hod/trainers', label: 'Trainers', icon: <FiAward size={16} /> },
     { path: '/hod/analytics', label: 'Analytics', icon: <FiBarChart size={16} /> },
     { path: '/hod/attendance', label: 'Attendance', icon: <FiCheckCircle size={16} /> }

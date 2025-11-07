@@ -43,7 +43,8 @@ const Register = () => {
     { value: 'placement', label: 'Training & Placement Head' },
     { value: 'faculty_head', label: 'Student Body - Faculty Head' },
     { value: 'team_rep', label: 'Student Body - Team Representative' },
-    { value: 'sports', label: 'Sports Administrator' }
+    { value: 'sports', label: 'Sports Administrator' },
+    { value: 'trainer', label: 'Trainer' }
   ];
 
   // Fetch universities on component mount
@@ -172,6 +173,11 @@ const Register = () => {
 
   const handleNext = () => {
     if (validateStep()) {
+      // Redirect to trainer registration if trainer role is selected
+      if (step === 1 && formData.role === 'trainer') {
+        navigate('/trainer/register');
+        return;
+      }
       setStep(step + 1);
     }
   };
