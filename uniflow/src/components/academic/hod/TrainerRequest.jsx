@@ -19,11 +19,14 @@ const TrainerRequest = () => {
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     if (!token) {
       showToast('Please login to continue', 'error');
+      setLoading(false);
       return;
     }
     
     try {
       setLoading(true);
+      console.log('Fetching trainers from:', `${API_BASE_URL}/hod/trainers`);
+      
       const response = await fetch(`${API_BASE_URL}/hod/trainers`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -32,10 +35,15 @@ const TrainerRequest = () => {
       });
 
       const data = await response.json();
+      console.log('Trainers response:', data);
+      console.log('Trainers count:', data.count);
+      console.log('Trainers data array:', data.data);
       
       if (response.ok && data.success) {
+        console.log('Trainers received:', data.data);
         setTrainers(data.data || []);
       } else {
+        console.error('Failed to fetch trainers:', data.message);
         showToast(data.message || 'Failed to fetch trainers', 'error');
         setTrainers([]);
       }

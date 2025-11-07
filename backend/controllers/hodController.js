@@ -442,7 +442,7 @@ const allocateTrainerToEvent = asyncHandler(async (req, res) => {
     });
   }
 
-  // Check if trainer exists and is verified
+  // Check if trainer exists
   if (trainerId) {
     const trainer = await Trainer.findById(trainerId);
     if (!trainer) {
@@ -451,12 +451,8 @@ const allocateTrainerToEvent = asyncHandler(async (req, res) => {
         message: 'Trainer not found'
       });
     }
-    if (!trainer.isVerified) {
-      return res.status(400).json({
-        success: false,
-        message: 'Trainer is not verified yet. Please select a verified trainer.'
-      });
-    }
+    // Allow HOD to allocate even non-verified trainers
+    // Verification can happen after allocation
   }
 
   event.trainer = trainerId || null;
@@ -486,11 +482,13 @@ const getVerifiedTrainers = asyncHandler(async (req, res) => {
     });
   }
 
+  console.log('HOD Department ID:', hod.department._id);
+
   const { search, expertise } = req.query;
 
   const query = {
     isActive: true,
-    isVerified: true,
+    // Removed isVerified requirement so HOD can see pending trainers too
     department: hod.department._id // Only trainers from HOD's department
   };
 
@@ -508,11 +506,15 @@ const getVerifiedTrainers = asyncHandler(async (req, res) => {
     query['expertise.domain'] = { $regex: expertise, $options: 'i' };
   }
 
+  console.log('Trainer Query:', JSON.stringify(query, null, 2));
+
   const trainers = await Trainer.find(query)
     .select('name email phone organization designation experience expertise ratings eventsDelivered')
     .populate('university', 'name')
     .populate('department', 'name')
     .sort('-ratings.averageRating');
+
+  console.log('Trainers found:', trainers.length);
 
   res.status(200).json({
     success: true,
