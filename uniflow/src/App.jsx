@@ -57,7 +57,16 @@ import AthleticsReport from './components/nonacademic/sports/AthleticsReport';
 import ResultsManagement from './components/nonacademic/sports/ResultsManagement';
 import FixtureScheduling from './components/nonacademic/sports/FixtureScheduling';
 import FacultyHeadDashboard from './components/nonacademic/studentbody/facultyhead/FacultyHeadDashboard';
-import TeamRepDashboard from './components/nonacademic/studentbody/teamrep/TeamRepDashboard';
+import { 
+  TeamRepDashboard,
+  ProposeEvent,
+  ManageTeamMembers,
+  EventExecution,
+  AttendanceTracking,
+  FeedbackCollection,
+  ActivityReport,
+  ResourceRequest
+} from './components/nonacademic/studentbody/teamrep';
 
 function App() {
   return (
@@ -125,8 +134,24 @@ function App() {
         <Route path="/placement/reports" element={<PlacementReports />} />
         
         {/* Student Body Routes */}
+        {/* Faculty Head Routes */}
         <Route path="/student-body/faculty-head/dashboard" element={<FacultyHeadDashboard />} />
-        <Route path="/student-body/team-rep/dashboard" element={<TeamRepDashboard />} />
+        
+        {/* Legacy redirect for old student_body role */}
+        <Route path="/student-body/dashboard" element={<Navigate to="/teamrep/dashboard" replace />} />
+        
+        {/* Team Rep Routes */}
+        <Route path="/teamrep/dashboard" element={<TeamRepDashboard />} />
+        <Route path="/teamrep/propose-event" element={<ProposeEvent />} />
+        <Route path="/teamrep/manage-members" element={<ManageTeamMembers />} />
+        <Route path="/teamrep/event-execution" element={<EventExecution />} />
+        <Route path="/teamrep/activity-report" element={<ActivityReport />} />
+        <Route path="/teamrep/attendance" element={<AttendanceTracking />} />
+        <Route path="/teamrep/feedback" element={<FeedbackCollection />} />
+        <Route path="/teamrep/resource-request" element={<ResourceRequest />} />
+        
+        {/* Legacy route - redirect to new path */}
+        <Route path="/student-body/team-rep/dashboard" element={<Navigate to="/teamrep/dashboard" replace />} />
         
         {/* Sports Routes */}
         <Route path="/sports/dashboard" element={<SportsDashboard />} />
