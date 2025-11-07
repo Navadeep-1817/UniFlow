@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../context/AuthContext';
 import HODTopNav from './HODTopNav';
 import { 
   FiUsers,
@@ -20,77 +21,49 @@ import {
 
 const HODDashboard = () => {
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   const [stats, setStats] = useState({});
   const [recentActivities, setRecentActivities] = useState([]);
   const [quickStats, setQuickStats] = useState({});
+  const [hodInfo, setHodInfo] = useState({
+    name: '',
+    employeeId: '',
+    department: '',
+    university: ''
+  });
 
   useEffect(() => {
-    // Mock department statistics
-    const mockStats = {
-      totalFaculty: 45,
-      totalStudents: 560,
-      ongoingEvents: 8,
-      upcomingEvents: 12,
-      completedEvents: 34,
-      pendingApprovals: 5,
-      resourceUtilization: 78,
-      attendanceRate: 85
-    };
+    // Load HOD data from user context
+    if (user) {
+      setHodInfo({
+        name: user.name || 'HOD',
+        employeeId: user.employeeId || 'N/A',
+        department: user.department?.name || user.department || 'N/A',
+        university: user.university?.name || user.university || 'N/A'
+      });
+    }
+  }, [user]);
 
-    const mockQuickStats = {
-      todayEvents: 3,
-      pendingLeaves: 2,
-      venueBookings: 7,
-      trainerRequests: 4
-    };
+  useEffect(() => {
+    // Fetch real data from API
+    const fetchDashboardData = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
 
-    const mockActivities = [
-      {
-        id: 1,
-        type: 'event',
-        title: 'New Event Created',
-        description: 'AI & ML Workshop scheduled for Nov 25-27',
-        timestamp: '2 hours ago',
-        icon: 'calendar'
-      },
-      {
-        id: 2,
-        type: 'approval',
-        title: 'Leave Request Approved',
-        description: 'Dr. Priya Sharma - Medical Leave on Nov 20',
-        timestamp: '4 hours ago',
-        icon: 'check'
-      },
-      {
-        id: 3,
-        type: 'resource',
-        title: 'Venue Booked',
-        description: 'Auditorium A reserved for Campus Drive',
-        timestamp: '5 hours ago',
-        icon: 'map'
-      },
-      {
-        id: 4,
-        type: 'faculty',
-        title: 'Faculty Allocated',
-        description: 'Prof. Rajesh assigned to Web Development SDP',
-        timestamp: '1 day ago',
-        icon: 'user'
-      },
-      {
-        id: 5,
-        type: 'alert',
-        title: 'Low Attendance Alert',
-        description: 'CRT Training - Session 5 (68% attendance)',
-        timestamp: '1 day ago',
-        icon: 'alert'
+      try {
+        // TODO: Implement backend API endpoints
+        // For now, initialize with empty/zero values
+        setStats({});
+        setQuickStats({});
+        setRecentActivities([]);
+      } catch (error) {
+        console.error('Error fetching HOD dashboard data:', error);
       }
-    ];
+    };
 
-    setStats(mockStats);
-    setQuickStats(mockQuickStats);
-    setRecentActivities(mockActivities);
+    fetchDashboardData();
   }, []);
+
 
   const getActivityIcon = (type) => {
     const icons = {

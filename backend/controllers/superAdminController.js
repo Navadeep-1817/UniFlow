@@ -6,7 +6,15 @@ const { ROLES } = require('../config/roles');
 
 // GET /api/superadmin/pending-approvals
 exports.getPendingApprovals = asyncHandler(async (req, res) => {
-  const pending = await User.find({ isApproved: false }).select('-password').populate('university', 'name code');
+  // Exclude students from approval queue as they are auto-approved
+  const pending = await User.find({ 
+    isApproved: false,
+    role: { $ne: 'student' } // Exclude students
+  })
+  .select('-password')
+  .populate('university', 'name code')
+  .populate('department', 'name code');
+  
   res.status(200).json({ success: true, count: pending.length, data: pending });
 });
 

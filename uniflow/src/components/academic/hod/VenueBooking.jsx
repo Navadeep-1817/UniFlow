@@ -9,13 +9,21 @@ const VenueBooking = () => {
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
 
   useEffect(() => {
-    const mockBookings = [
-      { id: 1, venueName: 'Conference Hall A', venueType: 'Seminar Hall', capacity: 100, eventName: 'AI Workshop', eventType: 'FDP', requestedBy: 'Dr. Priya Sharma', department: 'CSE', date: '2024-12-15', startTime: '09:00', endTime: '17:00', attendees: 60, purpose: 'Faculty Development Program on AI', status: 'pending', requestedOn: '2024-11-20' },
-      { id: 2, venueName: 'Computer Lab 1', venueType: 'Lab', capacity: 60, eventName: 'Python Workshop', eventType: 'SDP', requestedBy: 'Prof. Rajesh Kumar', department: 'CSE', date: '2024-12-18', startTime: '10:00', endTime: '16:00', attendees: 50, purpose: 'Student skill development', status: 'approved', requestedOn: '2024-11-18' },
-      { id: 3, venueName: 'Auditorium', venueType: 'Auditorium', capacity: 300, eventName: 'Tech Fest', eventType: 'Event', requestedBy: 'Student Council', department: 'CSE', date: '2024-12-25', startTime: '09:00', endTime: '18:00', attendees: 250, purpose: 'Annual technical festival', status: 'approved', requestedOn: '2024-11-15' },
-      { id: 4, venueName: 'Seminar Room 201', venueType: 'Classroom', capacity: 40, eventName: 'Guest Lecture', eventType: 'Workshop', requestedBy: 'Dr. Anita Desai', department: 'CSE', date: '2024-12-10', startTime: '14:00', endTime: '16:00', attendees: 35, purpose: 'Industry expert session', status: 'rejected', rejectionReason: 'Venue already booked', requestedOn: '2024-11-10' }
-    ];
-    setBookings(mockBookings);
+    // Fetch real venue bookings from API
+    const fetchBookings = async () => {
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      if (!token) return;
+      
+      try {
+        // TODO: Implement API endpoint
+        setBookings([]);
+        console.log('Venue bookings ready for API integration');
+      } catch (error) {
+        console.error('Error fetching venue bookings:', error);
+        setBookings([]);
+      }
+    };
+    fetchBookings();
   }, []);
 
   const showToast = (message, type = 'success') => { setToast({ show: true, message, type }); setTimeout(() => setToast({ show: false, message: '', type: '' }), 3000); };

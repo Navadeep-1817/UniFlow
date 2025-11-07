@@ -4,48 +4,71 @@ import { useNavigate } from 'react-router-dom';
 const GlobalAnalytics = () => {
   const navigate = useNavigate();
   const [analyticsData, setAnalyticsData] = useState({
-    totalUniversities: 4,
-    totalStudents: 2450,
-    totalFaculty: 387,
-    totalEvents: 156,
-    activeEvents: 23
+    totalUniversities: 0,
+    totalStudents: 0,
+    totalFaculty: 0,
+    totalEvents: 0,
+    activeEvents: 0
   });
 
-  const universityData = [
-    { name: 'MIT University', students: 850, faculty: 120, color: '#4F46E5' },
-    { name: 'Stanford College', students: 620, faculty: 95, color: '#10B981' },
-    { name: 'Harvard Institute', students: 540, faculty: 87, color: '#F59E0B' },
-    { name: 'Oxford Academy', students: 440, faculty: 85, color: '#EF4444' }
-  ];
-
-  const eventTrends = [
-    { month: 'Jan', events: 12 },
-    { month: 'Feb', events: 18 },
-    { month: 'Mar', events: 15 },
-    { month: 'Apr', events: 22 },
-    { month: 'May', events: 28 },
-    { month: 'Jun', events: 25 }
-  ];
-
-  const userGrowth = [
-    { month: 'Jan', users: 1850 },
-    { month: 'Feb', users: 2050 },
-    { month: 'Mar', users: 2250 },
-    { month: 'Apr', users: 2450 },
-    { month: 'May', users: 2650 },
-    { month: 'Jun', users: 2837 }
-  ];
-
-  const departmentData = [
-    { name: 'Computer Science', events: 45, color: '#4F46E5' },
-    { name: 'Mechanical', events: 32, color: '#10B981' },
-    { name: 'Civil', events: 28, color: '#F59E0B' },
-    { name: 'Electrical', events: 35, color: '#EF4444' },
-    { name: 'Electronics', events: 16, color: '#8B5CF6' }
-  ];
+  const [universityData, setUniversityData] = useState([]);
+  const [eventTrends, setEventTrends] = useState([]);
+  const [userGrowth, setUserGrowth] = useState([]);
+  const [departmentData, setDepartmentData] = useState([]);
 
   useEffect(() => {
-    // Fetch cross-university analytics - mock data for now
+    // Fetch real analytics from backend API
+    const fetchAnalytics = async () => {
+      // Check both localStorage and sessionStorage for token
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      
+      if (!token) {
+        console.error('No authentication token found');
+        return;
+      }
+
+      try {
+        // Fetch stats
+        const statsResponse = await fetch(`${API_BASE_URL}/superadmin/stats`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (statsResponse.ok) {
+          const statsData = await statsResponse.json();
+          if (statsData.success) {
+            const data = statsData.data;
+            // Calculate analytics
+            const totalStudents = (data.byRole || []).find(r => r._id === 'student')?.count || 0;
+            const totalFaculty = (data.byRole || []).find(r => r._id === 'faculty')?.count || 0;
+            
+            setAnalyticsData({
+              totalUniversities: data.totalUniversities || 0,
+              totalStudents: totalStudents,
+              totalFaculty: totalFaculty,
+              totalEvents: 0, // TODO: Add events count from backend
+              activeEvents: 0  // TODO: Add active events from backend
+            });
+          }
+        }
+
+        // TODO: Fetch university data, event trends, user growth, department data
+        // For now, keep as empty arrays
+        setUniversityData([]);
+        setEventTrends([]);
+        setUserGrowth([]);
+        setDepartmentData([]);
+
+        console.log('Analytics data loaded from database');
+      } catch (error) {
+        console.error('Error fetching analytics:', error);
+      }
+    };
+
+    fetchAnalytics();
   }, []);
 
   const handleLogout = () => {

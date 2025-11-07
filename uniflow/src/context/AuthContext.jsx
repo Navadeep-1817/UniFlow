@@ -13,9 +13,25 @@ export const AuthProvider = ({ children }) => {
     const checkAuth = async () => {
       try {
         if (authService.isAuthenticated()) {
-          const storedUser = authService.getStoredUser();
-          setUser(storedUser);
-          setIsAuthenticated(true);
+          // Fetch fresh user data from backend
+          try {
+            const response = await authService.getCurrentUser();
+            if (response.success && response.data.user) {
+              setUser(response.data.user);
+              setIsAuthenticated(true);
+            } else {
+              // Fallback to stored user data
+              const storedUser = authService.getStoredUser();
+              setUser(storedUser);
+              setIsAuthenticated(true);
+            }
+          } catch (apiError) {
+            console.error('Failed to fetch user from API, using stored data:', apiError);
+            // Fallback to stored user data
+            const storedUser = authService.getStoredUser();
+            setUser(storedUser);
+            setIsAuthenticated(true);
+          }
         }
       } catch (error) {
         console.error('Auth check failed:', error);

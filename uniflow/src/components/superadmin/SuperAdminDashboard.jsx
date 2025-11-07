@@ -17,10 +17,27 @@ const SuperAdminDashboard = () => {
     const userEmail = sessionStorage.getItem('userEmail') || localStorage.getItem('userEmail');
     const userRole = sessionStorage.getItem('userRole') || localStorage.getItem('userRole');
     const token = localStorage.getItem('token');
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    
     const fetchRemote = async () => {
-      if (!token) return loadMock();
+      if (!token) {
+        console.warn('No token found, loading mock data');
+        return loadMock();
+      }
+      
       try {
-        const statsRes = await fetch('/api/superadmin/stats', { headers: { Authorization: `Bearer ${token}` } });
+        const statsRes = await fetch(`${API_BASE_URL}/superadmin/stats`, { 
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          } 
+        });
+        
+        if (!statsRes.ok) {
+          console.error('Failed to fetch stats:', statsRes.status);
+          throw new Error(`HTTP ${statsRes.status}`);
+        }
+        
         const statsJson = await statsRes.json();
         if (statsJson && statsJson.success) {
           const data = statsJson.data;
@@ -30,17 +47,36 @@ const SuperAdminDashboard = () => {
           const totalFaculty = (data.byRole || []).find(r => r._id === 'faculty')?.count || 0;
           const totalAdmins = (data.byRole || []).filter(r => ['academic_admin_hod','academic_admin_tp','non_academic_faculty_head','non_academic_team_rep','superadmin'].includes(r._id)).reduce((s, r) => s + r.count, 0);
           setStats({ totalUsers, totalStudents, totalFaculty, totalAdmins });
+          console.log('Stats loaded:', { totalUsers, totalStudents, totalFaculty, totalAdmins });
         } else {
           loadMock();
         }
 
-        const usersRes = await fetch('/api/superadmin/users?limit=50', { headers: { Authorization: `Bearer ${token}` } });
-        const usersJson = await usersRes.json();
-        if (usersJson && usersJson.success) {
-          const mapped = usersJson.data.map(u => ({ id: u._id, name: u.name, email: u.email, role: u.role, department: u.department?.name || '', university: u.university?.name || '', status: u.isApproved ? 'Active' : 'Pending' }));
-          setUsers(mapped);
+        const usersRes = await fetch(`${API_BASE_URL}/superadmin/users?limit=50`, { 
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          } 
+        });
+        
+        if (usersRes.ok) {
+          const usersJson = await usersRes.json();
+          if (usersJson && usersJson.success) {
+            const mapped = usersJson.data.map(u => ({ 
+              id: u._id, 
+              name: u.name, 
+              email: u.email, 
+              role: u.role, 
+              department: u.department?.name || 'N/A', 
+              university: u.university?.name || 'N/A', 
+              status: u.isApproved ? 'Active' : 'Pending' 
+            }));
+            setUsers(mapped);
+            console.log('Users loaded:', mapped.length);
+          }
         }
       } catch (err) {
+        console.error('Error fetching superadmin data:', err);
         loadMock();
       }
     };

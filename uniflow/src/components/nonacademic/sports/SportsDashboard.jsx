@@ -1,9 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../context/AuthContext';
 import { FiHome, FiAward, FiTrendingUp, FiCalendar, FiMapPin, FiUsers } from 'react-icons/fi';
 
 const SportsDashboard = () => {
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
+  const [sportsCoordinatorInfo, setSportsCoordinatorInfo] = useState({
+    name: '',
+    employeeId: '',
+    university: ''
+  });
+  
   const [sportsStats, setSportsStats] = useState({
     totalEvents: 0,
     activeTeams: 0,
@@ -12,7 +20,34 @@ const SportsDashboard = () => {
   });
 
   useEffect(() => {
-    // Fetch sports events overview
+    // Load Sports Coordinator data from user context
+    if (user) {
+      setSportsCoordinatorInfo({
+        name: user.name || 'Sports Coordinator',
+        employeeId: user.employeeId || 'N/A',
+        university: user.university?.name || user.university || 'N/A'
+      });
+    }
+  }, [user]);
+
+  useEffect(() => {
+    // Fetch real data from API
+    const fetchDashboardData = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      try {
+        // TODO: Implement backend API endpoints
+        // GET /api/sports/stats
+        // GET /api/sports/events
+        // GET /api/sports/teams
+        console.log('Sports Dashboard ready for API integration');
+      } catch (error) {
+        console.error('Error fetching Sports dashboard data:', error);
+      }
+    };
+
+    fetchDashboardData();
   }, []);
 
   return (

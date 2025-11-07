@@ -15,123 +15,36 @@ const GlobalEventCalendar = () => {
   });
 
   useEffect(() => {
-    // Mock events data - In real app, this would be API call
-    const mockEvents = [
-      {
-        id: 1,
-        name: 'Tech Fest 2024',
-        university: 'JNTU Hyderabad',
-        department: 'Computer Science',
-        eventType: 'technical',
-        studentBody: 'Technical Club',
-        startDate: '2024-11-10',
-        endDate: '2024-11-12',
-        status: 'upcoming',
-        description: 'Annual technical festival with coding competitions, hackathons, and tech talks',
-        participants: 500,
-        venue: 'Main Auditorium'
-      },
-      {
-        id: 2,
-        name: 'Annual Sports Meet',
-        university: 'Osmania University',
-        department: 'Sports',
-        eventType: 'sports',
-        studentBody: 'Sports Committee',
-        startDate: '2024-11-08',
-        endDate: '2024-11-09',
-        status: 'ongoing',
-        description: 'Inter-departmental sports competition',
-        participants: 300,
-        venue: 'Sports Complex'
-      },
-      {
-        id: 3,
-        name: 'Cultural Fest',
-        university: 'JNTU Kakinada',
-        department: 'Student Affairs',
-        eventType: 'cultural',
-        studentBody: 'Cultural Committee',
-        startDate: '2024-10-28',
-        endDate: '2024-10-30',
-        status: 'completed',
-        description: 'Three-day cultural extravaganza with dance, music, and drama',
-        participants: 800,
-        venue: 'Open Air Theater'
-      },
-      {
-        id: 4,
-        name: 'Placement Drive',
-        university: 'Andhra University',
-        department: 'Training & Placement',
-        eventType: 'placement',
-        studentBody: 'T&P Cell',
-        startDate: '2024-11-15',
-        endDate: '2024-11-16',
-        status: 'upcoming',
-        description: 'Campus recruitment drive by top companies',
-        participants: 250,
-        venue: 'Seminar Hall'
-      },
-      {
-        id: 5,
-        name: 'Workshop on AI/ML',
-        university: 'JNTU Hyderabad',
-        department: 'Computer Science',
-        eventType: 'workshop',
-        studentBody: 'Tech Club',
-        startDate: '2024-11-07',
-        endDate: '2024-11-07',
-        status: 'ongoing',
-        description: 'Hands-on workshop on Artificial Intelligence and Machine Learning',
-        participants: 150,
-        venue: 'CS Lab Block'
-      },
-      {
-        id: 6,
-        name: 'Blood Donation Camp',
-        university: 'Osmania University',
-        department: 'Student Affairs',
-        eventType: 'social',
-        studentBody: 'NSS',
-        startDate: '2024-10-25',
-        endDate: '2024-10-25',
-        status: 'completed',
-        description: 'Blood donation drive in collaboration with Red Cross',
-        participants: 200,
-        venue: 'Medical Center'
-      },
-      {
-        id: 7,
-        name: 'Entrepreneurship Summit',
-        university: 'JNTU Kakinada',
-        department: 'MBA',
-        eventType: 'seminar',
-        studentBody: 'E-Cell',
-        startDate: '2024-11-20',
-        endDate: '2024-11-21',
-        status: 'upcoming',
-        description: 'Summit featuring startup founders and investors',
-        participants: 400,
-        venue: 'Convention Center'
-      },
-      {
-        id: 8,
-        name: 'Chess Tournament',
-        university: 'Andhra University',
-        department: 'Sports',
-        eventType: 'sports',
-        studentBody: 'Sports Committee',
-        startDate: '2024-11-08',
-        endDate: '2024-11-10',
-        status: 'ongoing',
-        description: 'Inter-university chess championship',
-        participants: 64,
-        venue: 'Indoor Stadium'
+    // Fetch real events from backend API
+    const fetchEvents = async () => {
+      // Check both localStorage and sessionStorage for token
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      
+      if (!token) {
+        console.error('No authentication token found in localStorage or sessionStorage');
+        return;
       }
-    ];
 
-    setEvents(mockEvents);
+      try {
+        // TODO: Implement events API endpoint in backend
+        // const response = await fetch(`${API_BASE_URL}/superadmin/events`, {
+        //   headers: {
+        //     'Authorization': `Bearer ${token}`,
+        //     'Content-Type': 'application/json'
+        //   }
+        // });
+        
+        // For now, set empty array until events API is implemented
+        setEvents([]);
+        console.log('Events data ready for API integration');
+      } catch (error) {
+        console.error('Error fetching events:', error);
+        setEvents([]);
+      }
+    };
+
+    fetchEvents();
   }, []);
 
   const handleLogout = () => {

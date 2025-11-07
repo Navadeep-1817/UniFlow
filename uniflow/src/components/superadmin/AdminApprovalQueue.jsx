@@ -9,114 +9,77 @@ const AdminApprovalQueue = () => {
   const [confirmModal, setConfirmModal] = useState({ show: false, user: null, action: '' });
 
   useEffect(() => {
-    // Load pending users from storage
     loadPendingUsers();
   }, []);
 
   const loadPendingUsers = () => {
-    // Try to fetch pending users from backend; fall back to mock data when offline
-    const token = localStorage.getItem('token');
-    if (token) {
-      fetch('/api/superadmin/pending-approvals', {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((r) => r.json())
-        .then((json) => {
-          if (json && json.success) {
-            // Map to expected fields in UI
-            const mapped = json.data.map((u) => ({
-              id: u._id,
-              fullName: u.name || `${u.firstName || ''} ${u.lastName || ''}`.trim(),
-              email: u.email,
-              role: u.role,
-              university: u.university?.name || '',
-              department: u.department?.name || '',
-              registeredDate: u.createdAt,
-              status: u.isApproved ? 'approved' : 'pending',
-            }));
-            setPendingUsers(mapped);
-            return;
-          }
-          // fall through to mock
-          setPendingUsers(getMockPending());
-        })
-        .catch(() => setPendingUsers(getMockPending()));
+    // Check both localStorage and sessionStorage for token
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+    if (!token) {
+      showToast('Authentication required. Please login again.', 'error');
+      console.error('No token found in localStorage or sessionStorage');
       return;
     }
 
-    // No token => use mock
-    const mockPendingUsers = getMockPending();
+    console.log('Fetching pending approvals from:', `${API_BASE_URL}/superadmin/pending-approvals`);
+    console.log('Token found:', token ? 'Yes' : 'No');
 
-    setPendingUsers(mockPendingUsers);
+    fetch(`${API_BASE_URL}/superadmin/pending-approvals`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+    })
+      .then((r) => {
+        if (!r.ok) {
+          console.error('Failed to fetch pending approvals - Status:', r.status, r.statusText);
+          return r.json().then(errData => {
+            console.error('Error response:', errData);
+            throw new Error(errData.message || `HTTP ${r.status}`);
+          }).catch(() => {
+            throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+          });
+        }
+        return r.json();
+      })
+      .then((json) => {
+        console.log('Received approval data:', json);
+        
+        if (json && json.success && Array.isArray(json.data)) {
+          const mapped = json.data.map((u) => ({
+            id: u._id,
+            fullName: u.name || `${u.firstName || ''} ${u.lastName || ''}`.trim(),
+            email: u.email,
+            role: u.role,
+            university: u.university?.name || 'N/A',
+            department: u.department?.name || 'N/A',
+            registeredDate: u.createdAt,
+            rollNumber: u.rollNumber,
+            employeeId: u.employeeId,
+            status: u.isApproved ? 'approved' : 'pending',
+          }));
+          
+          console.log(`Loaded ${mapped.length} pending users (Faculty, HOD, T&P only - Students excluded)`);
+          setPendingUsers(mapped);
+          
+          if (mapped.length === 0) {
+            showToast('No pending approvals at this time.', 'info');
+          }
+        } else {
+          setPendingUsers([]);
+          if (json && !json.success) {
+            showToast(json.message || 'Failed to load pending approvals.', 'error');
+          }
+        }
+      })
+      .catch((err) => {
+        console.error('Error loading pending users:', err);
+        setPendingUsers([]);
+        showToast(`Error: ${err.message}. Check if backend is running on port 5000.`, 'error');
+      });
   };
-
-  const getMockPending = () => ([
-    {
-      id: 1,
-      fullName: 'Rahul Sharma',
-      email: 'rahul.sharma@jntu.ac.in',
-      role: 'student',
-      university: 'JNTU Hyderabad',
-      department: 'Computer Science',
-      rollNumber: 'CS21001',
-      registeredDate: '2024-11-05T10:30:00',
-      status: 'pending'
-    },
-    {
-      id: 2,
-      fullName: 'Dr. Priya Reddy',
-      email: 'priya.reddy@osmania.ac.in',
-      role: 'faculty',
-      university: 'Osmania University',
-      department: 'Electronics',
-      employeeId: 'FAC2024',
-      registeredDate: '2024-11-05T14:20:00',
-      status: 'pending'
-    },
-    {
-      id: 3,
-      fullName: 'Prof. Venkat Rao',
-      email: 'venkat.rao@jntu.ac.in',
-      role: 'hod',
-      university: 'JNTU Kakinada',
-      department: 'Mechanical',
-      employeeId: 'HOD2024',
-      registeredDate: '2024-11-06T09:15:00',
-      status: 'pending'
-    },
-    {
-      id: 4,
-      fullName: 'Ms. Anjali Kumar',
-      email: 'anjali.kumar@andhra.ac.in',
-      role: 'placement',
-      university: 'Andhra University',
-      department: 'Training & Placement',
-      employeeId: 'TNP2024',
-      registeredDate: '2024-11-06T11:00:00',
-      status: 'pending'
-    },
-    {
-      id: 5,
-      fullName: 'Kiran Patel',
-      email: 'kiran.patel@jntu.ac.in',
-      role: 'student_body',
-      university: 'JNTU Hyderabad',
-      department: 'Student Affairs',
-      registeredDate: '2024-11-06T08:45:00',
-      status: 'pending'
-    },
-    {
-      id: 6,
-      fullName: 'Sneha Gupta',
-      email: 'sneha.gupta@osmania.ac.in',
-      role: 'student',
-      university: 'Osmania University',
-      department: 'IT',
-      rollNumber: 'IT21045',
-      registeredDate: '2024-11-05T16:30:00',
-      status: 'pending'
-    }
-  ]);
 
   const showToast = (message, type = 'success') => {
     setToast({ show: true, message, type });
@@ -131,51 +94,80 @@ const AdminApprovalQueue = () => {
     setConfirmModal({ show: false, user: null, action: '' });
   };
 
-  const handleApproval = (userId, action) => {
-    // Find the user
+  const handleApproval = async (userId, action) => {
     const user = pendingUsers.find(u => u.id === userId);
+    // Check both localStorage and sessionStorage for token
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
     
-    if (action === 'approved') {
-      // In real app, make API call to approve user
-      // Then remove from pending list
-      setPendingUsers(prev => prev.filter(u => u.id !== userId));
-      showToast(`${user.fullName} has been approved! They can now login to the system.`, 'success');
-    } else if (action === 'rejected') {
-      // In real app, make API call to reject user
-      setPendingUsers(prev => prev.filter(u => u.id !== userId));
-      showToast(`${user.fullName}'s registration has been rejected.`, 'error');
+    if (!token) {
+      showToast('Authentication required. Please login again.', 'error');
+      return;
     }
-    
+
+    try {
+      const endpoint = `${API_BASE_URL}/superadmin/${action === 'approved' ? 'approve' : 'reject'}/${userId}`;
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // --- FIX 2: ADDED 'userName' FALLBACK ---
+        // Prevents a crash if 'user' is undefined when accessing 'user.fullName'
+        const userName = user ? user.fullName : 'The user';
+        
+        setPendingUsers(prev => prev.filter(u => u.id !== userId));
+        showToast(
+          action === 'approved'
+            ? `${userName} has been approved!`
+            : `${userName}'s registration has been rejected.`,
+          action === 'approved' ? 'success' : 'error'
+        );
+      } else {
+        showToast(data.message || 'Action failed. Please try again.', 'error');
+      }
+    } catch (error) {
+      console.error('Approval/Rejection error:', error);
+      showToast('Failed to process request. Please try again.', 'error');
+    }
+
     closeConfirmModal();
   };
 
   const getRoleLabel = (role) => {
     const roleMap = {
-      'student': 'Student',
-      'faculty': 'Faculty',
-      'hod': 'Head of Department',
-      'placement': 'Training & Placement Head',
-      'student_body': 'Student Body Representative',
-      'sports': 'Sports Administrator',
-      'superadmin': 'Super Admin'
+      student: 'Student',
+      faculty: 'Faculty',
+      hod: 'Head of Department',
+      placement: 'Training & Placement Head',
+      student_body: 'Student Body Representative',
+      sports: 'Sports Administrator',
+      superadmin: 'Super Admin'
     };
     return roleMap[role] || role;
   };
 
   const getRoleBadgeColor = (role) => {
     const colorMap = {
-      'student': { bg: '#DBEAFE', color: '#1E40AF' },
-      'faculty': { bg: '#FEF3C7', color: '#92400E' },
-      'hod': { bg: '#FCE7F3', color: '#9F1239' },
-      'placement': { bg: '#D1FAE5', color: '#065F46' },
-      'student_body': { bg: '#E0E7FF', color: '#3730A3' },
-      'sports': { bg: '#FED7AA', color: '#9A3412' },
-      'superadmin': { bg: '#F3E8FF', color: '#6B21A8' }
+      student: { bg: '#DBEAFE', color: '#1E40AF' },
+      faculty: { bg: '#FEF3C7', color: '#92400E' },
+      hod: { bg: '#FCE7F3', color: '#9F1239' },
+      placement: { bg: '#D1FAE5', color: '#065F46' },
+      student_body: { bg: '#E0E7FF', color: '#3730A3' },
+      sports: { bg: '#FED7AA', color: '#9A3412' },
+      superadmin: { bg: '#F3E8FF', color: '#6B21A8' }
     };
     return colorMap[role] || { bg: '#F3F4F6', color: '#374151' };
   };
 
   const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
     const date = new Date(dateString);
     return date.toLocaleString('en-IN', {
       day: '2-digit',
@@ -186,8 +178,8 @@ const AdminApprovalQueue = () => {
     });
   };
 
-  const filteredUsers = filterRole === 'all' 
-    ? pendingUsers 
+  const filteredUsers = filterRole === 'all'
+    ? pendingUsers
     : pendingUsers.filter(u => u.role === filterRole);
 
   const styles = {
@@ -246,7 +238,8 @@ const AdminApprovalQueue = () => {
       border: '1px solid #E5E7EB',
       display: 'flex',
       alignItems: 'center',
-      gap: '16px'
+      gap: '16px',
+      flexWrap: 'wrap'
     },
     filterLabel: {
       fontSize: '14px',
@@ -277,10 +270,14 @@ const AdminApprovalQueue = () => {
       border: '1px solid #E5E7EB',
       display: 'flex',
       justifyContent: 'space-between',
-      alignItems: 'center'
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      gap: '16px'
     },
     statItem: {
-      textAlign: 'center'
+      textAlign: 'center',
+      flex: 1,
+      minWidth: '100px'
     },
     statNumber: {
       fontSize: '24px',
@@ -315,13 +312,16 @@ const AdminApprovalQueue = () => {
       fontSize: '18px',
       fontWeight: '600',
       color: '#1F2937',
-      margin: 0
+      margin: 0,
+      wordBreak: 'break-word'
     },
     roleBadge: {
       padding: '4px 12px',
       borderRadius: '12px',
       fontSize: '12px',
-      fontWeight: '600'
+      fontWeight: '600',
+      flexShrink: 0,
+      marginLeft: '8px'
     },
     userInfo: {
       marginBottom: '16px'
@@ -331,12 +331,14 @@ const AdminApprovalQueue = () => {
       alignItems: 'center',
       marginBottom: '8px',
       fontSize: '14px',
-      color: '#6B7280'
+      color: '#6B7280',
+      wordBreak: 'break-word'
     },
     infoLabel: {
       fontWeight: '600',
       color: '#374151',
-      width: '120px'
+      width: '120px',
+      flexShrink: 0
     },
     dateInfo: {
       fontSize: '12px',
@@ -383,7 +385,8 @@ const AdminApprovalQueue = () => {
     },
     emptyIcon: {
       fontSize: '48px',
-      marginBottom: '16px'
+      marginBottom: '16px',
+      color: '#10B981'
     },
     emptyText: {
       fontSize: '18px',
@@ -561,12 +564,16 @@ const AdminApprovalQueue = () => {
             transition: 'all 0.3s'
           }}
           onMouseOver={(e) => {
-            e.target.style.color = '#4F46E5';
-            e.target.style.borderBottomColor = '#4F46E5';
+            if (e.target.style.color !== '#4F46E5') {
+              e.target.style.color = '#4F46E5';
+              e.target.style.borderBottomColor = '#DDDDEE';
+            }
           }}
           onMouseOut={(e) => {
-            e.target.style.color = '#6B7280';
-            e.target.style.borderBottomColor = 'transparent';
+            if (e.target.style.color !== '#4F46E5') {
+              e.target.style.color = '#6B7280';
+              e.target.style.borderBottomColor = 'transparent';
+            }
           }}
         >
           📊 Dashboard
@@ -603,7 +610,7 @@ const AdminApprovalQueue = () => {
           }}
           onMouseOver={(e) => {
             e.target.style.color = '#4F46E5';
-            e.target.style.borderBottomColor = '#4F46E5';
+            e.target.style.borderBottomColor = '#DDDDEE';
           }}
           onMouseOut={(e) => {
             e.target.style.color = '#6B7280';
@@ -628,7 +635,7 @@ const AdminApprovalQueue = () => {
           }}
           onMouseOver={(e) => {
             e.target.style.color = '#4F46E5';
-            e.target.style.borderBottomColor = '#4F46E5';
+            e.target.style.borderBottomColor = '#DDDDEE';
           }}
           onMouseOut={(e) => {
             e.target.style.color = '#6B7280';
@@ -653,7 +660,7 @@ const AdminApprovalQueue = () => {
           }}
           onMouseOver={(e) => {
             e.target.style.color = '#4F46E5';
-            e.target.style.borderBottomColor = '#4F46E5';
+            e.target.style.borderBottomColor = '#DDDDEE';
           }}
           onMouseOut={(e) => {
             e.target.style.color = '#6B7280';
@@ -666,29 +673,27 @@ const AdminApprovalQueue = () => {
 
       {/* Content */}
       <div style={styles.content}>
-        {/* Stats Bar */}
+        {/* Stats Bar - Students excluded (auto-approved) */}
         <div style={styles.statsBar}>
           <div style={styles.statItem}>
             <div style={styles.statNumber}>{pendingUsers.length}</div>
             <div style={styles.statLabel}>Total Pending</div>
           </div>
           <div style={styles.statItem}>
-            <div style={styles.statNumber}>{pendingUsers.filter(u => u.role === 'student').length}</div>
-            <div style={styles.statLabel}>Students</div>
-          </div>
-          <div style={styles.statItem}>
             <div style={styles.statNumber}>{pendingUsers.filter(u => u.role === 'faculty').length}</div>
             <div style={styles.statLabel}>Faculty</div>
           </div>
           <div style={styles.statItem}>
-            <div style={styles.statNumber}>
-              {pendingUsers.filter(u => ['hod', 'placement', 'student_body', 'sports'].includes(u.role)).length}
-            </div>
-            <div style={styles.statLabel}>Admins</div>
+            <div style={styles.statNumber}>{pendingUsers.filter(u => u.role === 'hod').length}</div>
+            <div style={styles.statLabel}>HOD</div>
+          </div>
+          <div style={styles.statItem}>
+            <div style={styles.statNumber}>{pendingUsers.filter(u => u.role === 'placement').length}</div>
+            <div style={styles.statLabel}>T&P Head</div>
           </div>
         </div>
 
-        {/* Filter Section */}
+        {/* Filter Section - Students excluded (auto-approved) */}
         <div style={styles.filterSection}>
           <span style={styles.filterLabel}>Filter by Role:</span>
           <button 
@@ -696,12 +701,6 @@ const AdminApprovalQueue = () => {
             onClick={() => setFilterRole('all')}
           >
             All ({pendingUsers.length})
-          </button>
-          <button 
-            style={{...styles.filterBtn, ...(filterRole === 'student' && styles.activeFilterBtn)}}
-            onClick={() => setFilterRole('student')}
-          >
-            Students ({pendingUsers.filter(u => u.role === 'student').length})
           </button>
           <button 
             style={{...styles.filterBtn, ...(filterRole === 'faculty' && styles.activeFilterBtn)}}
@@ -719,7 +718,7 @@ const AdminApprovalQueue = () => {
             style={{...styles.filterBtn, ...(filterRole === 'placement' && styles.activeFilterBtn)}}
             onClick={() => setFilterRole('placement')}
           >
-            T&P ({pendingUsers.filter(u => u.role === 'placement').length})
+            T&P Head ({pendingUsers.filter(u => u.role === 'placement').length})
           </button>
         </div>
 
@@ -756,6 +755,8 @@ const AdminApprovalQueue = () => {
                       <span style={styles.infoLabel}>Department:</span>
                       <span>{user.department}</span>
                     </div>
+                    
+                    {/* These will now render if data is present */}
                     {user.rollNumber && (
                       <div style={styles.infoRow}>
                         <span style={styles.infoLabel}>Roll Number:</span>

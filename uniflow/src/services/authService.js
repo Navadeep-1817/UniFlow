@@ -67,6 +67,13 @@ const authService = {
       }
 
       const response = await api.post('/auth/register', payload);
+      
+      // Store auth data if token is returned (auto-approved users)
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.data.user));
+      }
+      
       return response.data;
     } catch (error) {
       throw error.response?.data || { message: 'Registration failed' };

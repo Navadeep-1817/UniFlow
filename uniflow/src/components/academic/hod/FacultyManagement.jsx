@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../../context/AuthContext';
 import HODTopNav from './HODTopNav';
 import { 
   FiUserPlus,
@@ -44,133 +45,37 @@ const FacultyManagement = () => {
   });
 
   useEffect(() => {
-    // Mock faculty data
-    const mockFaculty = [
-      {
-        id: 1,
-        name: 'Dr. Priya Sharma',
-        email: 'priya.sharma@university.edu',
-        phone: '+91 98765 43210',
-        specialization: 'Artificial Intelligence',
-        department: 'Computer Science',
-        qualification: 'Ph.D. in Computer Science',
-        experience: '15 years',
-        status: 'active',
-        eventsAssigned: 8,
-        joinedDate: '2015-08-15',
-        workload: 85,
-        assignedEvents: [
-          { id: 1, name: 'AI & ML Workshop', type: 'FDP', sessions: 6, attendance: 92 },
-          { id: 2, name: 'Data Science SDP', type: 'SDP', sessions: 10, attendance: 88 },
-          { id: 3, name: 'Python Programming', type: 'SDP', sessions: 8, attendance: 95 }
-        ],
-        attendanceContribution: {
-          totalSessions: 24,
-          sessionsCompleted: 22,
-          avgAttendance: 91.7,
-          studentsImpacted: 145
-        }
-      },
-      {
-        id: 2,
-        name: 'Prof. Rajesh Kumar',
-        email: 'rajesh.kumar@university.edu',
-        phone: '+91 98765 43211',
-        specialization: 'Web Development',
-        department: 'Computer Science',
-        qualification: 'M.Tech in CSE',
-        experience: '12 years',
-        status: 'active',
-        eventsAssigned: 5,
-        joinedDate: '2018-01-10',
-        workload: 65,
-        assignedEvents: [
-          { id: 4, name: 'Web Development SDP', type: 'SDP', sessions: 10, attendance: 87 },
-          { id: 5, name: 'React Workshop', type: 'FDP', sessions: 4, attendance: 90 }
-        ],
-        attendanceContribution: {
-          totalSessions: 14,
-          sessionsCompleted: 14,
-          avgAttendance: 88.5,
-          studentsImpacted: 98
-        }
-      },
-      {
-        id: 3,
-        name: 'Dr. Anita Desai',
-        email: 'anita.desai@university.edu',
-        phone: '+91 98765 43212',
-        specialization: 'Data Science',
-        department: 'Computer Science',
-        qualification: 'Ph.D. in Data Analytics',
-        experience: '10 years',
-        status: 'active',
-        eventsAssigned: 6,
-        joinedDate: '2019-07-20',
-        workload: 75,
-        assignedEvents: [
-          { id: 6, name: 'CRT Training Batch 1', type: 'CRT', sessions: 8, attendance: 94 },
-          { id: 7, name: 'Analytics Workshop', type: 'FDP', sessions: 5, attendance: 89 }
-        ],
-        attendanceContribution: {
-          totalSessions: 13,
-          sessionsCompleted: 13,
-          avgAttendance: 91.5,
-          studentsImpacted: 120
-        }
-      },
-      {
-        id: 4,
-        name: 'Prof. Suresh Patel',
-        email: 'suresh.patel@university.edu',
-        phone: '+91 98765 43213',
-        specialization: 'Database Systems',
-        department: 'Computer Science',
-        qualification: 'M.Tech in IT',
-        experience: '8 years',
-        status: 'on_leave',
-        eventsAssigned: 3,
-        joinedDate: '2020-02-14',
-        workload: 40,
-        assignedEvents: [
-          { id: 8, name: 'Database Workshop', type: 'FDP', sessions: 6, attendance: 85 }
-        ],
-        attendanceContribution: {
-          totalSessions: 6,
-          sessionsCompleted: 4,
-          avgAttendance: 85,
-          studentsImpacted: 45
-        }
-      },
-      {
-        id: 5,
-        name: 'Dr. Meena Singh',
-        email: 'meena.singh@university.edu',
-        phone: '+91 98765 43214',
-        specialization: 'Machine Learning',
-        department: 'Computer Science',
-        qualification: 'Ph.D. in AI/ML',
-        experience: '14 years',
-        status: 'active',
-        eventsAssigned: 7,
-        joinedDate: '2016-09-01',
-        workload: 92,
-        assignedEvents: [
-          { id: 9, name: 'ML Fundamentals', type: 'SDP', sessions: 12, attendance: 93 },
-          { id: 10, name: 'Deep Learning FDP', type: 'FDP', sessions: 8, attendance: 91 },
-          { id: 11, name: 'CRT Advanced', type: 'CRT', sessions: 6, attendance: 89 }
-        ],
-        attendanceContribution: {
-          totalSessions: 26,
-          sessionsCompleted: 24,
-          avgAttendance: 91,
-          studentsImpacted: 165
-        }
+    // Fetch real faculty data from API
+    const fetchFaculty = async () => {
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      
+      if (!token) {
+        console.error('No authentication token found');
+        return;
       }
-    ];
 
-    setFaculty(mockFaculty);
-    setFilteredFaculty(mockFaculty);
+      try {
+        // TODO: Implement backend API endpoint
+        // const response = await fetch(`${API_BASE_URL}/hod/faculty`, {
+        //   headers: {
+        //     'Authorization': `Bearer ${token}`,
+        //     'Content-Type': 'application/json'
+        //   }
+        // });
+        
+        // For now, set empty array until API is implemented
+        setFaculty([]);
+        setFilteredFaculty([]);
+        console.log('Faculty data ready for API integration');
+      } catch (error) {
+        console.error('Error fetching faculty:', error);
+        setFaculty([]);
+        setFilteredFaculty([]);
+      }
+    };
+
+    fetchFaculty();
   }, []);
 
   useEffect(() => {

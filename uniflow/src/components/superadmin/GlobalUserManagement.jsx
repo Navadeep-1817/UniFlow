@@ -13,17 +13,62 @@ const GlobalUserManagement = () => {
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
 
   useEffect(() => {
-    const mockUsers = [
-      { id: 1, firstName: 'Rajesh', lastName: 'Kumar', email: 'rajesh.kumar@jntu.ac.in', role: 'student', university: 'JNTU Hyderabad', department: 'Computer Science', status: 'active', registeredDate: '2024-09-15', approvedDate: '2024-09-16', rollNumber: 'CS21001', phone: '+91 9876543210' },
-      { id: 2, firstName: 'Priya', lastName: 'Sharma', email: 'priya.sharma@osmania.edu', role: 'faculty', university: 'Osmania University', department: 'Electronics', status: 'active', registeredDate: '2024-08-20', approvedDate: '2024-08-21', employeeId: 'FAC2145', phone: '+91 9876543211' },
-      { id: 3, firstName: 'Arun', lastName: 'Reddy', email: 'arun.reddy@jntuk.edu', role: 'academic_admin', university: 'JNTU Kakinada', department: 'Mechanical', status: 'active', registeredDate: '2024-07-10', approvedDate: '2024-07-11', employeeId: 'HOD3421', phone: '+91 9876543212' },
-      { id: 4, firstName: 'Sneha', lastName: 'Patel', email: 'sneha.patel@andhra.edu', role: 'student', university: 'Andhra University', department: 'Civil Engineering', status: 'active', registeredDate: '2024-09-01', approvedDate: '2024-09-02', rollNumber: 'CE21045', phone: '+91 9876543213' },
-      { id: 5, firstName: 'Vikram', lastName: 'Singh', email: 'vikram.singh@jntu.ac.in', role: 'nonacademic_admin', university: 'JNTU Hyderabad', department: 'Training & Placement', status: 'active', registeredDate: '2024-06-15', approvedDate: '2024-06-16', employeeId: 'TP4532', phone: '+91 9876543214' },
-      { id: 6, firstName: 'Ananya', lastName: 'Rao', email: 'ananya.rao@osmania.edu', role: 'student', university: 'Osmania University', department: 'Computer Science', status: 'inactive', registeredDate: '2024-05-10', approvedDate: '2024-05-11', rollNumber: 'CS20098', phone: '+91 9876543215' },
-      { id: 7, firstName: 'Karthik', lastName: 'Nair', email: 'karthik.nair@jntuk.edu', role: 'faculty', university: 'JNTU Kakinada', department: 'Computer Science', status: 'active', registeredDate: '2024-08-05', approvedDate: '2024-08-06', employeeId: 'FAC5621', phone: '+91 9876543216' },
-      { id: 8, firstName: 'Divya', lastName: 'Menon', email: 'divya.menon@andhra.edu', role: 'nonacademic_admin', university: 'Andhra University', department: 'Sports', status: 'active', registeredDate: '2024-07-20', approvedDate: '2024-07-21', employeeId: 'SPT6721', phone: '+91 9876543217' }
-    ];
-    setUsers(mockUsers);
+    // Fetch real users from backend API
+    const fetchUsers = async () => {
+      // Check both localStorage and sessionStorage for token
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      
+      if (!token) {
+        console.error('No authentication token found');
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/superadmin/users?limit=1000`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (data.success && data.data) {
+          // Map backend user data to component format
+          const mappedUsers = data.data.map(user => ({
+            id: user._id,
+            firstName: user.name?.split(' ')[0] || user.name || 'N/A',
+            lastName: user.name?.split(' ').slice(1).join(' ') || '',
+            email: user.email,
+            role: user.role,
+            university: user.university?.name || 'N/A',
+            department: user.department?.name || 'N/A',
+            status: user.isActive ? 'active' : 'inactive',
+            registeredDate: user.createdAt,
+            approvedDate: user.approvedAt || user.createdAt,
+            rollNumber: user.rollNumber || null,
+            employeeId: user.employeeId || null,
+            phone: user.phone || 'N/A'
+          }));
+          
+          setUsers(mappedUsers);
+          console.log(`Loaded ${mappedUsers.length} users from database`);
+        } else {
+          console.error('Invalid response format');
+          setUsers([]);
+        }
+      } catch (error) {
+        console.error('Error fetching users:', error);
+        setUsers([]); // Set empty array instead of mock data
+      }
+    };
+
+    fetchUsers();
   }, []);
 
   const showToast = (message, type = 'success') => {

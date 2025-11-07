@@ -35,9 +35,7 @@ const HODTopNav = () => {
     { path: '/hod/venue', label: 'Venue', icon: <FiMapPin size={16} /> },
     { path: '/hod/trainers', label: 'Trainers', icon: <FiAward size={16} /> },
     { path: '/hod/analytics', label: 'Analytics', icon: <FiBarChart size={16} /> },
-    { path: '/hod/attendance', label: 'Attendance', icon: <FiCheckCircle size={16} /> },
-    { path: '/hod/resources', label: 'Resources', icon: <FiSettings size={16} /> },
-    { path: '/hod/timetable', label: 'Timetable', icon: <FiClock size={16} /> }
+    { path: '/hod/attendance', label: 'Attendance', icon: <FiCheckCircle size={16} /> }
   ];
 
   const isActive = (path) => location.pathname === path;

@@ -1,11 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../context/AuthContext';
 import { FiBriefcase, FiUsers, FiTrendingUp, FiDollarSign, FiCalendar, FiAward, FiTarget, FiBarChart2, FiArrowRight, FiCheckSquare, FiClipboard, FiFileText, FiUserCheck, FiXCircle, FiLogOut } from 'react-icons/fi';
 import PlacementTopNav from './PlacementTopNav';
 import { colors, commonStyles, hoverEffects } from '../../../styles/globalStyles';
 
 const TPDashboard = () => {
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
+  const [tpInfo, setTpInfo] = useState({
+    name: '',
+    employeeId: '',
+    department: '',
+    university: ''
+  });
 
   const handleLogout = () => {
     // Clear any stored user data/tokens
@@ -14,20 +22,54 @@ const TPDashboard = () => {
     // Navigate to login page
     navigate('/login');
   };
-  const [stats] = useState({
-    totalCompanies: 120,
-    activeDrives: 8,
-    placedStudents: 382,
-    unplacedStudents: 68,
-    totalStudents: 450,
-    placementPercentage: 84.9,
-    highestPackage: 45.0,
-    averagePackage: 8.5,
-    crtSessions: 15,
-    upcomingInterviews: 12,
-        offerLetters: 428,
-    pendingOffers: 35
+  
+  // Initialize with empty/zero values - will be fetched from API
+  const [stats, setStats] = useState({
+    totalCompanies: 0,
+    activeDrives: 0,
+    placedStudents: 0,
+    unplacedStudents: 0,
+    totalStudents: 0,
+    placementPercentage: 0,
+    highestPackage: 0,
+    averagePackage: 0,
+    crtSessions: 0,
+    upcomingInterviews: 0,
+    offerLetters: 0,
+    pendingOffers: 0
   });
+
+  useEffect(() => {
+    // Load T&P admin data from user context
+    if (user) {
+      setTpInfo({
+        name: user.name || 'T&P Officer',
+        employeeId: user.employeeId || 'N/A',
+        department: user.department?.name || 'Training & Placement',
+        university: user.university?.name || user.university || 'N/A'
+      });
+    }
+  }, [user]);
+
+  useEffect(() => {
+    // Fetch real data from API
+    const fetchDashboardData = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      try {
+        // TODO: Implement backend API endpoints for placement data
+        // GET /api/placement/stats
+        // GET /api/placement/departments
+        // GET /api/placement/activities
+        console.log('T&P Dashboard ready for API integration');
+      } catch (error) {
+        console.error('Error fetching T&P dashboard data:', error);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
 
   const quickLinks = [
     { title: 'Companies', icon: <FiBriefcase size={20} />, color: colors.primary, bg: colors.primaryLight, path: '/placement/companies', desc: 'Manage partner companies' },
@@ -41,20 +83,25 @@ const TPDashboard = () => {
     { title: 'Reports', icon: <FiFileText size={20} />, color: colors.info, bg: colors.infoLight, path: '/placement/reports', desc: 'Generate reports' }
   ];
 
-  const departmentData = [
-    { dept: 'Computer Science', placed: 165, total: 180, percentage: 91.7 },
-    { dept: 'Electronics', placed: 102, total: 120, percentage: 85.0 },
-    { dept: 'Mechanical', placed: 72, total: 90, percentage: 80.0 },
-    { dept: 'Civil', placed: 43, total: 60, percentage: 71.7 }
-  ];
+  // Empty arrays - will be fetched from API
+  const [departmentData, setDepartmentData] = useState([]);
+  const [recentActivities, setRecentActivities] = useState([]);
 
-  const recentActivities = [
-    { company: 'Amazon', type: 'Technical Interview', date: 'Today, 10:00 AM', status: 'Active', icon: <FiUsers size={16} /> },
-    { company: 'Microsoft', type: 'Offer Released', date: 'Today, 9:15 AM', status: 'Completed', icon: <FiAward size={16} /> },
-    { company: 'TCS', type: 'Campus Drive', date: 'Tomorrow, 2:00 PM', status: 'Scheduled', icon: <FiBriefcase size={16} /> },
-    { company: 'Infosys', type: 'Pre-placement Talk', date: 'Nov 8, 11:00 AM', status: 'Upcoming', icon: <FiCalendar size={16} /> },
-    { company: 'Wipro', type: 'Aptitude Test', date: 'Nov 10, 9:00 AM', status: 'Upcoming', icon: <FiTarget size={16} /> }
-  ];
+  // Old mock data - REMOVED
+  // const departmentData = [
+  //   { dept: 'Computer Science', placed: 165, total: 180, percentage: 91.7 },
+  //   { dept: 'Electronics', placed: 102, total: 120, percentage: 85.0 },
+  //   { dept: 'Mechanical', placed: 72, total: 90, percentage: 80.0 },
+  //   { dept: 'Civil', placed: 43, total: 60, percentage: 71.7 }
+  // ];
+
+  // const recentActivities = [
+  //   { company: 'Amazon', type: 'Technical Interview', date: 'Today, 10:00 AM', status: 'Active', icon: <FiUsers size={16} /> },
+  //   { company: 'Microsoft', type: 'Offer Released', date: 'Today, 9:15 AM', status: 'Completed', icon: <FiAward size={16} /> },
+  //   { company: 'TCS', type: 'Campus Drive', date: 'Tomorrow, 2:00 PM', status: 'Scheduled', icon: <FiBriefcase size={16} /> },
+  //   { company: 'Infosys', type: 'Pre-placement Talk', date: 'Nov 8, 11:00 AM', status: 'Upcoming', icon: <FiCalendar size={16} /> },
+  //   { company: 'Wipro', type: 'Aptitude Test', date: 'Nov 10, 9:00 AM', status: 'Upcoming', icon: <FiTarget size={16} /> }
+  // ];
 
   const ProgressBar = ({ percentage, color }) => (
     <div style={{ width: '100%', height: '6px', backgroundColor: colors.gray200, borderRadius: '3px', overflow: 'hidden' }}>

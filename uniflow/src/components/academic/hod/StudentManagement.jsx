@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../../context/AuthContext';
 import HODTopNav from './HODTopNav';
 import { 
   FiUserPlus,
@@ -45,129 +46,37 @@ const StudentManagement = () => {
   });
 
   useEffect(() => {
-    // Mock students data with event participation and performance
-    const mockStudents = [
-      {
-        id: 1,
-        rollNo: 'CS21001',
-        name: 'Rahul Sharma',
-        email: 'rahul.sharma@student.edu',
-        phone: '+91 98765 11111',
-        year: '3',
-        section: 'A',
-        department: 'Computer Science',
-        cgpa: 8.9,
-        eventsParticipated: 12,
-        eventDetails: [
-          { id: 1, name: 'AI & ML Workshop', type: 'FDP', attendance: 100, performance: 'Excellent' },
-          { id: 2, name: 'Data Science SDP', type: 'SDP', attendance: 95, performance: 'Very Good' },
-          { id: 3, name: 'CRT Training', type: 'CRT', attendance: 100, performance: 'Excellent' }
-        ],
-        performanceMetrics: {
-          overallAttendance: 96,
-          certificatesEarned: 8,
-          averageScore: 88,
-          rank: 5
-        },
-        achievements: ['Best Project Award 2024', 'Hackathon Winner', 'Top Performer - Q2 2024']
-      },
-      {
-        id: 2,
-        rollNo: 'CS21002',
-        name: 'Priya Patel',
-        email: 'priya.patel@student.edu',
-        phone: '+91 98765 22222',
-        year: '3',
-        section: 'A',
-        department: 'Computer Science',
-        cgpa: 9.2,
-        eventsParticipated: 15,
-        eventDetails: [
-          { id: 1, name: 'AI & ML Workshop', type: 'FDP', attendance: 100, performance: 'Excellent' },
-          { id: 4, name: 'Web Development SDP', type: 'SDP', attendance: 100, performance: 'Excellent' },
-          { id: 5, name: 'React Workshop', type: 'FDP', attendance: 100, performance: 'Very Good' }
-        ],
-        performanceMetrics: {
-          overallAttendance: 98,
-          certificatesEarned: 12,
-          averageScore: 92,
-          rank: 2
-        },
-        achievements: ['Dean\'s List 2023-24', 'Research Paper Published', 'Innovation Award']
-      },
-      {
-        id: 3,
-        rollNo: 'CS22001',
-        name: 'Amit Kumar',
-        email: 'amit.kumar@student.edu',
-        phone: '+91 98765 33333',
-        year: '2',
-        section: 'B',
-        department: 'Computer Science',
-        cgpa: 7.8,
-        eventsParticipated: 8,
-        eventDetails: [
-          { id: 6, name: 'CRT Training Batch 1', type: 'CRT', attendance: 88, performance: 'Good' },
-          { id: 7, name: 'Database Workshop', type: 'FDP', attendance: 92, performance: 'Very Good' }
-        ],
-        performanceMetrics: {
-          overallAttendance: 85,
-          certificatesEarned: 5,
-          averageScore: 78,
-          rank: 45
-        },
-        achievements: ['Sports Captain', 'Event Coordinator']
-      },
-      {
-        id: 4,
-        rollNo: 'CS23001',
-        name: 'Sneha Reddy',
-        email: 'sneha.reddy@student.edu',
-        phone: '+91 98765 44444',
-        year: '1',
-        section: 'A',
-        department: 'Computer Science',
-        cgpa: 8.5,
-        eventsParticipated: 6,
-        eventDetails: [
-          { id: 8, name: 'Python Programming', type: 'SDP', attendance: 100, performance: 'Excellent' },
-          { id: 9, name: 'ML Fundamentals', type: 'SDP', attendance: 95, performance: 'Very Good' }
-        ],
-        performanceMetrics: {
-          overallAttendance: 94,
-          certificatesEarned: 4,
-          averageScore: 85,
-          rank: 12
-        },
-        achievements: ['Best Newcomer Award', 'Code Sprint Winner']
-      },
-      {
-        id: 5,
-        rollNo: 'CS21003',
-        name: 'Vikas Singh',
-        email: 'vikas.singh@student.edu',
-        phone: '+91 98765 55555',
-        year: '3',
-        section: 'B',
-        department: 'Computer Science',
-        cgpa: 8.2,
-        eventsParticipated: 10,
-        eventDetails: [
-          { id: 10, name: 'Deep Learning FDP', type: 'FDP', attendance: 90, performance: 'Good' },
-          { id: 11, name: 'CRT Advanced', type: 'CRT', attendance: 95, performance: 'Very Good' }
-        ],
-        performanceMetrics: {
-          overallAttendance: 88,
-          certificatesEarned: 7,
-          averageScore: 82,
-          rank: 28
-        },
-        achievements: ['Tech Fest Organizer', 'Placement Coordinator']
+    // Fetch real students data from API
+    const fetchStudents = async () => {
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      
+      if (!token) {
+        console.error('No authentication token found');
+        return;
       }
-    ];
 
-    setStudents(mockStudents);
-    setFilteredStudents(mockStudents);
+      try {
+        // TODO: Implement backend API endpoint
+        // const response = await fetch(`${API_BASE_URL}/hod/students`, {
+        //   headers: {
+        //     'Authorization': `Bearer ${token}`,
+        //     'Content-Type': 'application/json'
+        //   }
+        // });
+        
+        // For now, set empty array until API is implemented
+        setStudents([]);
+        setFilteredStudents([]);
+        console.log('Students data ready for API integration');
+      } catch (error) {
+        console.error('Error fetching students:', error);
+        setStudents([]);
+        setFilteredStudents([]);
+      }
+    };
+
+    fetchStudents();
   }, []);
 
   useEffect(() => {

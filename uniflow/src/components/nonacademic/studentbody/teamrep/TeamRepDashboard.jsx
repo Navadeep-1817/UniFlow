@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../../context/AuthContext';
 import { 
   FiHome, FiCalendar, FiUsers, FiFileText, FiCheckCircle, 
   FiClock, FiXCircle, FiTrendingUp, FiSettings, FiBell,
@@ -8,36 +9,67 @@ import {
 
 const TeamRepDashboard = () => {
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
+  const [teamRepInfo, setTeamRepInfo] = useState({
+    name: '',
+    rollNumber: '',
+    studentBody: '',
+    university: ''
+  });
+  
   const [dashboardStats, setDashboardStats] = useState({
-    totalEvents: 12,
-    pendingApprovals: 3,
-    activeMembers: 24,
-    upcomingEvents: 5
+    totalEvents: 0,
+    pendingApprovals: 0,
+    activeMembers: 0,
+    upcomingEvents: 0
   });
 
-  const [proposedEvents, setProposedEvents] = useState([
-    { id: 1, name: 'Tech Talk Series', status: 'approved', date: '2024-12-15', budget: 5000 },
-    { id: 2, name: 'Cultural Fest', status: 'pending', date: '2024-12-20', budget: 15000 },
-    { id: 3, name: 'Workshop on AI', status: 'pending', date: '2024-12-18', budget: 8000 },
-    { id: 4, name: 'Sports Day', status: 'rejected', date: '2024-12-10', budget: 20000 },
-    { id: 5, name: 'Hackathon', status: 'approved', date: '2024-12-25', budget: 10000 }
-  ]);
-
-  const [upcomingEvents, setUpcomingEvents] = useState([
-    { id: 1, name: 'Tech Talk Series', date: '2024-12-15', time: '10:00 AM', venue: 'Auditorium A' },
-    { id: 2, name: 'Hackathon', date: '2024-12-25', time: '09:00 AM', venue: 'Computer Lab' },
-    { id: 3, name: 'Team Meeting', date: '2024-12-08', time: '03:00 PM', venue: 'Conference Room' }
-  ]);
-
-  const [announcements, setAnnouncements] = useState([
-    { id: 1, title: 'Budget Approval Delay', message: 'Budget approval for Cultural Fest is delayed by 2 days', type: 'warning', time: '2 hours ago' },
-    { id: 2, title: 'Event Approved', message: 'Tech Talk Series has been approved by Faculty Head', type: 'success', time: '5 hours ago' },
-    { id: 3, title: 'New Guidelines', message: 'Updated event proposal guidelines available', type: 'info', time: '1 day ago' }
-  ]);
+  // Initialize with empty arrays - will be fetched from API
+  const [proposedEvents, setProposedEvents] = useState([]);
+  const [upcomingEvents, setUpcomingEvents] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
 
   useEffect(() => {
-    // Fetch personal team dashboard data
+    // Load Team Rep data from user context
+    if (user) {
+      setTeamRepInfo({
+        name: user.name || 'Team Representative',
+        rollNumber: user.rollNumber || 'N/A',
+        studentBody: user.studentBody?.name || user.studentBody || 'N/A',
+        university: user.university?.name || user.university || 'N/A'
+      });
+    }
+  }, [user]);
+
+  useEffect(() => {
+    // Fetch real data from API
+    const fetchDashboardData = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      try {
+        // TODO: Implement backend API endpoints
+        // GET /api/teamrep/stats
+        // GET /api/teamrep/events/proposed
+        // GET /api/teamrep/events/upcoming
+        // GET /api/teamrep/announcements
+        console.log('Team Rep Dashboard ready for API integration');
+      } catch (error) {
+        console.error('Error fetching Team Rep dashboard data:', error);
+      }
+    };
+
+    fetchDashboardData();
   }, []);
+
+  // Old mock data - REMOVED
+  // const [proposedEvents, setProposedEvents] = useState([
+  //   { id: 1, name: 'Tech Talk Series', status: 'approved', date: '2024-12-15', budget: 5000 },
+  //   { id: 2, name: 'Cultural Fest', status: 'pending', date: '2024-12-20', budget: 15000 },
+  //   ...
+  // ]);
+  // const [upcomingEvents, setUpcomingEvents] = useState([...]);
+  // const [announcements, setAnnouncements] = useState([...]);
 
   const getStatusColor = (status) => {
     switch(status) {

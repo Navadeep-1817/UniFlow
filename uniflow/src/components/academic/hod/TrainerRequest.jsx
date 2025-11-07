@@ -15,11 +15,21 @@ const TrainerRequest = () => {
   const [formData, setFormData] = useState({ trainerName: '', organization: '', domain: '', email: '', phone: '', programName: '', programType: 'FDP', date: '', startTime: '09:00', endTime: '17:00', venue: '', expectedAudience: '', budget: '', description: '' });
 
   useEffect(() => {
-    const mockRequests = [
-      { id: 1, trainerName: 'Dr. Suresh Patel', organization: 'IIT Delhi', domain: 'Artificial Intelligence', email: 'suresh@iitd.ac.in', phone: '+91 98765 11111', programName: 'AI & ML Workshop', programType: 'FDP', date: '2024-12-15', startTime: '09:00', endTime: '17:00', venue: 'Conference Hall A', expectedAudience: 60, budget: 25000, description: 'Advanced workshop on AI/ML', status: 'pending', requestedOn: '2024-11-20' },
-      { id: 2, trainerName: 'Prof. Anjali Sharma', organization: 'Microsoft', domain: 'Cloud Computing', email: 'anjali@microsoft.com', phone: '+91 98765 22222', programName: 'Azure Fundamentals', programType: 'SDP', date: '2024-12-20', startTime: '10:00', endTime: '16:00', venue: 'Lab 201', expectedAudience: 40, budget: 30000, description: 'Azure cloud training', status: 'approved', requestedOn: '2024-11-18' }
-    ];
-    setRequests(mockRequests);
+    // Fetch real trainer requests from API
+    const fetchRequests = async () => {
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      if (!token) return;
+      
+      try {
+        // TODO: Implement API endpoint
+        setRequests([]);
+        console.log('Trainer requests ready for API integration');
+      } catch (error) {
+        console.error('Error fetching trainer requests:', error);
+        setRequests([]);
+      }
+    };
+    fetchRequests();
   }, []);
 
   const showToast = (message, type = 'success') => { setToast({ show: true, message, type }); setTimeout(() => setToast({ show: false, message: '', type: '' }), 3000); };

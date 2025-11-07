@@ -42,87 +42,23 @@ const DepartmentEvents = () => {
   });
 
   useEffect(() => {
-    // Mock events data
-    const mockEvents = [
-      {
-        id: 1,
-        name: 'Faculty Development Program on AI & ML',
-        type: 'FDP',
-        description: 'Comprehensive training on Artificial Intelligence and Machine Learning for faculty members',
-        startDate: '2024-11-25',
-        endDate: '2024-11-27',
-        venue: 'Conference Hall A',
-        capacity: 50,
-        registered: 42,
-        coordinator: 'Dr. Priya Sharma',
-        status: 'ongoing',
-        createdOn: '2024-11-01',
-        sessions: 6
-      },
-      {
-        id: 2,
-        name: 'Student Development Program - Web Technologies',
-        type: 'SDP',
-        description: 'Full-stack web development training for final year students',
-        startDate: '2024-12-01',
-        endDate: '2024-12-05',
-        venue: 'Lab 201',
-        capacity: 60,
-        registered: 58,
-        coordinator: 'Prof. Rajesh Kumar',
-        status: 'pending',
-        createdOn: '2024-11-10',
-        sessions: 10
-      },
-      {
-        id: 3,
-        name: 'Campus Recruitment Training - Batch 1',
-        type: 'CRT',
-        description: 'Aptitude, reasoning, and technical skills training for placement preparation',
-        startDate: '2024-11-15',
-        endDate: '2024-11-22',
-        venue: 'Auditorium B',
-        capacity: 100,
-        registered: 95,
-        coordinator: 'Dr. Anita Desai',
-        status: 'completed',
-        createdOn: '2024-10-20',
-        sessions: 8
-      },
-      {
-        id: 4,
-        name: 'Research Methodology Workshop',
-        type: 'FDP',
-        description: 'Advanced research techniques and paper writing workshop',
-        startDate: '2024-12-10',
-        endDate: '2024-12-12',
-        venue: 'Conference Hall B',
-        capacity: 40,
-        registered: 0,
-        coordinator: 'Dr. Suresh Patel',
-        status: 'pending',
-        createdOn: '2024-11-18',
-        sessions: 5
-      },
-      {
-        id: 5,
-        name: 'Data Science and Analytics SDP',
-        type: 'SDP',
-        description: 'Hands-on training in data analysis, visualization, and machine learning',
-        startDate: '2024-11-20',
-        endDate: '2024-11-24',
-        venue: 'Lab 305',
-        capacity: 50,
-        registered: 48,
-        coordinator: 'Prof. Meena Singh',
-        status: 'ongoing',
-        createdOn: '2024-11-05',
-        sessions: 10
+    // Fetch real events data from API
+    const fetchEvents = async () => {
+      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+      if (!token) return;
+      
+      try {
+        // TODO: Implement API endpoint
+        setEvents([]);
+        setFilteredEvents([]);
+        console.log('Department events data ready for API integration');
+      } catch (error) {
+        console.error('Error fetching department events:', error);
+        setEvents([]);
+        setFilteredEvents([]);
       }
-    ];
-
-    setEvents(mockEvents);
-    setFilteredEvents(mockEvents);
+    };
+    fetchEvents();
   }, []);
 
   useEffect(() => {

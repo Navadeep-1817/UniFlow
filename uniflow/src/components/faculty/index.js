@@ -1,4 +1,5 @@
 export { default as FacultyDashboard } from './FacultyDashboard';
+export { default as FacultyProfile } from './FacultyProfile';
 export { default as MyAssignedEvents } from './MyAssignedEvents';
 export { default as SessionManagement } from './SessionManagement';
 export { default as AttendanceMarking } from './AttendanceMarking';

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { 
   FiCalendar, 
   FiUsers, 
@@ -30,12 +31,13 @@ import {
 
 const FacultyDashboard = () => {
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   const [facultyInfo, setFacultyInfo] = useState({
-    name: 'Dr. Priya Sharma',
-    employeeId: 'FAC2024',
-    department: 'Computer Science',
-    designation: 'Associate Professor',
-    university: 'JNTU Hyderabad'
+    name: '',
+    employeeId: '',
+    department: '',
+    designation: '',
+    university: ''
   });
 
   const [upcomingSessions, setUpcomingSessions] = useState([]);
@@ -45,7 +47,48 @@ const FacultyDashboard = () => {
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
 
   useEffect(() => {
-    // Mock data - Replace with API calls
+    // Load faculty data from user context
+    if (user) {
+      setFacultyInfo({
+        name: user.name || 'Faculty',
+        employeeId: user.employeeId || 'N/A',
+        department: user.department?.name || user.department || 'N/A',
+        designation: user.designation || 'Faculty',
+        university: user.university?.name || user.university || 'N/A'
+      });
+    }
+  }, [user]);
+
+  useEffect(() => {
+    // Fetch real data from API
+    const fetchDashboardData = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      try {
+        // TODO: Implement these API endpoints in backend
+        // For now, keep empty arrays until APIs are ready
+        // const sessionsResponse = await fetch(`${API_URL}/faculty/sessions`, {
+        //   headers: { 'Authorization': `Bearer ${token}` }
+        // });
+        // const sessionsData = await sessionsResponse.json();
+        // setUpcomingSessions(sessionsData.data || []);
+        
+        setUpcomingSessions([]);
+        setAssignedEvents([]);
+        setTrainingPrograms([]);
+        setNotifications([]);
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  // Old mock data - REMOVED
+  useEffect(() => {
+    // Mock data - REMOVED, keeping structure for reference
     const mockUpcomingSessions = [
       {
         id: 1,
@@ -151,10 +194,11 @@ const FacultyDashboard = () => {
       }
     ];
 
-    setUpcomingSessions(mockUpcomingSessions);
-    setAssignedEvents(mockAssignedEvents);
-    setTrainingPrograms(mockTrainingPrograms);
-    setNotifications(mockNotifications);
+    // Mock data removed - will be fetched from API
+    // setUpcomingSessions(mockUpcomingSessions);
+    // setAssignedEvents(mockAssignedEvents);
+    // setTrainingPrograms(mockTrainingPrograms);
+    // setNotifications(mockNotifications);
   }, []);
 
   const showToast = (message, type = 'success') => {
@@ -247,8 +291,15 @@ const FacultyDashboard = () => {
     },
     nav: {
       display: 'flex',
+      gap: '12px',
+      alignItems: 'center',
+      overflowX: 'auto',
+      scrollbarWidth: 'none',
+      msOverflowStyle: 'none'
+    },
+    navWrapper: {
+      display: 'flex',
       gap: '8px',
-      flexWrap: 'wrap',
       alignItems: 'center'
     },
     welcomeSection: {
@@ -425,17 +476,28 @@ const FacultyDashboard = () => {
         </div>
         <div style={styles.nav}>
           <NavButton icon={FiHome} label="Dashboard" path="/faculty/dashboard" active={true} />
-          <NavButton icon={FiCalendar} label="My Events" path="/faculty/my-events" />
-          <NavButton icon={FiLayers} label="Sessions" path="/faculty/sessions" />
+          <NavButton icon={FiUser} label="Profile" path="/faculty/profile" />
+          <NavButton icon={FiCalendar} label="Events" path="/faculty/my-events" />
           <NavButton icon={FiCheckCircle} label="Attendance" path="/faculty/attendance" />
-          <NavButton icon={FiClipboard} label="Sheet" path="/faculty/attendance-sheet" />
-          <NavButton icon={FiUploadCloud} label="Materials" path="/faculty/upload-materials" />
-          <NavButton icon={FiTrendingUp} label="Progress" path="/faculty/student-progress" />
           <NavButton icon={FiFileText} label="Reports" path="/faculty/reports" />
-          <NavButton icon={FiSend} label="Leave" path="/faculty/leave-request" />
           <NavButton icon={FiBell} label="Notifications" path="/faculty/notifications" />
           <NavButton icon={FiBarChart2} label="Analytics" path="/faculty/analytics" />
-          <button onClick={handleLogout} style={{padding: '10px 16px', backgroundColor: '#FEE2E2', border: 'none', borderRadius: '8px', color: '#DC2626', cursor: 'pointer', fontSize: '14px', fontWeight: '500', transition: 'all 0.2s ease'}} onMouseEnter={(e) => {e.currentTarget.style.backgroundColor = '#FCA5A5'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 6px rgba(220, 38, 38, 0.2)';}} onMouseLeave={(e) => {e.currentTarget.style.backgroundColor = '#FEE2E2'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none';}}>Logout</button>
+          <button 
+            onClick={handleLogout} 
+            style={{
+              padding: '10px 16px', 
+              backgroundColor: '#FEE2E2', 
+              border: 'none', 
+              borderRadius: '8px', 
+              color: '#DC2626', 
+              cursor: 'pointer', 
+              fontSize: '14px', 
+              fontWeight: '500', 
+              transition: 'all 0.2s ease'
+            }}
+          >
+            Logout
+          </button>
         </div>
       </div>
 
@@ -520,7 +582,13 @@ const FacultyDashboard = () => {
           {/* Upcoming Sessions */}
           <div style={styles.card}>
             <h3 style={styles.sectionTitle}><FiClock size={18} style={{marginRight: '8px'}} /> Upcoming Sessions</h3>
-            {upcomingSessions.map(session => (
+            {upcomingSessions.length === 0 ? (
+              <div style={{textAlign: 'center', padding: '40px 20px', color: '#9CA3AF'}}>
+                <FiClock size={48} style={{opacity: 0.3, marginBottom: '12px'}} />
+                <p style={{fontSize: '16px', fontWeight: '500'}}>No upcoming sessions</p>
+                <p style={{fontSize: '14px', marginTop: '8px'}}>Your scheduled sessions will appear here</p>
+              </div>
+            ) : upcomingSessions.map(session => (
               <div 
                 key={session.id} 
                 style={styles.sessionCard}
@@ -558,7 +626,13 @@ const FacultyDashboard = () => {
           {/* Assigned Events */}
           <div style={styles.card}>
             <h3 style={styles.sectionTitle}><FiClipboard size={18} style={{marginRight: '8px'}} /> Assigned Events</h3>
-            {assignedEvents.map(event => {
+            {assignedEvents.length === 0 ? (
+              <div style={{textAlign: 'center', padding: '40px 20px', color: '#9CA3AF'}}>
+                <FiClipboard size={48} style={{opacity: 0.3, marginBottom: '12px'}} />
+                <p style={{fontSize: '16px', fontWeight: '500'}}>No assigned events</p>
+                <p style={{fontSize: '14px', marginTop: '8px'}}>Events assigned to you will appear here</p>
+              </div>
+            ) : assignedEvents.map(event => {
               const typeStyle = getEventTypeColor(event.type);
               const progress = (event.completedSessions / event.totalSessions) * 100;
               return (

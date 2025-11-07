@@ -33,7 +33,8 @@ import {
   GenerateReport,
   LeaveRequest,
   NotificationCenter,
-  FacultyAnalytics
+  FacultyAnalytics,
+  FacultyProfile
 } from './components/faculty';
 import HODDashboard from './components/academic/hod/HODDashboard';
 import DepartmentEvents from './components/academic/hod/DepartmentEvents';
@@ -44,8 +45,6 @@ import VenueBooking from './components/academic/hod/VenueBooking';
 import TrainerRequest from './components/academic/hod/TrainerRequest';
 import DepartmentAnalytics from './components/academic/hod/DepartmentAnalytics';
 import DepartmentAttendance from './components/academic/hod/DepartmentAttendance';
-import ResourceManagement from './components/academic/hod/ResourceManagement';
-import TimetableManagement from './components/academic/hod/TimetableManagement';
 import CompanyManagement from './components/academic/placement/CompanyManagement';
 import CRTSessionManagement from './components/academic/placement/CRTSessionManagement';
 import TPDashboard from './components/academic/placement/TPDashboard';
@@ -122,6 +121,7 @@ function App() {
         
         {/* Faculty Routes */}
         <Route path="/faculty/dashboard" element={<FacultyDashboard />} />
+        <Route path="/faculty/profile" element={<FacultyProfile />} />
         <Route path="/faculty/my-events" element={<MyAssignedEvents />} />
         <Route path="/faculty/sessions" element={<SessionManagement />} />
         <Route path="/faculty/attendance" element={<AttendanceMarking />} />
@@ -143,8 +143,6 @@ function App() {
         <Route path="/hod/trainers" element={<TrainerRequest />} />
         <Route path="/hod/analytics" element={<DepartmentAnalytics />} />
         <Route path="/hod/attendance" element={<DepartmentAttendance />} />
-        <Route path="/hod/resources" element={<ResourceManagement />} />
-        <Route path="/hod/timetable" element={<TimetableManagement />} />
         
         {/* Placement Routes */}
         <Route path="/placement/dashboard" element={<TPDashboard />} />

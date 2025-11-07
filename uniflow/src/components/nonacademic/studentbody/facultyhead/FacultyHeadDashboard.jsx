@@ -1,16 +1,53 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../../../context/AuthContext';
 import FacultyHeadTopNav from './FacultyHeadTopNav';
 
 const FacultyHeadDashboard = () => {
+  const { user, loading: authLoading } = useAuth();
+  const [facultyHeadInfo, setFacultyHeadInfo] = useState({
+    name: '',
+    employeeId: '',
+    studentBody: '',
+    university: ''
+  });
+  
   const [bodyStats, setBodyStats] = useState({
-    totalMembers: 45,
-    activeEvents: 8,
-    pendingApprovals: 3,
-    budgetUtilized: 125000
+    totalMembers: 0,
+    activeEvents: 0,
+    pendingApprovals: 0,
+    budgetUtilized: 0
   });
 
   useEffect(() => {
-    // Fetch student body overview
+    // Load Faculty Head data from user context
+    if (user) {
+      setFacultyHeadInfo({
+        name: user.name || 'Faculty Head',
+        employeeId: user.employeeId || 'N/A',
+        studentBody: user.studentBody?.name || user.studentBody || 'N/A',
+        university: user.university?.name || user.university || 'N/A'
+      });
+    }
+  }, [user]);
+
+  useEffect(() => {
+    // Fetch real data from API
+    const fetchDashboardData = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      try {
+        // TODO: Implement backend API endpoints
+        // GET /api/facultyhead/stats
+        // GET /api/facultyhead/members
+        // GET /api/facultyhead/events
+        console.log('Faculty Head Dashboard ready for API integration');
+      } catch (error) {
+        console.error('Error fetching Faculty Head dashboard data:', error);
+      }
+    };
+
+    fetchDashboardData();
   }, []);
 
   return (
