@@ -4,41 +4,51 @@ const { protect, authorize } = require('../middleware/authMiddleware');
 const { ROLES } = require('../config/roles');
 const {
   generateCertificate,
+  getAllCertificates,
   getMyCertificates,
-  getCertificate,
+  getCertificateById,
   verifyCertificate,
-  bulkGenerateCertificates,
   downloadCertificate,
-  revokeCertificate
+  revokeCertificate,
+  bulkGenerateCertificates,
 } = require('../controllers/certificateController');
 
 // Public routes
-router.get('/verify/:certificateId', verifyCertificate);
+router.get('/verify/:code', verifyCertificate); // Accept both certificateNumber and verificationCode
 
-// Protected routes
-router.use(protect);
+// Protected specific routes - BEFORE :id
+router.get('/my-certificates', protect, authorize(ROLES.STUDENT), getMyCertificates);
 
-// Student routes
-router.get('/me', getMyCertificates);
-router.get('/:id', getCertificate);
-router.get('/:id/download', downloadCertificate);
-
-// Admin routes - generate certificates
+// Generate routes
 router.post(
   '/generate',
-  authorize(ROLES.SUPER_ADMIN, ROLES.ACADEMIC_ADMIN_HOD, ROLES.ACADEMIC_ADMIN_TP, ROLES.NON_ACADEMIC_FACULTY_HEAD, ROLES.FACULTY),
+  protect,
+  authorize(ROLES.SUPER_ADMIN, ROLES.ACADEMIC_ADMIN_HOD, ROLES.ACADEMIC_ADMIN_TP, ROLES.FACULTY),
   generateCertificate
 );
 
 router.post(
   '/bulk-generate',
-  authorize(ROLES.SUPER_ADMIN, ROLES.ACADEMIC_ADMIN_HOD, ROLES.ACADEMIC_ADMIN_TP, ROLES.NON_ACADEMIC_FACULTY_HEAD),
+  protect,
+  authorize(ROLES.SUPER_ADMIN, ROLES.ACADEMIC_ADMIN_HOD, ROLES.ACADEMIC_ADMIN_TP),
   bulkGenerateCertificates
 );
 
-router.delete(
+// Get all certificates (supports query params like eventId)
+router.get(
+  '/',
+  protect,
+  authorize(ROLES.SUPER_ADMIN, ROLES.ACADEMIC_ADMIN_HOD, ROLES.ACADEMIC_ADMIN_TP, ROLES.FACULTY),
+  getAllCertificates
+);
+
+// Dynamic :id routes - AFTER specific routes
+router.get('/:id', protect, getCertificateById);
+router.get('/:id/download', protect, downloadCertificate);
+router.put(
   '/:id/revoke',
-  authorize(ROLES.SUPER_ADMIN, ROLES.ACADEMIC_ADMIN_HOD, ROLES.ACADEMIC_ADMIN_TP, ROLES.NON_ACADEMIC_FACULTY_HEAD),
+  protect,
+  authorize(ROLES.SUPER_ADMIN, ROLES.ACADEMIC_ADMIN_HOD, ROLES.ACADEMIC_ADMIN_TP),
   revokeCertificate
 );
 

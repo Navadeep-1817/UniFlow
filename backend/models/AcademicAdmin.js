@@ -33,7 +33,6 @@ const academicAdminSchema = new mongoose.Schema(
     approvedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
     },
     permissions: {
       canCreateEvents: { type: Boolean, default: true },

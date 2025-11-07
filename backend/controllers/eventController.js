@@ -608,9 +608,62 @@ const getEventStats = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Get upcoming events
+// @route   GET /api/events/upcoming
+// @access  Public
+const getUpcomingEvents = asyncHandler(async (req, res) => {
+  const {
+    type,
+    category,
+    mode,
+    university,
+    days = 30,
+    page = 1,
+    limit = 10,
+  } = req.query;
+
+  const query = {
+    status: 'Published',
+    'date.startDate': {
+      $gte: new Date(),
+      $lte: new Date(Date.now() + days * 24 * 60 * 60 * 1000),
+    },
+  };
+
+  if (type) query.type = type;
+  if (category) query.category = category;
+  if (mode) query.mode = mode;
+  if (university) query.university = university;
+
+  const pageNum = parseInt(page);
+  const limitNum = parseInt(limit);
+  const skip = (pageNum - 1) * limitNum;
+
+  const events = await Event.find(query)
+    .populate('university', 'name code')
+    .populate('organizer')
+    .populate('venue', 'name building capacity')
+    .populate('trainer', 'name organization')
+    .sort('date.startDate')
+    .skip(skip)
+    .limit(limitNum);
+
+  const total = await Event.countDocuments(query);
+
+  res.status(200).json({
+    success: true,
+    count: events.length,
+    total,
+    page: pageNum,
+    pages: Math.ceil(total / limitNum),
+    data: events,
+  });
+});
+
 module.exports = {
   getEvents,
   getEvent,
+  getUpcomingEvents,
   createEvent,
   updateEvent,
   deleteEvent,

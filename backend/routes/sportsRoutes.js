@@ -15,8 +15,9 @@ const {
   getSportsStats
 } = require('../controllers/sportsController');
 
-// Public routes
+// Public routes - IMPORTANT: Specific routes BEFORE dynamic :id routes
 router.get('/', getSportsEvents);
+router.get('/stats', getSportsStats); // MOVED: Must be before /:id to avoid conflict
 router.get('/:id', getSportsEvent);
 router.get('/:id/results', getSportsEventResults);
 
@@ -50,12 +51,6 @@ router.post(
   '/:id/results',
   authorize(ROLES.SUPER_ADMIN, ROLES.NON_ACADEMIC_FACULTY_HEAD, ROLES.NON_ACADEMIC_TEAM_REP),
   recordResult
-);
-
-router.get(
-  '/stats/overview',
-  authorize(ROLES.SUPER_ADMIN, ROLES.NON_ACADEMIC_FACULTY_HEAD, ROLES.NON_ACADEMIC_TEAM_REP),
-  getSportsStats
 );
 
 module.exports = router;

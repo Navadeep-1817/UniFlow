@@ -125,20 +125,27 @@ app.use('/api/events', require('./routes/eventRoutes'));
 app.use('/api/registrations', require('./routes/registrationRoutes'));
 app.use('/api/attendance', require('./routes/attendanceRoutes'));
 
-// Feedback and Certificates (Comment out until controllers are implemented)
-// app.use('/api/feedback', require('./routes/feedbackRoutes'));
-// app.use('/api/certificates', require('./routes/certificateRoutes'));
+// Infrastructure Management (NOW ACTIVE)
+app.use('/api/venues', require('./routes/venueRoutes'));
+app.use('/api/departments', require('./routes/departmentRoutes'));
+app.use('/api/student-bodies', require('./routes/studentBodyRoutes'));
 
-// Sports Management (Comment out until controllers are implemented)
-// app.use('/api/sports', require('./routes/sportsRoutes'));
+// Feedback and Certificates systems
+app.use('/api/feedback', require('./routes/feedbackRoutes'));
+app.use('/api/certificates', require('./routes/certificateRoutes'));
 
-// Infrastructure (Comment out until controllers are implemented)
-// app.use('/api/venues', require('./routes/venueRoutes'));
-// app.use('/api/departments', require('./routes/departmentRoutes'));
-// app.use('/api/student-bodies', require('./routes/studentBodyRoutes'));
+// Sports Management
+app.use('/api/sports', require('./routes/sportsRoutes'));
 
-// System Features (Comment out until controllers are implemented)
-// app.use('/api/notifications', require('./routes/notificationRoutes'));
+// Notification System
+app.use('/api/notifications', require('./routes/notificationRoutes'));
+
+// Week 3 Systems - Placement, Timetable, Resource
+app.use('/api/placements', require('./routes/placementRoutes'));
+app.use('/api/timetables', require('./routes/timetableRoutes'));
+app.use('/api/resources', require('./routes/resourceRoutes'));
+
+// Additional System Features (Comment out until controllers are implemented)
 // app.use('/api/approvals', require('./routes/approvalRoutes'));
 // app.use('/api/conflicts', require('./routes/conflictRoutes'));
 // app.use('/api/analytics', require('./routes/analyticsRoutes'));

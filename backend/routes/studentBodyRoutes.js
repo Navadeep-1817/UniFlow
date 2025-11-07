@@ -3,35 +3,53 @@ const router = express.Router();
 const { protect, authorize } = require('../middleware/authMiddleware');
 const { ROLES } = require('../config/roles');
 const {
-  getStudentBodies,
-  getStudentBody,
   createStudentBody,
+  getAllStudentBodies,
+  getStudentBodyById,
   updateStudentBody,
   deleteStudentBody,
-  addTeamRepresentative,
-  removeTeamRepresentative,
+  getStudentBodyMembers,
   addMember,
   removeMember,
   getStudentBodyEvents
 } = require('../controllers/studentBodyController');
 
-// Public routes
-router.get('/', getStudentBodies);
-router.get('/:id', getStudentBody);
-router.get('/:id/events', getStudentBodyEvents);
+// All routes require authentication
+router.get(
+  '/',
+  protect,
+  getAllStudentBodies
+);
 
-// Protected routes
+router.get(
+  '/:id',
+  protect,
+  getStudentBodyById
+);
+
+router.get(
+  '/:id/members',
+  protect,
+  getStudentBodyMembers
+);
+
+router.get(
+  '/:id/events',
+  protect,
+  getStudentBodyEvents
+);
+
 router.post(
   '/',
   protect,
-  authorize(ROLES.SUPER_ADMIN, ROLES.NON_ACADEMIC_FACULTY_HEAD),
+  authorize(ROLES.SUPER_ADMIN, ROLES.NON_ACADEMIC_FACULTY_HEAD, ROLES.ACADEMIC_ADMIN_HOD, ROLES.ACADEMIC_ADMIN_TP),
   createStudentBody
 );
 
 router.put(
   '/:id',
   protect,
-  authorize(ROLES.SUPER_ADMIN, ROLES.NON_ACADEMIC_FACULTY_HEAD),
+  authorize(ROLES.SUPER_ADMIN, ROLES.NON_ACADEMIC_FACULTY_HEAD, ROLES.NON_ACADEMIC_TEAM_REP),
   updateStudentBody
 );
 
@@ -42,31 +60,16 @@ router.delete(
   deleteStudentBody
 );
 
-// Team representatives management
-router.post(
-  '/:id/representatives',
-  protect,
-  authorize(ROLES.SUPER_ADMIN, ROLES.NON_ACADEMIC_FACULTY_HEAD),
-  addTeamRepresentative
-);
-
-router.delete(
-  '/:id/representatives/:userId',
-  protect,
-  authorize(ROLES.SUPER_ADMIN, ROLES.NON_ACADEMIC_FACULTY_HEAD),
-  removeTeamRepresentative
-);
-
 // Members management
 router.post(
-  '/:id/members',
+  '/:id/add-member',
   protect,
   authorize(ROLES.NON_ACADEMIC_FACULTY_HEAD, ROLES.NON_ACADEMIC_TEAM_REP),
   addMember
 );
 
 router.delete(
-  '/:id/members/:userId',
+  '/:id/remove-member/:studentId',
   protect,
   authorize(ROLES.NON_ACADEMIC_FACULTY_HEAD, ROLES.NON_ACADEMIC_TEAM_REP),
   removeMember

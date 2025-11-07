@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
+import ForgotPassword from './components/auth/ForgotPassword';
+import PendingApproval from './components/auth/PendingApproval';
 import SuperAdminDashboard from './components/superadmin/SuperAdminDashboard';
 import AdminApprovalQueue from './components/superadmin/AdminApprovalQueue';
 import GlobalAnalytics from './components/superadmin/GlobalAnalytics';
@@ -18,6 +20,7 @@ import Notifications from './components/student/Notifications';
 import PlacementProfile from './components/student/PlacementProfile';
 import RegisterEvent from './components/student/RegisterEvent';
 import StudentBodyMembership from './components/student/StudentBodyMembership';
+import StudentAnalytics from './components/student/StudentAnalytics';
 import { 
   FacultyDashboard,
   MyAssignedEvents,
@@ -29,7 +32,8 @@ import {
   EventFeedback,
   GenerateReport,
   LeaveRequest,
-  NotificationCenter
+  NotificationCenter,
+  FacultyAnalytics
 } from './components/faculty';
 import HODDashboard from './components/academic/hod/HODDashboard';
 import DepartmentEvents from './components/academic/hod/DepartmentEvents';
@@ -57,7 +61,33 @@ import AthleticsReport from './components/nonacademic/sports/AthleticsReport';
 import ResultsManagement from './components/nonacademic/sports/ResultsManagement';
 import FixtureScheduling from './components/nonacademic/sports/FixtureScheduling';
 import FacultyHeadDashboard from './components/nonacademic/studentbody/facultyhead/FacultyHeadDashboard';
-import TeamRepDashboard from './components/nonacademic/studentbody/teamrep/TeamRepDashboard';
+import BudgetManagement from './components/nonacademic/studentbody/facultyhead/BudgetManagement';
+import EventApproval from './components/nonacademic/studentbody/facultyhead/EventApproval';
+import StudentBodyEvents from './components/nonacademic/studentbody/facultyhead/StudentBodyEvents';
+import TeamManagement from './components/nonacademic/studentbody/facultyhead/TeamManagement';
+import TeamPerformanceReview from './components/nonacademic/studentbody/facultyhead/TeamPerformanceReview';
+import VenueApproval from './components/nonacademic/studentbody/facultyhead/VenueApproval';
+import { 
+  TeamRepDashboard,
+  ProposeEvent,
+  ManageTeamMembers,
+  EventExecution,
+  AttendanceTracking,
+  FeedbackCollection,
+  ActivityReport,
+  ResourceRequest
+} from './components/nonacademic/studentbody/teamrep';
+
+// Analytics Components - Global Access
+import AttendanceReport from './components/analytics/AttendanceReport';
+import ComparativeAnalytics from './components/analytics/ComparativeAnalytics';
+import EventAnalytics from './components/analytics/EventAnalytics';
+import ExportReport from './components/analytics/ExportReport';
+import FeedbackReport from './components/analytics/FeedbackReport';
+import StudentBodyAnalytics from './components/analytics/StudentBodyAnalytics';
+import StudentPerformanceReport from './components/analytics/StudentPerformanceReport';
+import SuperAdminAnalytics from './components/analytics/SuperAdminAnalytics';
+import UniversityAnalytics from './components/analytics/UniversityAnalytics';
 
 function App() {
   return (
@@ -66,6 +96,8 @@ function App() {
         <Route path="/" element={<Navigate to="/register" replace />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/pending-approval" element={<PendingApproval />} />
         
         {/* Dashboard routes for different roles */}
         <Route path="/superadmin/dashboard" element={<SuperAdminDashboard />} />
@@ -86,6 +118,7 @@ function App() {
         <Route path="/student/notifications" element={<Notifications />} />
         <Route path="/student/placement-profile" element={<PlacementProfile />} />
         <Route path="/student/memberships" element={<StudentBodyMembership />} />
+        <Route path="/student/analytics" element={<StudentAnalytics />} />
         
         {/* Faculty Routes */}
         <Route path="/faculty/dashboard" element={<FacultyDashboard />} />
@@ -99,6 +132,7 @@ function App() {
         <Route path="/faculty/reports" element={<GenerateReport />} />
         <Route path="/faculty/leave-request" element={<LeaveRequest />} />
         <Route path="/faculty/notifications" element={<NotificationCenter />} />
+        <Route path="/faculty/analytics" element={<FacultyAnalytics />} />
         {/* HOD Routes */}
         <Route path="/hod/dashboard" element={<HODDashboard />} />
         <Route path="/hod/faculty" element={<FacultyManagement />} />
@@ -125,14 +159,47 @@ function App() {
         <Route path="/placement/reports" element={<PlacementReports />} />
         
         {/* Student Body Routes */}
+        {/* Faculty Head Routes */}
         <Route path="/student-body/faculty-head/dashboard" element={<FacultyHeadDashboard />} />
-        <Route path="/student-body/team-rep/dashboard" element={<TeamRepDashboard />} />
+        <Route path="/student-body/faculty-head/budget-management" element={<BudgetManagement />} />
+        <Route path="/student-body/faculty-head/event-approval" element={<EventApproval />} />
+        <Route path="/student-body/faculty-head/events" element={<StudentBodyEvents />} />
+        <Route path="/student-body/faculty-head/team-management" element={<TeamManagement />} />
+        <Route path="/student-body/faculty-head/performance-review" element={<TeamPerformanceReview />} />
+        <Route path="/student-body/faculty-head/venue-approval" element={<VenueApproval />} />
+        
+        {/* Legacy redirect for old student_body role */}
+        <Route path="/student-body/dashboard" element={<Navigate to="/teamrep/dashboard" replace />} />
+        
+        {/* Team Rep Routes */}
+        <Route path="/teamrep/dashboard" element={<TeamRepDashboard />} />
+        <Route path="/teamrep/propose-event" element={<ProposeEvent />} />
+        <Route path="/teamrep/manage-members" element={<ManageTeamMembers />} />
+        <Route path="/teamrep/event-execution" element={<EventExecution />} />
+        <Route path="/teamrep/activity-report" element={<ActivityReport />} />
+        <Route path="/teamrep/attendance" element={<AttendanceTracking />} />
+        <Route path="/teamrep/feedback" element={<FeedbackCollection />} />
+        <Route path="/teamrep/resource-request" element={<ResourceRequest />} />
+        
+        {/* Legacy route - redirect to new path */}
+        <Route path="/student-body/team-rep/dashboard" element={<Navigate to="/teamrep/dashboard" replace />} />
         
         {/* Sports Routes */}
         <Route path="/sports/dashboard" element={<SportsDashboard />} />
         <Route path="/sports/athletics-report" element={<AthleticsReport />} />
         <Route path="/sports/results-management" element={<ResultsManagement />} />
         <Route path="/sports/fixture-scheduling" element={<FixtureScheduling />} />
+        
+        {/* Global Analytics Routes - Accessible by all roles */}
+        <Route path="/analytics/attendance" element={<AttendanceReport />} />
+        <Route path="/analytics/comparative" element={<ComparativeAnalytics />} />
+        <Route path="/analytics/events" element={<EventAnalytics />} />
+        <Route path="/analytics/export" element={<ExportReport />} />
+        <Route path="/analytics/feedback" element={<FeedbackReport />} />
+        <Route path="/analytics/student-body" element={<StudentBodyAnalytics />} />
+        <Route path="/analytics/student-performance" element={<StudentPerformanceReport />} />
+        <Route path="/analytics/superadmin" element={<SuperAdminAnalytics />} />
+        <Route path="/analytics/university" element={<UniversityAnalytics />} />
       </Routes>
     </BrowserRouter>
   );

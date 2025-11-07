@@ -206,23 +206,29 @@ exports.register = async (req, res, next) => {
         case ROLES.ACADEMIC_ADMIN_TP:
           roleProfile = await AcademicAdmin.create({
             userId: user._id,
-            adminType: role === ROLES.ACADEMIC_ADMIN_HOD ? 'HOD' : 'Training & Placement',
+            adminType: role === ROLES.ACADEMIC_ADMIN_HOD ? 'HOD' : 'TP',
             department: roleSpecificData.department,
-            university: roleSpecificData.university,
             ...roleSpecificData,
           });
           break;
 
-        case ROLES.NON_ACADEMIC_FACULTY_HEAD:
-        case ROLES.NON_ACADEMIC_TEAM_REP:
-          roleProfile = await NonAcademicAdmin.create({
-            userId: user._id,
-            studentBody: roleSpecificData.studentBody,
-            university: roleSpecificData.university,
-            position: role === ROLES.NON_ACADEMIC_FACULTY_HEAD ? 'Faculty Head' : 'Team Representative',
-            ...roleSpecificData,
-          });
-          break;
+// Replace the NON_ACADEMIC_FACULTY_HEAD and NON_ACADEMIC_TEAM_REP case in the register function
+// with this corrected version:
+
+case ROLES.NON_ACADEMIC_FACULTY_HEAD:
+case ROLES.NON_ACADEMIC_TEAM_REP:
+  roleProfile = await NonAcademicAdmin.create({
+    userId: user._id,
+    studentBody: roleSpecificData.studentBody,
+    university: roleSpecificData.university,
+    position: role === ROLES.NON_ACADEMIC_FACULTY_HEAD ? 'Faculty Head' : 'Team Representative',
+    adminType: role === ROLES.NON_ACADEMIC_FACULTY_HEAD ? 'FacultyHead' : 'TeamRep',
+    tenure: {
+      startDate: new Date() // automatically sets start date to current date
+    },
+    ...roleSpecificData,
+  });
+  break;
       }
     } catch (profileError) {
       // If role profile creation fails, delete the user
@@ -520,15 +526,19 @@ exports.getMe = async (req, res, next) => {
         break;
       case ROLES.NON_ACADEMIC_FACULTY_HEAD:
       case ROLES.NON_ACADEMIC_TEAM_REP:
-        roleProfile = await NonAcademicAdmin.findOne({ userId: user._id })
-          .populate('studentBody', 'name description')
-          .populate('university', 'name logo');
+        roleProfile = await NonAcademicAdmin.create({
+          userId: user._id,
+          studentBody: roleSpecificData.studentBody,
+          university: roleSpecificData.university,
+          position: role === ROLES.NON_ACADEMIC_FACULTY_HEAD ? 'Faculty Head' : 'Team Representative',
+          adminType: role === ROLES.NON_ACADEMIC_FACULTY_HEAD ? 'FacultyHead' : 'TeamRep',
+          tenure: {
+            startDate: new Date() // automatically sets start date to current date
+          },
+          ...roleSpecificData,
+        });
         break;
-      case ROLES.SUPER_ADMIN:
-        roleProfile = await SuperAdmin.findOne({ userId: user._id })
-          .populate('managedUniversities', 'name code');
-        break;
-    }
+      }
 
     res.status(200).json({
       success: true,

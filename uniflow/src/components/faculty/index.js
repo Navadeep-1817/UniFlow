@@ -9,3 +9,4 @@ export { default as EventFeedback } from './EventFeedback';
 export { default as GenerateReport } from './GenerateReport';
 export { default as LeaveRequest } from './LeaveRequest';
 export { default as NotificationCenter } from './NotificationCenter';
+export { default as FacultyAnalytics } from './FacultyAnalytics';

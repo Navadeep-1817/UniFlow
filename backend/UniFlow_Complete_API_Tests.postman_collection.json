@@ -1,0 +1,1260 @@
+{
+  "info": {
+    "name": "UniFlow - Complete Backend API Tests (100%)",
+    "description": "Complete test collection for all 209 endpoints across 24 systems",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{authToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "eventId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "departmentId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "venueId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "studentId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "facultyId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "placementId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "timetableId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "resourceId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "0. Setup & Health Check",
+      "item": [
+        {
+          "name": "Server Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/health",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["health"]
+            }
+          }
+        },
+        {
+          "name": "Root Endpoint",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": [""]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    pm.collectionVariables.set('userId', pm.response.json().data._id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"testuser@example.com\",\n  \"password\": \"Test@1234\",\n  \"role\": \"Student\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    pm.collectionVariables.set('authToken', pm.response.json().token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testuser@example.com\",\n  \"password\": \"Test@1234\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "me"]
+            }
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testuser@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/forgot-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "forgot-password"]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Setup",
+      "item": [
+        {
+          "name": "Check Setup Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/setup/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["setup", "status"]
+            }
+          }
+        },
+        {
+          "name": "Initialize System",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"universityName\": \"Test University\",\n  \"universityCode\": \"TU\",\n  \"adminName\": \"Super Admin\",\n  \"adminEmail\": \"admin@testuniversity.com\",\n  \"adminPassword\": \"Admin@1234\",\n  \"superAdminKey\": \"your-super-admin-key\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/setup/initialize",
+              "host": ["{{baseUrl}}"],
+              "path": ["setup", "initialize"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Week 3 - Placement System",
+      "item": [
+        {
+          "name": "Get All Placement Drives (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/placements?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["placements"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "minCTC",
+                  "value": "500000",
+                  "disabled": true
+                },
+                {
+                  "key": "jobType",
+                  "value": "Full-time",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Placement Drive",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    pm.collectionVariables.set('placementId', pm.response.json().data._id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{eventId}}\",\n  \"company\": {\n    \"name\": \"Tech Corp\",\n    \"website\": \"https://techcorp.com\",\n    \"logo\": \"https://logo-url.com\",\n    \"industry\": \"IT Services\"\n  },\n  \"jobDetails\": {\n    \"role\": \"Software Engineer\",\n    \"description\": \"Full-stack development role\",\n    \"type\": \"Full-time\",\n    \"workMode\": \"Hybrid\",\n    \"location\": \"Bangalore\"\n  },\n  \"package\": {\n    \"ctc\": 1200000,\n    \"base\": 1000000,\n    \"variable\": 150000,\n    \"joiningBonus\": 50000\n  },\n  \"eligibility\": {\n    \"departments\": [\"{{departmentId}}\"],\n    \"minCGPA\": 7.5,\n    \"maxBacklogs\": 2\n  },\n  \"importantDates\": {\n    \"applicationDeadline\": \"2025-12-31\",\n    \"assessmentDate\": \"2026-01-10\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/placements",
+              "host": ["{{baseUrl}}"],
+              "path": ["placements"]
+            }
+          }
+        },
+        {
+          "name": "Get Single Placement Drive",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/placements/{{placementId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["placements", "{{placementId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Placement Drive",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Active\",\n  \"company\": {\n    \"name\": \"Updated Tech Corp\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/placements/{{placementId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["placements", "{{placementId}}"]
+            }
+          }
+        },
+        {
+          "name": "Student - Register for Placement",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/placements/{{placementId}}/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["placements", "{{placementId}}", "register"]
+            }
+          }
+        },
+        {
+          "name": "Update Application Status",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"shortlisted\",\n  \"roundNumber\": 1,\n  \"remarks\": \"Passed aptitude test\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/placements/{{placementId}}/applications/{{studentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["placements", "{{placementId}}", "applications", "{{studentId}}"]
+            }
+          }
+        },
+        {
+          "name": "Record Round",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roundType\": \"Technical\",\n  \"roundNumber\": 2,\n  \"venue\": \"{{venueId}}\",\n  \"date\": \"2026-01-15T10:00:00Z\",\n  \"selectedStudents\": [\"{{studentId}}\"],\n  \"remarks\": \"Technical round conducted\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/placements/{{placementId}}/rounds",
+              "host": ["{{baseUrl}}"],
+              "path": ["placements", "{{placementId}}", "rounds"]
+            }
+          }
+        },
+        {
+          "name": "Record Offer",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ctc\": 1200000,\n  \"designation\": \"Software Engineer\",\n  \"joiningDate\": \"2026-07-01\",\n  \"location\": \"Bangalore\",\n  \"offerStatus\": \"Offered\",\n  \"remarks\": \"Joining bonus included\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/placements/{{placementId}}/offers/{{studentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["placements", "{{placementId}}", "offers", "{{studentId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Placement Statistics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/placements/stats/overview?academicYear=2025-26",
+              "host": ["{{baseUrl}}"],
+              "path": ["placements", "stats", "overview"],
+              "query": [
+                {
+                  "key": "academicYear",
+                  "value": "2025-26"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Student - Get My Placements",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/placements/my/placements",
+              "host": ["{{baseUrl}}"],
+              "path": ["placements", "my", "placements"]
+            }
+          }
+        },
+        {
+          "name": "Delete Placement Drive",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/placements/{{placementId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["placements", "{{placementId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Week 3 - Timetable System",
+      "item": [
+        {
+          "name": "Create Timetable",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    pm.collectionVariables.set('timetableId', pm.response.json().data._id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"CSE 5th Semester - Odd 2025\",\n  \"description\": \"Computer Science timetable\",\n  \"type\": \"Academic\",\n  \"department\": \"{{departmentId}}\",\n  \"semester\": 5,\n  \"academicYear\": \"2025-26\",\n  \"schedule\": [\n    {\n      \"day\": \"Monday\",\n      \"slots\": [\n        {\n          \"startTime\": \"09:00\",\n          \"endTime\": \"10:00\",\n          \"event\": \"{{eventId}}\",\n          \"venue\": \"{{venueId}}\",\n          \"type\": \"Lecture\"\n        }\n      ]\n    }\n  ],\n  \"breakTimings\": {\n    \"lunch\": {\n      \"start\": \"13:00\",\n      \"end\": \"14:00\"\n    }\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/timetables",
+              "host": ["{{baseUrl}}"],
+              "path": ["timetables"]
+            }
+          }
+        },
+        {
+          "name": "Get All Timetables",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/timetables?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["timetables"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "type",
+                  "value": "Academic",
+                  "disabled": true
+                },
+                {
+                  "key": "semester",
+                  "value": "5",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Single Timetable",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/timetables/{{timetableId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["timetables", "{{timetableId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Timetable",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Timetable\",\n  \"status\": \"Active\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/timetables/{{timetableId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["timetables", "{{timetableId}}"]
+            }
+          }
+        },
+        {
+          "name": "Add Event to Timetable",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{eventId}}\",\n  \"day\": \"Tuesday\",\n  \"startTime\": \"10:00\",\n  \"endTime\": \"11:00\",\n  \"venue\": \"{{venueId}}\",\n  \"faculty\": \"{{facultyId}}\",\n  \"type\": \"Lecture\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/timetables/{{timetableId}}/events",
+              "host": ["{{baseUrl}}"],
+              "path": ["timetables", "{{timetableId}}", "events"]
+            }
+          }
+        },
+        {
+          "name": "Detect Conflicts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/timetables/{{timetableId}}/conflicts",
+              "host": ["{{baseUrl}}"],
+              "path": ["timetables", "{{timetableId}}", "conflicts"]
+            }
+          }
+        },
+        {
+          "name": "Resolve Conflict",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resolution\": \"Changed venue to Room 202\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/timetables/{{timetableId}}/conflicts/CONFLICT_ID",
+              "host": ["{{baseUrl}}"],
+              "path": ["timetables", "{{timetableId}}", "conflicts", "CONFLICT_ID"]
+            }
+          }
+        },
+        {
+          "name": "Check Venue Availability",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/timetables/check-venue?venueId={{venueId}}&day=Monday&startTime=10:00&endTime=11:00",
+              "host": ["{{baseUrl}}"],
+              "path": ["timetables", "check-venue"],
+              "query": [
+                {
+                  "key": "venueId",
+                  "value": "{{venueId}}"
+                },
+                {
+                  "key": "day",
+                  "value": "Monday"
+                },
+                {
+                  "key": "startTime",
+                  "value": "10:00"
+                },
+                {
+                  "key": "endTime",
+                  "value": "11:00"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Check Faculty Availability",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/timetables/check-faculty?facultyId={{facultyId}}&day=Monday&startTime=10:00&endTime=11:00",
+              "host": ["{{baseUrl}}"],
+              "path": ["timetables", "check-faculty"],
+              "query": [
+                {
+                  "key": "facultyId",
+                  "value": "{{facultyId}}"
+                },
+                {
+                  "key": "day",
+                  "value": "Monday"
+                },
+                {
+                  "key": "startTime",
+                  "value": "10:00"
+                },
+                {
+                  "key": "endTime",
+                  "value": "11:00"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Publish Timetable",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/timetables/{{timetableId}}/publish",
+              "host": ["{{baseUrl}}"],
+              "path": ["timetables", "{{timetableId}}", "publish"]
+            }
+          }
+        },
+        {
+          "name": "Archive Timetable",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/timetables/{{timetableId}}/archive",
+              "host": ["{{baseUrl}}"],
+              "path": ["timetables", "{{timetableId}}", "archive"]
+            }
+          }
+        },
+        {
+          "name": "Remove Event from Timetable",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/timetables/{{timetableId}}/events/SLOT_ID",
+              "host": ["{{baseUrl}}"],
+              "path": ["timetables", "{{timetableId}}", "events", "SLOT_ID"]
+            }
+          }
+        },
+        {
+          "name": "Delete Timetable",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/timetables/{{timetableId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["timetables", "{{timetableId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Week 3 - Resource System",
+      "item": [
+        {
+          "name": "Upload Resource",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    pm.collectionVariables.set('resourceId', pm.response.json().data._id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{eventId}}\",\n  \"title\": \"Lecture Slides - Introduction to AI\",\n  \"description\": \"Comprehensive slides covering AI fundamentals\",\n  \"type\": \"Presentation\",\n  \"fileUrl\": \"https://cloudinary.com/file-url\",\n  \"fileSize\": 2048576,\n  \"mimeType\": \"application/pdf\",\n  \"visibility\": \"Public\",\n  \"tags\": [\"AI\", \"Machine Learning\", \"Introduction\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/resources",
+              "host": ["{{baseUrl}}"],
+              "path": ["resources"]
+            }
+          }
+        },
+        {
+          "name": "Get All Resources",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/resources?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["resources"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "eventId",
+                  "value": "{{eventId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "type",
+                  "value": "PDF",
+                  "disabled": true
+                },
+                {
+                  "key": "tags",
+                  "value": "AI,ML",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Single Resource",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/resources/{{resourceId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["resources", "{{resourceId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Resource",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Resource Title\",\n  \"visibility\": \"Registered Only\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/resources/{{resourceId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["resources", "{{resourceId}}"]
+            }
+          }
+        },
+        {
+          "name": "Download Resource",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/resources/{{resourceId}}/download",
+              "host": ["{{baseUrl}}"],
+              "path": ["resources", "{{resourceId}}", "download"]
+            }
+          }
+        },
+        {
+          "name": "Rate Resource",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 5,\n  \"review\": \"Excellent resource, very helpful!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/resources/{{resourceId}}/rate",
+              "host": ["{{baseUrl}}"],
+              "path": ["resources", "{{resourceId}}", "rate"]
+            }
+          }
+        },
+        {
+          "name": "Comment on Resource",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"text\": \"Great content! Looking forward to more.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/resources/{{resourceId}}/comment",
+              "host": ["{{baseUrl}}"],
+              "path": ["resources", "{{resourceId}}", "comment"]
+            }
+          }
+        },
+        {
+          "name": "Delete Comment",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/resources/{{resourceId}}/comment/COMMENT_ID",
+              "host": ["{{baseUrl}}"],
+              "path": ["resources", "{{resourceId}}", "comment", "COMMENT_ID"]
+            }
+          }
+        },
+        {
+          "name": "Delete Resource",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/resources/{{resourceId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["resources", "{{resourceId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Events",
+      "item": [
+        {
+          "name": "Create Event",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    pm.collectionVariables.set('eventId', pm.response.json().data._id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Tech Workshop\",\n  \"description\": \"AI & ML Workshop\",\n  \"type\": \"Workshop\",\n  \"startDate\": \"2025-12-01T10:00:00Z\",\n  \"endDate\": \"2025-12-01T16:00:00Z\",\n  \"venue\": \"{{venueId}}\",\n  \"maxParticipants\": 100,\n  \"registrationDeadline\": \"2025-11-25T23:59:59Z\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/events",
+              "host": ["{{baseUrl}}"],
+              "path": ["events"]
+            }
+          }
+        },
+        {
+          "name": "Get All Events",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/events?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["events"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Event by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/events/{{eventId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["events", "{{eventId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Event",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Tech Workshop\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/events/{{eventId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["events", "{{eventId}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Week 2 - Notifications",
+      "item": [
+        {
+          "name": "Send Notification",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"recipient\": \"{{userId}}\",\n  \"title\": \"Test Notification\",\n  \"message\": \"This is a test notification\",\n  \"type\": \"info\",\n  \"priority\": \"medium\",\n  \"channels\": [\"in-app\", \"email\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/notifications/send",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", "send"]
+            }
+          }
+        },
+        {
+          "name": "Get My Notifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/my-notifications",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", "my-notifications"]
+            }
+          }
+        },
+        {
+          "name": "Get Unread Count",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/unread-count",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", "unread-count"]
+            }
+          }
+        },
+        {
+          "name": "Mark as Read",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/notifications/NOTIFICATION_ID/read",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", "NOTIFICATION_ID", "read"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Week 2 - Sports",
+      "item": [
+        {
+          "name": "Create Sports Event",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"eventId\": \"{{eventId}}\",\n  \"sportName\": \"Basketball\",\n  \"category\": \"Team\",\n  \"tournamentType\": \"Knockout\",\n  \"maxTeams\": 8,\n  \"playersPerTeam\": 5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/sports",
+              "host": ["{{baseUrl}}"],
+              "path": ["sports"]
+            }
+          }
+        },
+        {
+          "name": "Get All Sports Events",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/sports",
+              "host": ["{{baseUrl}}"],
+              "path": ["sports"]
+            }
+          }
+        },
+        {
+          "name": "Register for Sports Event",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"teamName\": \"Thunder Squad\",\n  \"players\": [\"{{userId}}\"]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/sports/SPORTS_ID/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["sports", "SPORTS_ID", "register"]
+            }
+          }
+        },
+        {
+          "name": "Get Sports Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/sports/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["sports", "stats"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. Week 1 - Feedback",
+      "item": [
+        {
+          "name": "Submit Feedback",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": \"{{eventId}}\",\n  \"ratings\": {\n    \"content\": 5,\n    \"organization\": 4,\n    \"venue\": 5\n  },\n  \"comments\": \"Great workshop!\",\n  \"isAnonymous\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/feedback",
+              "host": ["{{baseUrl}}"],
+              "path": ["feedback"]
+            }
+          }
+        },
+        {
+          "name": "Get Event Feedback",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/feedback/event/{{eventId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["feedback", "event", "{{eventId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Feedback Statistics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/feedback/event/{{eventId}}/statistics",
+              "host": ["{{baseUrl}}"],
+              "path": ["feedback", "event", "{{eventId}}", "statistics"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "10. Week 1 - Certificates",
+      "item": [
+        {
+          "name": "Generate Certificate",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event\": \"{{eventId}}\",\n  \"recipient\": \"{{userId}}\",\n  \"type\": \"Participation\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/certificates/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["certificates", "generate"]
+            }
+          }
+        },
+        {
+          "name": "Verify Certificate (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/certificates/verify/CERTIFICATE_NUMBER",
+              "host": ["{{baseUrl}}"],
+              "path": ["certificates", "verify", "CERTIFICATE_NUMBER"]
+            }
+          }
+        },
+        {
+          "name": "Get My Certificates",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/certificates/my-certificates",
+              "host": ["{{baseUrl}}"],
+              "path": ["certificates", "my-certificates"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

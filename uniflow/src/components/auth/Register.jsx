@@ -25,7 +25,8 @@ const Register = () => {
     { value: 'faculty', label: 'Faculty' },
     { value: 'hod', label: 'Head of Department (HOD)' },
     { value: 'placement', label: 'Training & Placement Head' },
-    { value: 'student_body', label: 'Student Body Representative' },
+    { value: 'faculty_head', label: 'Student Body - Faculty Head' },
+    { value: 'team_rep', label: 'Student Body - Team Representative' },
     { value: 'sports', label: 'Sports Administrator' }
   ];
 

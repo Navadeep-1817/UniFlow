@@ -3,6 +3,7 @@ const router = express.Router();
 const {
   getEvents,
   getEvent,
+  getUpcomingEvents,
   createEvent,
   updateEvent,
   deleteEvent,
@@ -17,17 +18,18 @@ const {
 const { protect, authorize } = require('../middleware/authMiddleware');
 const { ROLES } = require('../config/roles');
 
-// Public routes
+// Public routes - IMPORTANT: Specific routes BEFORE dynamic :id routes
 router.get('/', getEvents);
+router.get('/upcoming', getUpcomingEvents); // MOVED: Must be before /:id to avoid conflict
 router.get('/:id', getEvent);
 
 // Protected routes - must be authenticated
 router.use(protect);
 
-// My events
+// My events - MOVED: Must be before /:id in protected section
 router.get('/my/events', getMyEvents);
 
-// Pending events for approval (Admin only)
+// Pending events for approval (Admin only) - MOVED: Must be before /:id
 router.get(
   '/pending/approval',
   authorize(
@@ -39,7 +41,7 @@ router.get(
   getPendingEvents
 );
 
-// Event statistics
+// Event statistics - Keep with :id routes
 router.get('/:id/stats', getEventStats);
 
 // Create event (Faculty and above)

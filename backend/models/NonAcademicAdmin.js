@@ -8,6 +8,12 @@ const nonAcademicAdminSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    // ✅ Added field: every non-academic admin belongs to a university
+    university: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'University',
+      required: true,
+    },
     adminType: {
       type: String,
       enum: ['FacultyHead', 'TeamRep'],
@@ -57,7 +63,9 @@ const nonAcademicAdminSchema = new mongoose.Schema(
   }
 );
 
+// ✅ Helpful indexes for better query performance
 nonAcademicAdminSchema.index({ userId: 1 });
 nonAcademicAdminSchema.index({ studentBody: 1, adminType: 1 });
+nonAcademicAdminSchema.index({ university: 1 });
 
 module.exports = mongoose.model('NonAcademicAdmin', nonAcademicAdminSchema);

@@ -2,13 +2,29 @@ const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/authMiddleware');
 const { ROLES } = require('../config/roles');
+const {
+  getDashboard,
+  getProfile,
+  updateProfile,
+  getDepartmentEvents,
+  getDepartmentFaculty,
+  getDepartmentStudents,
+  getPermissions
+} = require('../controllers/academicAdminController');
 
-// Academic admin routes will be added here
-// These routes handle academic administrative operations like managing
-// departments, courses, academic events, placements, etc.
+// All routes require authentication and academic admin role
+router.use(protect);
+router.use(authorize(ROLES.ACADEMIC_ADMIN_HOD, ROLES.ACADEMIC_ADMIN_TP));
 
-// Example routes (to be implemented):
-// router.get('/dashboard', protect, authorize(ROLES.ACADEMIC_ADMIN_HOD, ROLES.ACADEMIC_ADMIN_TP), getDashboard);
-// router.get('/departments', protect, authorize(ROLES.ACADEMIC_ADMIN_HOD), getDepartments);
+// Dashboard and profile routes
+router.get('/dashboard', getDashboard);
+router.get('/profile', getProfile);
+router.put('/profile', updateProfile);
+router.get('/permissions', getPermissions);
+
+// Department management routes
+router.get('/events', getDepartmentEvents);
+router.get('/faculty', getDepartmentFaculty);
+router.get('/students', getDepartmentStudents);
 
 module.exports = router;

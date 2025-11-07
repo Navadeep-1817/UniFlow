@@ -19,7 +19,8 @@ const Login = () => {
     { value: 'faculty', label: 'Faculty' },
     { value: 'hod', label: 'Head of Department (HOD)' },
     { value: 'placement', label: 'Training & Placement Head' },
-    { value: 'student_body', label: 'Student Body Representative' },
+    { value: 'faculty_head', label: 'Student Body - Faculty Head' },
+    { value: 'team_rep', label: 'Student Body - Team Representative' },
     { value: 'sports', label: 'Sports Administrator' }
   ];
 
@@ -88,8 +89,11 @@ const Login = () => {
             case 'placement':
               navigate('/placement/dashboard');
               break;
-            case 'student_body':
-              navigate('/student-body/dashboard');
+            case 'faculty_head':
+              navigate('/student-body/faculty-head/dashboard');
+              break;
+            case 'team_rep':
+              navigate('/teamrep/dashboard');
               break;
             case 'sports':
               navigate('/sports/dashboard');
