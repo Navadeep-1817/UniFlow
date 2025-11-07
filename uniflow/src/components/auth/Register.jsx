@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import setupService from '../../services/setupService';
 
 const Register = () => {
   const navigate = useNavigate();
+  const { register } = useAuth();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     role: '',
@@ -10,15 +13,28 @@ const Register = () => {
     email: '',
     password: '',
     confirmPassword: '',
+    phone: '',
     university: '',
     department: '',
+    studentBody: '',
     rollNumber: '',
-    employeeId: ''
+    employeeId: '',
+    year: '1',
+    section: 'A',
+    batch: new Date().getFullYear().toString(),
+    designation: 'Assistant Professor',
+    qualification: 'M.Tech'
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
+  
+  // Data from backend
+  const [universities, setUniversities] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [studentBodies, setStudentBodies] = useState([]);
+  const [loadingData, setLoadingData] = useState(false);
 
   const roles = [
     { value: 'student', label: 'Student' },
@@ -30,15 +46,69 @@ const Register = () => {
     { value: 'sports', label: 'Sports Administrator' }
   ];
 
-  const universities = [
-    'JNTU Hyderabad', 'JNTU Kakinada', 'Osmania University', 
-    'Andhra University', 'Other'
-  ];
+  // Fetch universities on component mount
+  useEffect(() => {
+    const fetchUniversities = async () => {
+      try {
+        setLoadingData(true);
+        const response = await setupService.getUniversities();
+        if (response.success && response.data) {
+          setUniversities(response.data.universities || []);
+        }
+      } catch (error) {
+        console.error('Error fetching universities:', error);
+        showToast('Failed to load universities', 'error');
+      } finally {
+        setLoadingData(false);
+      }
+    };
+    
+    fetchUniversities();
+  }, []);
 
-  const departments = [
-    'Computer Science', 'Electronics', 'Mechanical', 'Civil', 
-    'Electrical', 'IT', 'Other'
-  ];
+  // Fetch departments when university is selected
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      if (formData.university) {
+        try {
+          setLoadingData(true);
+          const response = await setupService.getDepartments(formData.university);
+          if (response.success && response.data) {
+            setDepartments(response.data.departments || []);
+          }
+        } catch (error) {
+          console.error('Error fetching departments:', error);
+          showToast('Failed to load departments', 'error');
+        } finally {
+          setLoadingData(false);
+        }
+      }
+    };
+    
+    fetchDepartments();
+  }, [formData.university]);
+
+  // Fetch student bodies for non-academic roles
+  useEffect(() => {
+    const fetchStudentBodies = async () => {
+      if ((formData.role === 'faculty_head' || formData.role === 'team_rep') && formData.university) {
+        try {
+          setLoadingData(true);
+          const response = await setupService.getStudentBodies(formData.university);
+          if (response.success && response.data) {
+            setStudentBodies(response.data.studentBodies || []);
+          }
+        } catch (error) {
+          console.error('Error fetching student bodies:', error);
+          showToast('Failed to load student bodies', 'error');
+        } finally {
+          setLoadingData(false);
+        }
+      }
+    };
+    
+    fetchStudentBodies();
+  }, [formData.role, formData.university]);
 
   // Validation
   const validateStep = () => {
@@ -55,6 +125,11 @@ const Register = () => {
       } else if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(formData.email)) {
         newErrors.email = 'Invalid email address';
       }
+      if (!formData.phone.trim()) {
+        newErrors.phone = 'Phone number is required';
+      } else if (!/^[0-9]{10}$/.test(formData.phone)) {
+        newErrors.phone = 'Phone must be 10 digits';
+      }
       if (!formData.password) {
         newErrors.password = 'Password is required';
       } else if (formData.password.length < 6) {
@@ -67,7 +142,16 @@ const Register = () => {
 
     if (step === 3) {
       if (!formData.university) newErrors.university = 'Please select university';
-      if (!formData.department) newErrors.department = 'Please select department';
+      
+      // Department required for academic roles
+      if (['student', 'faculty', 'hod', 'placement'].includes(formData.role)) {
+        if (!formData.department) newErrors.department = 'Please select department';
+      }
+      
+      // Student body required for non-academic roles
+      if (['faculty_head', 'team_rep'].includes(formData.role)) {
+        if (!formData.studentBody) newErrors.studentBody = 'Please select student body';
+      }
       
       if (formData.role === 'student' && !formData.rollNumber) {
         newErrors.rollNumber = 'Roll number is required for students';
@@ -105,20 +189,51 @@ const Register = () => {
     setIsLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      // Store registration data
-      sessionStorage.setItem('registeredUser', JSON.stringify(formData));
+      const response = await register(formData);
       
-      showToast('Registration successful! Please login.', 'success');
-      
-      setTimeout(() => {
-        navigate('/login');
-      }, 2000);
+      // Check if user needs approval
+      if (response.data && !response.data.user.isApproved) {
+        showToast('Registration successful! Awaiting admin approval.', 'success');
+        setTimeout(() => {
+          navigate('/pending-approval');
+        }, 2000);
+      } else {
+        showToast('Registration successful! Redirecting to dashboard...', 'success');
+        setTimeout(() => {
+          // Navigate based on role
+          const userRole = formData.role;
+          switch (userRole) {
+            case 'student':
+              navigate('/student/dashboard');
+              break;
+            case 'faculty':
+              navigate('/faculty/dashboard');
+              break;
+            case 'hod':
+              navigate('/hod/dashboard');
+              break;
+            case 'placement':
+              navigate('/placement/dashboard');
+              break;
+            case 'faculty_head':
+              navigate('/student-body/faculty-head/dashboard');
+              break;
+            case 'team_rep':
+              navigate('/teamrep/dashboard');
+              break;
+            case 'sports':
+              navigate('/sports/dashboard');
+              break;
+            default:
+              navigate('/dashboard');
+          }
+        }, 2000);
+      }
 
     } catch (error) {
-      showToast('Registration failed. Please try again.', 'error');
+      const errorMessage = error.message || 'Registration failed. Please try again.';
+      showToast(errorMessage, 'error');
+      console.error('Registration error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -359,6 +474,20 @@ const Register = () => {
               </div>
 
               <div style={styles.formGroup}>
+                <label style={styles.label}>Phone Number *</label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  placeholder="10-digit phone number"
+                  maxLength="10"
+                  style={{...styles.input, ...(errors.phone && styles.inputError)}}
+                />
+                {errors.phone && <p style={styles.error}>{errors.phone}</p>}
+              </div>
+
+              <div style={styles.formGroup}>
                 <label style={styles.label}>Password *</label>
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -396,30 +525,55 @@ const Register = () => {
                   value={formData.university}
                   onChange={handleChange}
                   style={{...styles.select, ...(errors.university && styles.inputError)}}
+                  disabled={loadingData}
                 >
                   <option value="">Select your university</option>
                   {universities.map(uni => (
-                    <option key={uni} value={uni}>{uni}</option>
+                    <option key={uni._id} value={uni._id}>{uni.name}</option>
                   ))}
                 </select>
                 {errors.university && <p style={styles.error}>{errors.university}</p>}
               </div>
 
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Department *</label>
-                <select
-                  name="department"
-                  value={formData.department}
-                  onChange={handleChange}
-                  style={{...styles.select, ...(errors.department && styles.inputError)}}
-                >
-                  <option value="">Select your department</option>
-                  {departments.map(dept => (
-                    <option key={dept} value={dept}>{dept}</option>
-                  ))}
-                </select>
-                {errors.department && <p style={styles.error}>{errors.department}</p>}
-              </div>
+              {/* Show department for academic roles */}
+              {['student', 'faculty', 'hod', 'placement'].includes(formData.role) && (
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Department *</label>
+                  <select
+                    name="department"
+                    value={formData.department}
+                    onChange={handleChange}
+                    style={{...styles.select, ...(errors.department && styles.inputError)}}
+                    disabled={!formData.university || loadingData}
+                  >
+                    <option value="">Select your department</option>
+                    {departments.map(dept => (
+                      <option key={dept._id} value={dept._id}>{dept.name}</option>
+                    ))}
+                  </select>
+                  {errors.department && <p style={styles.error}>{errors.department}</p>}
+                </div>
+              )}
+
+              {/* Show student body for non-academic roles */}
+              {['faculty_head', 'team_rep'].includes(formData.role) && (
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Student Body *</label>
+                  <select
+                    name="studentBody"
+                    value={formData.studentBody}
+                    onChange={handleChange}
+                    style={{...styles.select, ...(errors.studentBody && styles.inputError)}}
+                    disabled={!formData.university || loadingData}
+                  >
+                    <option value="">Select student body</option>
+                    {studentBodies.map(body => (
+                      <option key={body._id} value={body._id}>{body.name}</option>
+                    ))}
+                  </select>
+                  {errors.studentBody && <p style={styles.error}>{errors.studentBody}</p>}
+                </div>
+              )}
 
               {formData.role === 'student' && (
                 <div style={styles.formGroup}>

@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiClock, FiMail, FiCheckCircle, FiAlertCircle, FiLogOut, FiRefreshCw } from 'react-icons/fi';
+import { useAuth } from '../../context/AuthContext';
+import authService from '../../services/authService';
 
 const PendingApproval = () => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [userInfo, setUserInfo] = useState({
     name: '',
     email: '',
@@ -11,38 +14,92 @@ const PendingApproval = () => {
     registeredDate: ''
   });
   const [checking, setChecking] = useState(false);
+  const [statusMessage, setStatusMessage] = useState('');
 
   useEffect(() => {
-    // Get user info from localStorage or session
-    const storedEmail = localStorage.getItem('userEmail') || 'user@university.edu';
-    const storedRole = localStorage.getItem('userRole') || 'Student';
-    const storedName = localStorage.getItem('userName') || 'User';
+    // Get user info from stored data
+    const storedUser = authService.getStoredUser();
     
-    setUserInfo({
-      name: storedName,
-      email: storedEmail,
-      role: storedRole,
-      registeredDate: new Date().toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-      })
-    });
+    if (storedUser) {
+      // Map backend role to display role
+      const roleDisplayMap = {
+        'student': 'Student',
+        'faculty': 'Faculty',
+        'academic_admin_hod': 'Head of Department',
+        'academic_admin_tp': 'Training & Placement Head',
+        'non_academic_faculty_head': 'Student Body - Faculty Head',
+        'non_academic_team_rep': 'Student Body - Team Representative',
+        'trainer': 'Sports Administrator'
+      };
+      
+      setUserInfo({
+        name: storedUser.name || 'User',
+        email: storedUser.email || 'user@university.edu',
+        role: roleDisplayMap[storedUser.role] || storedUser.role,
+        registeredDate: storedUser.createdAt 
+          ? new Date(storedUser.createdAt).toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })
+          : new Date().toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })
+      });
+    }
   }, []);
 
-  const handleCheckStatus = () => {
+  const handleCheckStatus = async () => {
     setChecking(true);
-    // Simulate API call to check approval status
-    setTimeout(() => {
-      setChecking(false);
-      // In real implementation, this would check with backend
-    }, 1500);
+    setStatusMessage('');
+    
+    try {
+      // Check if user is authenticated and get current status
+      const response = await authService.getCurrentUser();
+      
+      if (response.data && response.data.user) {
+        if (response.data.user.isApproved) {
+          setStatusMessage('Your account has been approved! Redirecting to dashboard...');
+          setTimeout(() => {
+            // Navigate to appropriate dashboard based on role
+            const roleRouteMap = {
+              'superadmin': '/superadmin/dashboard',
+              'student': '/student/dashboard',
+              'faculty': '/faculty/dashboard',
+              'academic_admin_hod': '/hod/dashboard',
+              'academic_admin_tp': '/placement/dashboard',
+              'non_academic_faculty_head': '/student-body/faculty-head/dashboard',
+              'non_academic_team_rep': '/teamrep/dashboard',
+              'trainer': '/sports/dashboard'
+            };
+            
+            const route = roleRouteMap[response.data.user.role] || '/dashboard';
+            navigate(route);
+          }, 2000);
+        } else {
+          setStatusMessage('Your account is still pending approval. Please check back later.');
+        }
+      }
+    } catch (error) {
+      setStatusMessage('Unable to check status at this time. Please try again later.');
+      console.error('Error checking approval status:', error);
+    } finally {
+      setTimeout(() => {
+        setChecking(false);
+      }, 1500);
+    }
   };
 
-  const handleLogout = () => {
-    localStorage.clear();
-    sessionStorage.clear();
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      navigate('/login');
+    }
   };
 
   const styles = {
@@ -336,6 +393,18 @@ const PendingApproval = () => {
             Logout
           </button>
         </div>
+
+        {/* Status Message */}
+        {statusMessage && (
+          <div style={{
+            ...styles.helpText,
+            backgroundColor: statusMessage.includes('approved') ? '#D1FAE5' : '#EFF6FF',
+            borderColor: statusMessage.includes('approved') ? '#A7F3D0' : '#DBEAFE',
+            color: statusMessage.includes('approved') ? '#065F46' : '#1E40AF'
+          }}>
+            {statusMessage}
+          </div>
+        )}
 
         {/* Help Text */}
         <div style={styles.helpText}>

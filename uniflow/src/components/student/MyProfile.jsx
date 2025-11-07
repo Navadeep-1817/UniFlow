@@ -1,32 +1,92 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FiUser, FiMail, FiPhone, FiMapPin, FiCalendar, FiBook, FiCamera, FiSave, FiEdit2, FiX } from 'react-icons/fi';
 import { colors, commonStyles, hoverEffects } from '../../styles/globalStyles';
+import { useAuth } from '../../context/AuthContext';
 
 const MyProfile = () => {
+  const { user, loading: authLoading, refreshUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
+  const [loading, setLoading] = useState(true);
   const [profileData, setProfileData] = useState({
-    name: 'Rajesh Kumar',
-    rollNo: 'CS2021001',
-    email: 'rajesh.kumar@university.edu',
-    personalEmail: 'rajesh.kumar@gmail.com',
-    phone: '+91 9876543210',
-    alternatePhone: '+91 8765432109',
-    branch: 'Computer Science & Engineering',
-    year: '4th Year',
-    section: 'A',
-    semester: '8th Semester',
-    batch: '2021-2025',
-    dateOfBirth: '2003-05-15',
-    bloodGroup: 'O+',
-    address: '123, MG Road, Bangalore, Karnataka - 560001',
-    parentName: 'Mr. Suresh Kumar',
-    parentPhone: '+91 9876543211',
-    cgpa: '8.45',
+    name: '',
+    rollNo: '',
+    email: '',
+    personalEmail: '',
+    phone: '',
+    alternatePhone: '',
+    branch: '',
+    year: '',
+    section: '',
+    semester: '',
+    batch: '',
+    dateOfBirth: '',
+    bloodGroup: '',
+    address: '',
+    parentName: '',
+    parentPhone: '',
+    cgpa: '',
+    university: '',
+    department: '',
     profilePicture: null
   });
 
   const [editedData, setEditedData] = useState({ ...profileData });
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadUserData = async () => {
+      try {
+        if (!user) {
+          setLoading(false);
+          return;
+        }
+
+        if (!isMounted) return;
+
+        const userData = {
+          name: user.name || '',
+          rollNo: user.rollNumber || 'N/A',
+          email: user.email || '',
+          phone: user.phone || '',
+          branch: user.department?.name || user.department || 'N/A',
+          university: user.university?.name || user.university || 'N/A',
+          department: user.department?.name || '',
+          year: user.year || 'N/A',
+          section: user.section || 'N/A',
+          batch: user.batch || 'N/A',
+          semester: user.year ? `${parseInt(user.year) * 2}th Semester` : 'N/A',
+          personalEmail: user.personalEmail || '',
+          alternatePhone: user.alternatePhone || '',
+          dateOfBirth: user.dateOfBirth || '',
+          bloodGroup: user.bloodGroup || '',
+          address: user.address || '',
+          parentName: user.parentName || '',
+          parentPhone: user.parentPhone || '',
+          cgpa: user.cgpa || 'N/A',
+          profilePicture: user.profilePicture || null
+        };
+
+        if (isMounted) {
+          setProfileData(userData);
+          setEditedData(userData);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error);
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadUserData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user]);
 
   const showToast = (msg, type = 'success') => {
     setToast({ show: true, message: msg, type });
@@ -43,10 +103,20 @@ const MyProfile = () => {
     setEditedData({ ...profileData });
   };
 
-  const handleSave = () => {
-    setProfileData({ ...editedData });
-    setIsEditing(false);
-    showToast('Profile updated successfully!');
+  const handleSave = async () => {
+    try {
+      // For now, just update local state
+      // Later, this will call the backend API to update profile
+      setProfileData({ ...editedData });
+      setIsEditing(false);
+      showToast('Profile updated successfully!');
+      
+      // TODO: Add API call to update backend
+      // await updateProfile(editedData);
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      showToast('Failed to save changes', 'error');
+    }
   };
 
   const handleInputChange = (field, value) => {
@@ -66,6 +136,18 @@ const MyProfile = () => {
 
   const currentData = isEditing ? editedData : profileData;
 
+  if (loading || authLoading) {
+    return (
+      <div style={commonStyles.container}>
+        <div style={{...commonStyles.content, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px'}}>
+          <div style={{textAlign: 'center'}}>
+            <p style={{fontSize: '18px', color: colors.textSecondary}}>Loading profile...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={commonStyles.container}>
       {toast.show && (
@@ -81,19 +163,24 @@ const MyProfile = () => {
             <p style={commonStyles.pageSubtitle}>View and manage your personal information</p>
           </div>
           {!isEditing ? (
-            <button onClick={handleEdit} style={commonStyles.primaryBtn} 
-              onMouseEnter={hoverEffects.buttonHover} onMouseLeave={hoverEffects.buttonLeave}>
+            <button 
+              onClick={handleEdit} 
+              style={commonStyles.primaryBtn}
+            >
               <FiEdit2 size={18} /> Edit Profile
             </button>
           ) : (
             <div style={{ display: 'flex', gap: '12px' }}>
-              <button onClick={handleCancel} style={commonStyles.secondaryBtn}
-                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = colors.gray200; e.currentTarget.style.transform = 'scale(1.02)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = colors.gray100; e.currentTarget.style.transform = 'scale(1)'; }}>
+              <button 
+                onClick={handleCancel} 
+                style={commonStyles.secondaryBtn}
+              >
                 <FiX size={18} /> Cancel
               </button>
-              <button onClick={handleSave} style={commonStyles.primaryBtn} 
-                onMouseEnter={hoverEffects.buttonHover} onMouseLeave={hoverEffects.buttonLeave}>
+              <button 
+                onClick={handleSave} 
+                style={commonStyles.primaryBtn}
+              >
                 <FiSave size={18} /> Save Changes
               </button>
             </div>
@@ -118,15 +205,27 @@ const MyProfile = () => {
                   )}
                 </div>
                 {isEditing && (
-                  <label style={{ position: 'absolute', bottom: '10px', right: '10px', width: '45px', height: '45px',
-                    backgroundColor: colors.primary, borderRadius: '50%', display: 'flex', alignItems: 'center',
-                    justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                    transition: 'all 0.2s ease' }}
-                    onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.1)'; e.currentTarget.style.backgroundColor = colors.primaryDark; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.backgroundColor = colors.primary; }}>
+                  <label style={{ 
+                    position: 'absolute', 
+                    bottom: '10px', 
+                    right: '10px', 
+                    width: '45px', 
+                    height: '45px',
+                    backgroundColor: colors.primary, 
+                    borderRadius: '50%', 
+                    display: 'flex', 
+                    alignItems: 'center',
+                    justifyContent: 'center', 
+                    cursor: 'pointer', 
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                  }}>
                     <FiCamera size={20} color={colors.white} />
-                    <input type="file" accept="image/*" onChange={handleProfilePictureChange}
-                      style={{ display: 'none' }} />
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={handleProfilePictureChange}
+                      style={{ display: 'none' }} 
+                    />
                   </label>
                 )}
               </div>

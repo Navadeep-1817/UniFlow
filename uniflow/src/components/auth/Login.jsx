@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 const Login = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -54,59 +56,33 @@ const Login = () => {
 
     setIsLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      // Check if user is registered
-      const registeredUser = JSON.parse(sessionStorage.getItem('registeredUser') || '{}');
+      const response = await login(formData);
       
-      if (formData.email === registeredUser.email && formData.role === registeredUser.role) {
-        if (formData.rememberMe) {
-          localStorage.setItem('token', 'demo_token_12345');
-          localStorage.setItem('userRole', formData.role);
-          localStorage.setItem('userEmail', formData.email);
-        } else {
-          sessionStorage.setItem('token', 'demo_token_12345');
-          sessionStorage.setItem('userRole', formData.role);
-          sessionStorage.setItem('userEmail', formData.email);
-        }
+      showToast('Login successful! Redirecting...', 'success');
 
-        showToast('Login successful! Redirecting...', 'success');
+      // Get user role from response
+      const userRole = response.data.user.role;
+      
+      // Map backend role to frontend route
+      const roleRouteMap = {
+        'superadmin': '/superadmin/dashboard',
+        'student': '/student/dashboard',
+        'faculty': '/faculty/dashboard',
+        'academic_admin_hod': '/hod/dashboard',
+        'academic_admin_tp': '/placement/dashboard',
+        'non_academic_faculty_head': '/student-body/faculty-head/dashboard',
+        'non_academic_team_rep': '/teamrep/dashboard',
+        'trainer': '/sports/dashboard'
+      };
 
-        setTimeout(() => {
-          switch (formData.role) {
-            case 'superadmin':
-              navigate('/superadmin/dashboard');
-              break;
-            case 'student':
-              navigate('/student/dashboard');
-              break;
-            case 'faculty':
-              navigate('/faculty/dashboard');
-              break;
-            case 'hod':
-              navigate('/hod/dashboard');
-              break;
-            case 'placement':
-              navigate('/placement/dashboard');
-              break;
-            case 'faculty_head':
-              navigate('/student-body/faculty-head/dashboard');
-              break;
-            case 'team_rep':
-              navigate('/teamrep/dashboard');
-              break;
-            case 'sports':
-              navigate('/sports/dashboard');
-              break;
-            default:
-              navigate('/dashboard');
-          }
-        }, 1000);
-      } else {
-        showToast('Invalid credentials or please register first', 'error');
-      }
+      setTimeout(() => {
+        const route = roleRouteMap[userRole] || '/dashboard';
+        navigate(route);
+      }, 1000);
     } catch (error) {
-      showToast(error.message || 'Login failed. Please try again.', 'error');
+      const errorMessage = error.message || 'Invalid credentials. Please try again.';
+      showToast(errorMessage, 'error');
+      console.error('Login error:', error);
     } finally {
       setIsLoading(false);
     }

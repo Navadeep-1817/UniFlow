@@ -17,8 +17,65 @@ const generateToken = (id) => {
   });
 };
 
+// Helper to get complete user data with role profile
+const getUserWithProfile = async (userId) => {
+  const user = await User.findById(userId)
+    .populate('university', 'name code logo')
+    .populate('department', 'name code')
+    .populate('studentBody', 'name description')
+    .lean();
+
+  if (!user) return null;
+
+  // Fetch role-specific profile data
+  let roleProfile = null;
+  switch (user.role) {
+    case ROLES.STUDENT:
+      roleProfile = await Student.findOne({ userId: user._id }).lean();
+      if (roleProfile) {
+        user.rollNumber = roleProfile.rollNumber;
+        user.year = roleProfile.year;
+        user.section = roleProfile.section;
+        user.batch = roleProfile.batch;
+      }
+      break;
+    case ROLES.FACULTY:
+      roleProfile = await Faculty.findOne({ userId: user._id }).lean();
+      if (roleProfile) {
+        user.employeeId = roleProfile.employeeId;
+        user.designation = roleProfile.designation;
+        user.specialization = roleProfile.specialization;
+      }
+      break;
+    case ROLES.ACADEMIC_ADMIN_HOD:
+    case ROLES.ACADEMIC_ADMIN_TP:
+      roleProfile = await AcademicAdmin.findOne({ userId: user._id }).lean();
+      if (roleProfile) {
+        user.employeeId = roleProfile.employeeId;
+        user.adminType = roleProfile.adminType;
+      }
+      break;
+    case ROLES.NON_ACADEMIC_FACULTY_HEAD:
+    case ROLES.NON_ACADEMIC_TEAM_REP:
+      roleProfile = await NonAcademicAdmin.findOne({ userId: user._id }).lean();
+      if (roleProfile) {
+        user.position = roleProfile.position;
+      }
+      break;
+    case ROLES.TRAINER:
+      roleProfile = await Trainer.findOne({ userId: user._id }).lean();
+      if (roleProfile) {
+        user.employeeId = roleProfile.employeeId;
+        user.specialization = roleProfile.specialization;
+      }
+      break;
+  }
+
+  return user;
+};
+
 // Create and send token response
-const createSendToken = (user, statusCode, res, message = 'Success') => {
+const createSendToken = async (user, statusCode, res, message = 'Success') => {
   const token = generateToken(user._id);
 
   const cookieOptions = {
@@ -32,15 +89,15 @@ const createSendToken = (user, statusCode, res, message = 'Success') => {
 
   res.cookie('token', token, cookieOptions);
 
-  // Remove password from output
-  user.password = undefined;
+  // Get complete user data with role profile
+  const completeUser = await getUserWithProfile(user._id);
 
   res.status(statusCode).json({
     success: true,
     message,
     token,
     data: {
-      user,
+      user: completeUser,
     },
   });
 };
@@ -500,51 +557,19 @@ exports.logout = async (req, res, next) => {
 // @access  Private
 exports.getMe = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user._id)
-      .populate('university', 'name code logo')
-      .populate('department', 'name code')
-      .populate('studentBody', 'name description');
+    const completeUser = await getUserWithProfile(req.user._id);
 
-    // Get role-specific profile
-    let roleProfile;
-    switch (user.role) {
-      case ROLES.STUDENT:
-        roleProfile = await Student.findOne({ userId: user._id })
-          .populate('department', 'name code')
-          .populate('studentBodies.bodyId', 'name');
-        break;
-      case ROLES.FACULTY:
-        roleProfile = await Faculty.findOne({ userId: user._id })
-          .populate('department', 'name code')
-          .populate('assignedEvents', 'title eventType startDate');
-        break;
-      case ROLES.ACADEMIC_ADMIN_HOD:
-      case ROLES.ACADEMIC_ADMIN_TP:
-        roleProfile = await AcademicAdmin.findOne({ userId: user._id })
-          .populate('department', 'name code')
-          .populate('university', 'name logo');
-        break;
-      case ROLES.NON_ACADEMIC_FACULTY_HEAD:
-      case ROLES.NON_ACADEMIC_TEAM_REP:
-        roleProfile = await NonAcademicAdmin.create({
-          userId: user._id,
-          studentBody: roleSpecificData.studentBody,
-          university: roleSpecificData.university,
-          position: role === ROLES.NON_ACADEMIC_FACULTY_HEAD ? 'Faculty Head' : 'Team Representative',
-          adminType: role === ROLES.NON_ACADEMIC_FACULTY_HEAD ? 'FacultyHead' : 'TeamRep',
-          tenure: {
-            startDate: new Date() // automatically sets start date to current date
-          },
-          ...roleSpecificData,
-        });
-        break;
-      }
+    if (!completeUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
 
     res.status(200).json({
       success: true,
       data: {
-        user,
-        profile: roleProfile,
+        user: completeUser,
       },
     });
   } catch (error) {

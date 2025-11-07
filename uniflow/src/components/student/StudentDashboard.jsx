@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { 
   FiLayers, 
   FiAward, 
@@ -28,11 +29,12 @@ import {
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   const [studentInfo, setStudentInfo] = useState({
-    name: 'Rajesh Kumar',
-    rollNumber: 'CS21001',
-    department: 'Computer Science',
-    university: 'JNTU Hyderabad'
+    name: '',
+    rollNumber: '',
+    department: '',
+    university: ''
   });
 
   const [upcomingEvents, setUpcomingEvents] = useState([]);
@@ -41,7 +43,19 @@ const StudentDashboard = () => {
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
 
   useEffect(() => {
-    // Mock data - Replace with API calls
+    // Load user data from auth context
+    if (user) {
+      setStudentInfo({
+        name: user.name || 'Student',
+        rollNumber: user.rollNumber || 'N/A',
+        department: user.department?.name || user.department || 'N/A',
+        university: user.university?.name || user.university || 'N/A'
+      });
+    }
+  }, [user]);
+
+  useEffect(() => {
+    // Mock data - Replace with API calls later
     const mockUpcomingEvents = [
       {
         id: 1,
