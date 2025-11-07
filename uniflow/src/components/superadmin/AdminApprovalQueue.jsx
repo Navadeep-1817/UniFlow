@@ -14,77 +14,109 @@ const AdminApprovalQueue = () => {
   }, []);
 
   const loadPendingUsers = () => {
-    // Mock pending users - In real app, this would be API call
-    const mockPendingUsers = [
-      {
-        id: 1,
-        fullName: 'Rahul Sharma',
-        email: 'rahul.sharma@jntu.ac.in',
-        role: 'student',
-        university: 'JNTU Hyderabad',
-        department: 'Computer Science',
-        rollNumber: 'CS21001',
-        registeredDate: '2024-11-05T10:30:00',
-        status: 'pending'
-      },
-      {
-        id: 2,
-        fullName: 'Dr. Priya Reddy',
-        email: 'priya.reddy@osmania.ac.in',
-        role: 'faculty',
-        university: 'Osmania University',
-        department: 'Electronics',
-        employeeId: 'FAC2024',
-        registeredDate: '2024-11-05T14:20:00',
-        status: 'pending'
-      },
-      {
-        id: 3,
-        fullName: 'Prof. Venkat Rao',
-        email: 'venkat.rao@jntu.ac.in',
-        role: 'hod',
-        university: 'JNTU Kakinada',
-        department: 'Mechanical',
-        employeeId: 'HOD2024',
-        registeredDate: '2024-11-06T09:15:00',
-        status: 'pending'
-      },
-      {
-        id: 4,
-        fullName: 'Ms. Anjali Kumar',
-        email: 'anjali.kumar@andhra.ac.in',
-        role: 'placement',
-        university: 'Andhra University',
-        department: 'Training & Placement',
-        employeeId: 'TNP2024',
-        registeredDate: '2024-11-06T11:00:00',
-        status: 'pending'
-      },
-      {
-        id: 5,
-        fullName: 'Kiran Patel',
-        email: 'kiran.patel@jntu.ac.in',
-        role: 'student_body',
-        university: 'JNTU Hyderabad',
-        department: 'Student Affairs',
-        registeredDate: '2024-11-06T08:45:00',
-        status: 'pending'
-      },
-      {
-        id: 6,
-        fullName: 'Sneha Gupta',
-        email: 'sneha.gupta@osmania.ac.in',
-        role: 'student',
-        university: 'Osmania University',
-        department: 'IT',
-        rollNumber: 'IT21045',
-        registeredDate: '2024-11-05T16:30:00',
-        status: 'pending'
-      }
-    ];
+    // Try to fetch pending users from backend; fall back to mock data when offline
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetch('/api/superadmin/pending-approvals', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((r) => r.json())
+        .then((json) => {
+          if (json && json.success) {
+            // Map to expected fields in UI
+            const mapped = json.data.map((u) => ({
+              id: u._id,
+              fullName: u.name || `${u.firstName || ''} ${u.lastName || ''}`.trim(),
+              email: u.email,
+              role: u.role,
+              university: u.university?.name || '',
+              department: u.department?.name || '',
+              registeredDate: u.createdAt,
+              status: u.isApproved ? 'approved' : 'pending',
+            }));
+            setPendingUsers(mapped);
+            return;
+          }
+          // fall through to mock
+          setPendingUsers(getMockPending());
+        })
+        .catch(() => setPendingUsers(getMockPending()));
+      return;
+    }
+
+    // No token => use mock
+    const mockPendingUsers = getMockPending();
 
     setPendingUsers(mockPendingUsers);
   };
+
+  const getMockPending = () => ([
+    {
+      id: 1,
+      fullName: 'Rahul Sharma',
+      email: 'rahul.sharma@jntu.ac.in',
+      role: 'student',
+      university: 'JNTU Hyderabad',
+      department: 'Computer Science',
+      rollNumber: 'CS21001',
+      registeredDate: '2024-11-05T10:30:00',
+      status: 'pending'
+    },
+    {
+      id: 2,
+      fullName: 'Dr. Priya Reddy',
+      email: 'priya.reddy@osmania.ac.in',
+      role: 'faculty',
+      university: 'Osmania University',
+      department: 'Electronics',
+      employeeId: 'FAC2024',
+      registeredDate: '2024-11-05T14:20:00',
+      status: 'pending'
+    },
+    {
+      id: 3,
+      fullName: 'Prof. Venkat Rao',
+      email: 'venkat.rao@jntu.ac.in',
+      role: 'hod',
+      university: 'JNTU Kakinada',
+      department: 'Mechanical',
+      employeeId: 'HOD2024',
+      registeredDate: '2024-11-06T09:15:00',
+      status: 'pending'
+    },
+    {
+      id: 4,
+      fullName: 'Ms. Anjali Kumar',
+      email: 'anjali.kumar@andhra.ac.in',
+      role: 'placement',
+      university: 'Andhra University',
+      department: 'Training & Placement',
+      employeeId: 'TNP2024',
+      registeredDate: '2024-11-06T11:00:00',
+      status: 'pending'
+    },
+    {
+      id: 5,
+      fullName: 'Kiran Patel',
+      email: 'kiran.patel@jntu.ac.in',
+      role: 'student_body',
+      university: 'JNTU Hyderabad',
+      department: 'Student Affairs',
+      registeredDate: '2024-11-06T08:45:00',
+      status: 'pending'
+    },
+    {
+      id: 6,
+      fullName: 'Sneha Gupta',
+      email: 'sneha.gupta@osmania.ac.in',
+      role: 'student',
+      university: 'Osmania University',
+      department: 'IT',
+      rollNumber: 'IT21045',
+      registeredDate: '2024-11-05T16:30:00',
+      status: 'pending'
+    }
+  ]);
 
   const showToast = (message, type = 'success') => {
     setToast({ show: true, message, type });

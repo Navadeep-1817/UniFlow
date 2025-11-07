@@ -5,25 +5,49 @@ const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
 const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
+const cookieParser = require('cookie-parser');
 const connectDB = require('./config/db');
 
 // Load environment variables
 dotenv.config();
 
-// Connect to MongoDB
+// Connect to database
 connectDB();
+
+// ===== IMPORTANT: Register all models BEFORE using them =====
+// This prevents "Schema hasn't been registered" errors
+require('./models/User');
+require('./models/University');
+require('./models/Department');
+require('./models/Venue');
+require('./models/Student');
+require('./models/Faculty');
+require('./models/AcademicAdmin');
+require('./models/NonAcademicAdmin');
+require('./models/SuperAdmin');
+require('./models/Trainer');
+require('./models/StudentBody');
+require('./models/Event');
+require('./models/Registration');
+require('./models/Attendance');
+require('./models/Feedback');
+require('./models/Notification');
+require('./models/Certificate');
+require('./models/ApprovalRequest');
+require('./models/SportsEvent');
+require('./models/PlacementDrive');
+require('./models/Timetable');
+require('./models/Resource');
+require('./models/ActivityReport');
+require('./models/AuditLog');
 
 // Initialize Express app
 const app = express();
 
-// ============================================
-// MIDDLEWARE
-// ============================================
-
-// Security Headers
+// Security middleware
 app.use(helmet());
 
-// CORS Configuration
+// CORS configuration
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
   credentials: true,
@@ -31,12 +55,11 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Body Parser
+// Body parser middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Cookie Parser (for JWT cookies)
-const cookieParser = require('cookie-parser');
+// Cookie parser middleware
 app.use(cookieParser());
 
 // Sanitize data to prevent NoSQL injection
@@ -58,7 +81,7 @@ const limiter = rateLimit({
 
 app.use('/api/', limiter);
 
-
+// Root route
 app.get('/', (req, res) => {
   res.status(200).json({
     success: true,
@@ -68,6 +91,7 @@ app.get('/', (req, res) => {
   });
 });
 
+// Health check route
 app.get('/health', (req, res) => {
   res.status(200).json({
     success: true,
@@ -78,34 +102,48 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Setup routes (for initial data seeding - should be removed in production)
+// API Routes
+// Setup and Authentication
 app.use('/api/setup', require('./routes/setupRoutes'));
+app.use('/api/auth', require('./routes/authRoutes'));
 
-// Auth routes
-app.use('/api/auth', require('./routes/authRoutes'));
-// API Routes (will be added later)
-// Uncomment these when you create the route files
-/*
-app.use('/api/auth', require('./routes/authRoutes'));
+// User Management
+app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/trainers', require('./routes/trainerRoutes'));
+
+// Admin Routes
 app.use('/api/superadmin', require('./routes/superAdminRoutes'));
 app.use('/api/academic', require('./routes/academicAdminRoutes'));
 app.use('/api/non-academic', require('./routes/nonAcademicAdminRoutes'));
+
+// Role-based Routes
 app.use('/api/faculty', require('./routes/facultyRoutes'));
-app.use('/api/student', require('./routes/studentRoutes'));
+app.use('/api/students', require('./routes/studentRoutes'));
+
+// Core Event Management
 app.use('/api/events', require('./routes/eventRoutes'));
 app.use('/api/registrations', require('./routes/registrationRoutes'));
 app.use('/api/attendance', require('./routes/attendanceRoutes'));
-app.use('/api/feedback', require('./routes/feedbackRoutes'));
-app.use('/api/trainers', require('./routes/trainerRoutes'));
-app.use('/api/venues', require('./routes/venueRoutes'));
-app.use('/api/departments', require('./routes/departmentRoutes'));
-app.use('/api/student-bodies', require('./routes/studentBodyRoutes'));
-app.use('/api/notifications', require('./routes/notificationRoutes'));
-app.use('/api/analytics', require('./routes/analyticsRoutes'));
-app.use('/api/certificates', require('./routes/certificateRoutes'));
-*/
 
-// 404 Handler - FIXED VERSION
+// Feedback and Certificates (Comment out until controllers are implemented)
+// app.use('/api/feedback', require('./routes/feedbackRoutes'));
+// app.use('/api/certificates', require('./routes/certificateRoutes'));
+
+// Sports Management (Comment out until controllers are implemented)
+// app.use('/api/sports', require('./routes/sportsRoutes'));
+
+// Infrastructure (Comment out until controllers are implemented)
+// app.use('/api/venues', require('./routes/venueRoutes'));
+// app.use('/api/departments', require('./routes/departmentRoutes'));
+// app.use('/api/student-bodies', require('./routes/studentBodyRoutes'));
+
+// System Features (Comment out until controllers are implemented)
+// app.use('/api/notifications', require('./routes/notificationRoutes'));
+// app.use('/api/approvals', require('./routes/approvalRoutes'));
+// app.use('/api/conflicts', require('./routes/conflictRoutes'));
+// app.use('/api/analytics', require('./routes/analyticsRoutes'));
+
+// 404 Handler
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -114,7 +152,7 @@ app.use((req, res) => {
   });
 });
 
-// Error Handler Middleware
+// Global Error Handler Middleware
 app.use((err, req, res, next) => {
   console.error('Error:', err.message);
   
@@ -125,20 +163,15 @@ app.use((err, req, res, next) => {
   });
 });
 
-// ============================================
-// START SERVER
-// ============================================
-
+// Start server
 const PORT = process.env.PORT || 5000;
 
 const server = app.listen(PORT, () => {
   console.log(`
-  ╔════════════════════════════════════════╗
-  ║   🚀 UniFlow Server Running           ║
-  ║   📍 Port: ${PORT}                       ║
-  ║   🌍 Environment: ${process.env.NODE_ENV || 'development'}        ║
-  ║   🔗 Health: http://localhost:${PORT}/health ║
-  ╚════════════════════════════════════════╝
+    🚀 UniFlow Server Running
+    📍 Port: ${PORT}                       
+    🌍 Environment: ${process.env.NODE_ENV || 'development'}      
+    🔗 Health: http://localhost:${PORT}/health 
   `);
 });
 

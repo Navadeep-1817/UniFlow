@@ -230,23 +230,6 @@ exports.register = async (req, res, next) => {
       throw profileError;
     }
 
-    // Log the registration
-    await AuditLog.log({
-      userId: user._id,
-      userName: user.name,
-      userRole: user.role,
-      userEmail: user.email,
-      action: 'REGISTER',
-      actionDescription: `User registered with role: ${role}`,
-      module: 'User',
-      entityType: 'User',
-      entityId: user._id,
-      entityName: user.name,
-      ipAddress: req.ip,
-      userAgent: req.headers['user-agent'],
-      severity: 'INFO',
-      isSuccessful: true,
-    });
 
     // If user needs approval, send appropriate message
     if (!user.isApproved) {
@@ -256,7 +239,7 @@ exports.register = async (req, res, next) => {
         data: {
           user: {
             id: user._id,
-            name: user.name,
+            name: user.name,  
             email: user.email,
             role: user.role,
             isApproved: user.isApproved,
@@ -295,13 +278,20 @@ exports.register = async (req, res, next) => {
 // @access  Public
 exports.login = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, role } = req.body;
 
     // Validate input
     if (!email || !password) {
       return res.status(400).json({
         success: false,
         message: 'Please provide email and password',
+      });
+    }
+
+    if (!role) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please select your role',
       });
     }
 
@@ -316,6 +306,28 @@ exports.login = async (req, res, next) => {
       await AuditLog.log({
         action: 'LOGIN',
         actionDescription: `Failed login attempt for non-existent email: ${email}`,
+        module: 'User',
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent'],
+        severity: 'WARNING',
+        isSuccessful: false,
+      });
+
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials',
+      });
+    }
+
+    // Check if role matches
+    if (user.role !== role) {
+      await AuditLog.log({
+        userId: user._id,
+        userName: user.name,
+        userRole: user.role,
+        userEmail: user.email,
+        action: 'LOGIN',
+        actionDescription: `Failed login attempt - Role mismatch: attempted ${role}, actual ${user.role}`,
         module: 'User',
         ipAddress: req.ip,
         userAgent: req.headers['user-agent'],
@@ -373,8 +385,20 @@ exports.login = async (req, res, next) => {
       });
     }
 
-    // Check password
-    const isPasswordCorrect = await user.comparePassword(password);
+    // Check password.
+    // For SUPER_ADMIN, allow login using a special SUPER_ADMIN_KEY from env (bootstrap key)
+    let isPasswordCorrect = false;
+    try {
+      if (user.role === ROLES.SUPER_ADMIN && process.env.SUPER_ADMIN_KEY && password === process.env.SUPER_ADMIN_KEY) {
+        isPasswordCorrect = true;
+      } else {
+        isPasswordCorrect = await user.comparePassword(password);
+      }
+    } catch (pwErr) {
+      console.error('Password comparison error:', pwErr);
+      isPasswordCorrect = false;
+    }
+
     if (!isPasswordCorrect) {
       await AuditLog.log({
         userId: user._id,

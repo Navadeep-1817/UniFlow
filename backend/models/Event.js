@@ -283,6 +283,10 @@ const eventSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    // Enable optimistic concurrency to help prevent race conditions when
+    // multiple processes try to modify the same event (for example, seat counts).
+    optimisticConcurrency: true,
+    versionKey: '__v'
   }
 );
 

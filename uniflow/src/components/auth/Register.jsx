@@ -21,7 +21,6 @@ const Register = () => {
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
 
   const roles = [
-    { value: 'superadmin', label: 'Super Admin (Full Access)' },
     { value: 'student', label: 'Student' },
     { value: 'faculty', label: 'Faculty' },
     { value: 'hod', label: 'Head of Department (HOD)' },

@@ -16,23 +16,53 @@ const SuperAdminDashboard = () => {
     // Get current user info
     const userEmail = sessionStorage.getItem('userEmail') || localStorage.getItem('userEmail');
     const userRole = sessionStorage.getItem('userRole') || localStorage.getItem('userRole');
-    
-    // Mock data - In real app, this would be API calls
-    const mockUsers = [
-      { id: 1, name: 'John Doe', email: 'john@university.edu', role: 'student', department: 'Computer Science', university: 'JNTU Hyderabad', status: 'Active' },
-      { id: 2, name: 'Jane Smith', email: 'jane@university.edu', role: 'faculty', department: 'Electronics', university: 'JNTU Hyderabad', status: 'Active' },
-      { id: 3, name: 'Dr. Kumar', email: 'kumar@university.edu', role: 'hod', department: 'Computer Science', university: 'JNTU Kakinada', status: 'Active' },
-      { id: 4, name: 'Prof. Sharma', email: 'sharma@university.edu', role: 'placement', department: 'Training & Placement', university: 'Osmania University', status: 'Active' },
-      { id: 5, name: 'Student Rep', email: 'rep@university.edu', role: 'student_body', department: 'Student Affairs', university: 'JNTU Hyderabad', status: 'Active' },
-    ];
+    const token = localStorage.getItem('token');
+    const fetchRemote = async () => {
+      if (!token) return loadMock();
+      try {
+        const statsRes = await fetch('/api/superadmin/stats', { headers: { Authorization: `Bearer ${token}` } });
+        const statsJson = await statsRes.json();
+        if (statsJson && statsJson.success) {
+          const data = statsJson.data;
+          // build stats totals
+          const totalUsers = data.totalUsers || 0;
+          const totalStudents = (data.byRole || []).find(r => r._id === 'student')?.count || 0;
+          const totalFaculty = (data.byRole || []).find(r => r._id === 'faculty')?.count || 0;
+          const totalAdmins = (data.byRole || []).filter(r => ['academic_admin_hod','academic_admin_tp','non_academic_faculty_head','non_academic_team_rep','superadmin'].includes(r._id)).reduce((s, r) => s + r.count, 0);
+          setStats({ totalUsers, totalStudents, totalFaculty, totalAdmins });
+        } else {
+          loadMock();
+        }
 
-    setUsers(mockUsers);
-    setStats({
-      totalUsers: mockUsers.length,
-      totalStudents: mockUsers.filter(u => u.role === 'student').length,
-      totalFaculty: mockUsers.filter(u => u.role === 'faculty').length,
-      totalAdmins: mockUsers.filter(u => ['hod', 'placement', 'student_body', 'sports', 'superadmin'].includes(u.role)).length
-    });
+        const usersRes = await fetch('/api/superadmin/users?limit=50', { headers: { Authorization: `Bearer ${token}` } });
+        const usersJson = await usersRes.json();
+        if (usersJson && usersJson.success) {
+          const mapped = usersJson.data.map(u => ({ id: u._id, name: u.name, email: u.email, role: u.role, department: u.department?.name || '', university: u.university?.name || '', status: u.isApproved ? 'Active' : 'Pending' }));
+          setUsers(mapped);
+        }
+      } catch (err) {
+        loadMock();
+      }
+    };
+
+    const loadMock = () => {
+      const mockUsers = [
+        { id: 1, name: 'John Doe', email: 'john@university.edu', role: 'student', department: 'Computer Science', university: 'JNTU Hyderabad', status: 'Active' },
+        { id: 2, name: 'Jane Smith', email: 'jane@university.edu', role: 'faculty', department: 'Electronics', university: 'JNTU Hyderabad', status: 'Active' },
+        { id: 3, name: 'Dr. Kumar', email: 'kumar@university.edu', role: 'hod', department: 'Computer Science', university: 'JNTU Kakinada', status: 'Active' },
+        { id: 4, name: 'Prof. Sharma', email: 'sharma@university.edu', role: 'placement', department: 'Training & Placement', university: 'Osmania University', status: 'Active' },
+        { id: 5, name: 'Student Rep', email: 'rep@university.edu', role: 'student_body', department: 'Student Affairs', university: 'JNTU Hyderabad', status: 'Active' },
+      ];
+      setUsers(mockUsers);
+      setStats({
+        totalUsers: mockUsers.length,
+        totalStudents: mockUsers.filter(u => u.role === 'student').length,
+        totalFaculty: mockUsers.filter(u => u.role === 'faculty').length,
+        totalAdmins: mockUsers.filter(u => ['hod', 'placement', 'student_body', 'sports', 'superadmin'].includes(u.role)).length
+      });
+    };
+
+    fetchRemote();
   }, []);
 
   const handleLogout = () => {
