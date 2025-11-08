@@ -71,24 +71,29 @@ const FacultyAllocation = () => {
       console.log('Faculty Response:', facultyRes.data);
       console.log('Trainers Response:', trainersRes.data);
 
-      const eventsData = (eventsRes.data.data || eventsRes.data || []).map(event => ({
-        id: event._id,
-        name: event.title,
-        type: event.type || 'Event',
-        subType: event.subType || 'General',
-        category: event.category || 'Department',
-        startDate: new Date(event.date.startDate).toISOString().split('T')[0],
-        endDate: new Date(event.date.endDate).toISOString().split('T')[0],
-        venue: event.venue?.name || 'TBD',
-        status: event.status.toLowerCase(),
-        sessions: event.sessions?.length || 0,
-        description: event.description || '',
-        trainer: event.trainer,
-        trainerId: event.trainer?._id,
-        targetAudience: event.targetAudience || {},
-        registrations: event.registrations || [],
-        workloadPoints: event.workloadPoints || 10 // Default workload points per event
-      }));
+      const eventsData = (eventsRes.data.data || eventsRes.data || []).map(event => {
+        console.log('Event coordinators:', event.title, event.coordinators);
+        return {
+          id: event._id,
+          name: event.title,
+          type: event.type || 'Event',
+          subType: event.subType || 'General',
+          category: event.category || 'Department',
+          startDate: new Date(event.date.startDate).toISOString().split('T')[0],
+          endDate: new Date(event.date.endDate).toISOString().split('T')[0],
+          venue: event.venue?.name || 'TBD',
+          status: event.status.toLowerCase(),
+          sessions: event.sessions?.length || 0,
+          description: event.description || '',
+          trainer: event.trainer,
+          trainerId: event.trainer?._id,
+          coordinators: event.coordinators || [],
+          coordinatorIds: (event.coordinators || []).map(c => c._id || c),
+          targetAudience: event.targetAudience || {},
+          registrations: event.registrations || [],
+          workloadPoints: event.workloadPoints || 10 // Default workload points per event
+        };
+      });
       
       const facultyData = (facultyRes.data.data || facultyRes.data || []).map(fac => ({
         id: fac._id,
@@ -250,7 +255,9 @@ const FacultyAllocation = () => {
     setSelectedEvent(event.id);
     setSelectedEventDetails(event);
     setSelectedTrainer(event.trainerId || null);
-    setSelectedFaculty([]);
+    
+    // Pre-select already allocated faculty
+    setSelectedFaculty(event.coordinatorIds || []);
     setSelectedStudents([]);
     setParticipantSearchQuery('');
     
@@ -449,15 +456,25 @@ const FacultyAllocation = () => {
               ) : (
                 filteredEvents.map(event => {
                   const statusStyle = getStatusStyle(event.status);
-                  const isAllocated = !!event.trainer;
+                  const eventSubType = event.subType.toLowerCase();
+                  
+                  // Determine allocation type based on event subType
+                  const isTrainerEvent = eventSubType.includes('fdp') || 
+                                        eventSubType.includes('faculty development') ||
+                                        eventSubType.includes('crt') || 
+                                        eventSubType.includes('campus recruitment');
+                  
+                  const isAllocated = isTrainerEvent ? !!event.trainer : (event.coordinators && event.coordinators.length > 0);
                   const allocatedTrainer = event.trainer;
+                  const allocatedCoordinators = event.coordinators || [];
+                  
                   return (
                     <div key={event.id} style={styles.eventCard} onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.12)'; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)'; }}>
                       <div style={styles.eventHeader}>
                         <div>
                           <div style={styles.eventName}>{event.name}</div>
                           <div style={styles.eventMeta}>
-                            <span style={{...styles.eventTypeBadge, backgroundColor: event.type === 'FDP' ? '#4F46E5' : event.type === 'SDP' ? '#10B981' : '#F59E0B'}}>{event.type}</span>
+                            <span style={{...styles.eventTypeBadge, backgroundColor: event.type === 'FDP' ? '#4F46E5' : event.type === 'SDP' ? '#10B981' : '#F59E0B'}}>{event.subType}</span>
                             <span style={styles.eventDate}>{event.startDate} to {event.endDate}</span>
                           </div>
                         </div>
@@ -479,11 +496,36 @@ const FacultyAllocation = () => {
                       {isAllocated ? (
                         <div style={styles.allocatedInfo}>
                           <FiUserPlus size={16} color="#10B981" />
-                          <span>Trainer: <strong>{allocatedTrainer?.name || 'TBD'}</strong></span>
+                          {isTrainerEvent ? (
+                            <span>Trainer: <strong>{allocatedTrainer?.name || 'TBD'}</strong></span>
+                          ) : (
+                            <span>Faculty: <strong>
+                              {(() => {
+                                if (allocatedCoordinators.length === 0) return 'No faculty assigned';
+                                
+                                const names = allocatedCoordinators
+                                  .map(c => {
+                                    // If it's a populated object with name
+                                    if (c && typeof c === 'object' && c.name) {
+                                      return c.name;
+                                    }
+                                    return null;
+                                  })
+                                  .filter(name => name);
+                                
+                                if (names.length > 0) {
+                                  return names.join(', ');
+                                } else {
+                                  // If coordinators exist but not populated, show count
+                                  return `${allocatedCoordinators.length} faculty member${allocatedCoordinators.length > 1 ? 's' : ''}`;
+                                }
+                              })()}
+                            </strong></span>
+                          )}
                         </div>
                       ) : (
                         <button onClick={() => openAllocationModal(event)} style={styles.allocateBtn} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#4338CA'; e.currentTarget.style.transform = 'scale(1.02)'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#4F46E5'; e.currentTarget.style.transform = 'scale(1)'; }}>
-                          <FiUserPlus size={16} /> Allocate Trainer
+                          <FiUserPlus size={16} /> {isTrainerEvent ? 'Allocate Trainer' : 'Allocate Faculty'}
                         </button>
                       )}
                     </div>
@@ -586,7 +628,14 @@ const FacultyAllocation = () => {
                   </div>
                 ) : (
                   <div style={styles.facultySelection}>
-                    <h4 style={{marginBottom: '16px'}}>Select Faculty Coordinators:</h4>
+                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px'}}>
+                      <h4 style={{margin: 0}}>Select Faculty Coordinators:</h4>
+                      {selectedEventDetails?.coordinators && selectedEventDetails.coordinators.length > 0 && (
+                        <span style={{fontSize: '13px', color: '#6B7280', fontStyle: 'italic'}}>
+                          Currently allocated: {selectedEventDetails.coordinators.length} faculty
+                        </span>
+                      )}
+                    </div>
                     <div style={styles.searchBox}>
                       <FiSearch size={16} color="#6B7280" />
                       <input 
@@ -666,7 +715,13 @@ const FacultyAllocation = () => {
                     } 
                   }}
                 >
-                  <FiSave size={16} /> {allocationType === 'trainer' ? 'Allocate Trainer' : `Allocate ${selectedFaculty.length} Faculty`}
+                  <FiSave size={16} /> 
+                  {allocationType === 'trainer' 
+                    ? (selectedEventDetails?.trainer ? 'Update Trainer' : 'Allocate Trainer')
+                    : (selectedEventDetails?.coordinators && selectedEventDetails.coordinators.length > 0 
+                        ? `Update Faculty (${selectedFaculty.length} selected)` 
+                        : `Allocate ${selectedFaculty.length} Faculty`)
+                  }
                 </button>
               </div>
             </div>

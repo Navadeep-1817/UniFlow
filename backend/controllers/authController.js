@@ -93,7 +93,7 @@ const createSendToken = async (user, statusCode, res, message = 'Success') => {
     ),
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict', // 'none' required for cross-origin cookies
   };
 
   res.cookie('token', token, cookieOptions);
@@ -607,6 +607,8 @@ exports.logout = async (req, res, next) => {
     res.cookie('token', 'none', {
       expires: new Date(Date.now() + 10 * 1000),
       httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
     });
 
     res.status(200).json({
@@ -815,8 +817,9 @@ exports.forgotPassword = async (req, res, next) => {
 
     await user.save({ validateBeforeSave: false });
 
-    // Create reset url
-    const resetUrl = `${req.protocol}://${req.get('host')}/api/auth/resetpassword/${resetToken}`;
+    // Create reset url - points to frontend reset password page
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
 
     // Log forgot password request
     await AuditLog.log({

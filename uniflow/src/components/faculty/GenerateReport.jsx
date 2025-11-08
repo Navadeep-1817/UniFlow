@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { 
   FiFileText,
   FiDownload,
@@ -14,8 +15,11 @@ import {
   FiTrendingUp,
   FiBarChart,
   FiPieChart,
-  FiActivity
+  FiActivity,
+  FiAlertCircle
 } from 'react-icons/fi';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const GenerateReport = () => {
   const navigate = useNavigate();
@@ -23,17 +27,133 @@ const GenerateReport = () => {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [reportData, setReportData] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
 
   useEffect(() => {
-    // TODO: Fetch completed events from API
-    // fetchCompletedEvents();
+    fetchMyEvents();
   }, []);
 
+  const fetchMyEvents = async () => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    if (!token) {
+      setError('Authentication required');
+      setLoading(false);
+      navigate('/login');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      const response = await axios.get(`${API_BASE_URL}/faculty/my-events`, config);
+      
+      console.log('Fetched events:', response.data);
+      
+      // Transform events data - calculate real-time status like MyAssignedEvents does
+      const allEvents = response.data.data || response.data.events || [];
+      console.log('All events:', allEvents);
+      console.log('Total events count:', allEvents.length);
+      
+      const eventsData = allEvents.map(event => {
+        // Calculate real-time status based on dates (same logic as MyAssignedEvents)
+        const now = new Date();
+        const startDate = new Date(event.date?.startDate);
+        const endDate = new Date(event.date?.endDate);
+        
+        let calculatedStatus = 'Upcoming';
+        if (event.status === 'Completed' || now > endDate) {
+          calculatedStatus = 'Completed';
+        } else if (event.status === 'Ongoing' || (now >= startDate && now <= endDate)) {
+          calculatedStatus = 'Ongoing';
+        } else if (now < startDate) {
+          calculatedStatus = 'Upcoming';
+        }
+        
+        console.log('Event:', event.title, 'DB Status:', event.status, 'Calculated:', calculatedStatus);
+        
+        return {
+          id: event._id,
+          name: event.title,
+          startDate: new Date(event.date.startDate).toISOString().split('T')[0],
+          endDate: new Date(event.date.endDate).toISOString().split('T')[0],
+          type: event.type || 'Academic',
+          subType: event.subType || 'Event',
+          status: calculatedStatus,
+          venue: event.venue?.name || 'TBD'
+        };
+      }).filter(event => {
+        // Only show Completed and Ongoing events for reports
+        const isValid = event.status === 'Completed' || event.status === 'Ongoing';
+        console.log('Event:', event.name, 'Status:', event.status, 'Valid for report:', isValid);
+        return isValid;
+      });
+      
+      console.log('Filtered events for reports:', eventsData);
+      setEvents(eventsData);
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching events:', err);
+      setError(err.response?.data?.message || 'Failed to load events');
+      setLoading(false);
+    }
+  };
+
   const generateReportData = (eventId) => {
-    // TODO: Fetch comprehensive report data from API
-    // return fetchReportData(eventId);
-    return null;
+    // Generate mock report data (in production, this would fetch from API)
+    const event = events.find(e => e.id === parseInt(eventId) || e.id === eventId);
+    if (!event) return null;
+
+    return {
+      event: event,
+      overview: {
+        totalSessions: 5,
+        totalStudents: 45,
+        averageAttendance: 87,
+        averageFeedback: 4.3,
+        completionRate: 91,
+        totalMaterials: 12
+      },
+      attendance: {
+        sessionWise: [
+          { session: 'Session 1', date: event.startDate, present: 42, absent: 3, percentage: 93 },
+          { session: 'Session 2', date: event.startDate, present: 40, absent: 5, percentage: 89 },
+          { session: 'Session 3', date: event.startDate, present: 38, absent: 7, percentage: 84 },
+          { session: 'Session 4', date: event.startDate, present: 41, absent: 4, percentage: 91 },
+          { session: 'Session 5', date: event.endDate, present: 39, absent: 6, percentage: 87 }
+        ]
+      },
+      feedback: {
+        totalResponses: 40,
+        distribution: { 5: 18, 4: 15, 3: 5, 2: 2, 1: 0 },
+        categories: {
+          content: 4.5,
+          delivery: 4.2,
+          relevance: 4.4,
+          materials: 4.1
+        }
+      },
+      summary: {
+        strengths: [
+          'High student engagement and participation',
+          'Well-structured content delivery',
+          'Comprehensive learning materials provided'
+        ],
+        improvements: [
+          'More interactive sessions needed',
+          'Additional practice exercises required',
+          'Better time management for Q&A sessions'
+        ],
+        outcomes: [
+          'Successfully completed all planned sessions',
+          'Achieved target attendance rate',
+          'Positive feedback from majority of participants'
+        ]
+      }
+    };
   };
 
   const showToast = (message, type = 'success') => {
@@ -114,25 +234,46 @@ const GenerateReport = () => {
 
         {/* Event Selection & Generate Button */}
         <div style={styles.controlSection}>
-          <div style={styles.eventSelector}>
-            <label style={styles.selectorLabel}>Select Completed Event:</label>
-            <select 
-              value={selectedEvent?.id || ''} 
-              onChange={(e) => handleEventChange(e.target.value)}
-              style={styles.select}
-              onFocus={(e) => e.currentTarget.style.borderColor = '#4F46E5'}
-              onBlur={(e) => e.currentTarget.style.borderColor = '#E5E7EB'}
-            >
-              <option value="">Choose an event...</option>
-              {events.map(event => (
-                <option key={event.id} value={event.id}>
-                  {event.name} ({event.startDate} to {event.endDate})
-                </option>
-              ))}
-            </select>
-          </div>
+          {loading ? (
+            <div style={{textAlign: 'center', padding: '20px'}}>
+              <div style={{fontSize: '14px', color: '#6B7280'}}>Loading events...</div>
+            </div>
+          ) : error ? (
+            <div style={{padding: '16px', backgroundColor: '#FEE2E2', borderRadius: '8px', color: '#DC2626', display: 'flex', alignItems: 'center', gap: '8px'}}>
+              <FiAlertCircle size={20} />
+              <span>{error}</span>
+            </div>
+          ) : events.length === 0 ? (
+            <div style={{textAlign: 'center', padding: '40px'}}>
+              <FiCalendar size={48} color="#9CA3AF" style={{marginBottom: '16px'}} />
+              <p style={{fontSize: '16px', color: '#6B7280', margin: 0}}>No completed or ongoing events found</p>
+              <p style={{fontSize: '14px', color: '#9CA3AF', marginTop: '8px'}}>Events assigned to you will appear here once completed</p>
+            </div>
+          ) : (
+            <>
+              <div style={styles.eventSelector}>
+                <label style={styles.selectorLabel}>
+                  Select Completed/Ongoing Event ({events.length} available):
+                </label>
+                <select 
+                  value={selectedEvent?.id || ''} 
+                  onChange={(e) => handleEventChange(e.target.value)}
+                  style={styles.select}
+                  onFocus={(e) => e.currentTarget.style.borderColor = '#4F46E5'}
+                  onBlur={(e) => e.currentTarget.style.borderColor = '#E5E7EB'}
+                >
+                  <option value="">Choose an event...</option>
+                  {events.map(event => (
+                    <option key={event.id} value={event.id}>
+                      {event.name} - {event.subType} ({event.startDate} to {event.endDate})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </>
+          )}
 
-          {selectedEvent && !reportData && (
+          {!loading && !error && selectedEvent && !reportData && (
             <button 
               onClick={handleGenerateReport}
               disabled={isGenerating}

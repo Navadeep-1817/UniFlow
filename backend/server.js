@@ -53,23 +53,30 @@ const allowedOrigins = [
   'http://localhost:5173',  // Vite default
   'http://localhost:5174',  // Vite alternate
   'http://localhost:5175',  // Vite alternate
+  'https://uni-flow-phi.vercel.app',  // Production frontend
   process.env.FRONTEND_URL
 ].filter(Boolean);
 
+console.log('🔒 Allowed CORS Origins:', allowedOrigins);
+
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl)
+    // Allow requests with no origin (like mobile apps, Postman, or curl)
     if (!origin) return callback(null, true);
     
     if (allowedOrigins.indexOf(origin) !== -1) {
+      console.log('✅ CORS allowed for origin:', origin);
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      console.warn('⚠️ CORS blocked for origin:', origin);
+      callback(new Error(`CORS policy: Origin ${origin} is not allowed`));
     }
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 86400 // 24 hours
 }));
 
 // Body parser middleware
