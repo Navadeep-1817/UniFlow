@@ -8,7 +8,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "seed": "node seed.js",
     "seed:force": "node seed.js --force",
-    "seed:clear": "node seed.js --clear"
+    "seed:clear": "node seed.js --clear",
+    "seed:vignan": "node seedVignanUniversity.js",
+    "seed:student-bodies": "node seedStudentBodies.js"
   },
   "keywords": [],
   "author": "",

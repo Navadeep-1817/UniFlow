@@ -17,38 +17,19 @@ import {
 const StudentAnalytics = () => {
   const navigate = useNavigate();
 
-  // Mock data
+  // TODO: Fetch analytics data from API
   const stats = {
-    totalEvents: 25,
-    attended: 21,
-    certificates: 15,
-    attendanceRate: 84,
-    eventsRegistered: 25,
-    upcomingEvents: 4
+    totalEvents: 0,
+    attended: 0,
+    certificates: 0,
+    attendanceRate: 0,
+    eventsRegistered: 0,
+    upcomingEvents: 0
   };
 
-  const eventTypeData = [
-    { type: 'Technical', count: 10, percentage: 40, color: '#4F46E5' },
-    { type: 'Sports', count: 8, percentage: 32, color: '#10B981' },
-    { type: 'Cultural', count: 5, percentage: 20, color: '#F59E0B' },
-    { type: 'Workshop', count: 2, percentage: 8, color: '#8B5CF6' }
-  ];
-
-  const monthlyData = [
-    { month: 'Jan', events: 4 },
-    { month: 'Feb', events: 7 },
-    { month: 'Mar', events: 5 },
-    { month: 'Apr', events: 9 },
-    { month: 'May', events: 6 },
-    { month: 'Jun', events: 8 }
-  ];
-
-  const performanceMetrics = [
-    { label: 'Event Participation', value: 90, color: '#4F46E5' },
-    { label: 'Certificates Earned', value: 75, color: '#10B981' },
-    { label: 'Team Collaboration', value: 85, color: '#F59E0B' },
-    { label: 'Feedback Score', value: 95, color: '#EF4444' }
-  ];
+  const eventTypeData = [];
+  const monthlyData = [];
+  const performanceMetrics = [];
 
   const styles = {
     container: {

@@ -3,95 +3,6 @@ import FacultyHeadTopNav from './FacultyHeadTopNav';
 import { styles } from './EventApprovalStyles';
 import { FiCalendar, FiUser, FiMapPin, FiDollarSign, FiClock, FiUsers, FiFileText, FiCheck, FiX, FiEdit3, FiFilter } from 'react-icons/fi';
 
-// Mock data
-const mockPendingEvents = [
-  {
-    id: 1,
-    name: 'Tech Innovation Summit 2024',
-    proposedBy: 'Rahul Sharma',
-    teamName: 'Tech Club',
-    date: '2024-02-15',
-    time: '10:00 AM - 4:00 PM',
-    venue: 'Main Auditorium',
-    budget: 75000,
-    expectedParticipants: 200,
-    category: 'Technical',
-    description: 'A full-day summit featuring keynote speakers from leading tech companies, panel discussions on emerging technologies, and networking opportunities for students interested in technology careers.',
-    objectives: 'To inspire students about latest tech trends, provide networking opportunities, and showcase student projects.',
-    submittedDate: '2024-01-20',
-    status: 'pending',
-    priority: 'high'
-  },
-  {
-    id: 2,
-    name: 'Annual Cultural Fest - Rang Manch',
-    proposedBy: 'Priya Patel',
-    teamName: 'Cultural Committee',
-    date: '2024-03-10',
-    time: '6:00 PM - 10:00 PM',
-    venue: 'Open Air Theatre',
-    budget: 120000,
-    expectedParticipants: 500,
-    category: 'Cultural',
-    description: 'Annual cultural festival featuring dance performances, music concerts, drama competitions, and art exhibitions. The event will showcase diverse cultural traditions and student talents.',
-    objectives: 'Celebrate cultural diversity, provide platform for student performers, and foster community engagement.',
-    submittedDate: '2024-01-18',
-    status: 'pending',
-    priority: 'high'
-  },
-  {
-    id: 3,
-    name: 'Sports Day Championship',
-    proposedBy: 'Amit Kumar',
-    teamName: 'Sports Council',
-    date: '2024-02-25',
-    time: '8:00 AM - 5:00 PM',
-    venue: 'Sports Complex',
-    budget: 50000,
-    expectedParticipants: 300,
-    category: 'Sports',
-    description: 'Inter-department sports competition including athletics, cricket, football, basketball, and indoor games. Awards ceremony at the end of the day.',
-    objectives: 'Promote physical fitness, team spirit, and healthy competition among students.',
-    submittedDate: '2024-01-22',
-    status: 'pending',
-    priority: 'medium'
-  },
-  {
-    id: 4,
-    name: 'Entrepreneurship Workshop Series',
-    proposedBy: 'Sneha Reddy',
-    teamName: 'E-Cell',
-    date: '2024-02-20',
-    time: '2:00 PM - 5:00 PM',
-    venue: 'Seminar Hall B',
-    budget: 30000,
-    expectedParticipants: 100,
-    category: 'Workshop',
-    description: 'Three-day workshop series on entrepreneurship fundamentals, startup funding, and business planning. Industry experts will conduct interactive sessions.',
-    objectives: 'Develop entrepreneurial mindset, provide practical business knowledge, and connect students with mentors.',
-    submittedDate: '2024-01-25',
-    status: 'pending',
-    priority: 'medium'
-  },
-  {
-    id: 5,
-    name: 'Blood Donation Camp',
-    proposedBy: 'Vikram Singh',
-    teamName: 'NSS Unit',
-    date: '2024-02-18',
-    time: '9:00 AM - 3:00 PM',
-    venue: 'Medical Center',
-    budget: 15000,
-    expectedParticipants: 150,
-    category: 'Social Service',
-    description: 'Blood donation drive in collaboration with local blood bank. Medical staff will be present for safe donation process.',
-    objectives: 'Save lives through blood donation, create awareness about importance of blood donation.',
-    submittedDate: '2024-01-23',
-    status: 'pending',
-    priority: 'low'
-  }
-];
-
 const EventApproval = () => {
   const [pendingEvents, setPendingEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -107,10 +18,15 @@ const EventApproval = () => {
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
-      setTimeout(() => {
-        setPendingEvents(mockPendingEvents);
+      try {
+        // TODO: Fetch pending events from API
+        // const data = await fetchPendingEvents();
+        // setPendingEvents(data);
         setIsLoading(false);
-      }, 800);
+      } catch (error) {
+        console.error('Error fetching pending events:', error);
+        setIsLoading(false);
+      }
     };
     fetchData();
   }, []);

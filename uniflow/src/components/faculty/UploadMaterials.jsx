@@ -32,77 +32,20 @@ const UploadMaterials = () => {
   const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
-    // Mock events data
-    const mockEvents = [
-      { id: 1, name: 'AI & ML Workshop', startDate: '2024-11-15', endDate: '2024-11-17' },
-      { id: 2, name: 'Web Development SDP', startDate: '2024-11-20', endDate: '2024-11-22' },
-      { id: 3, name: 'CRT Training', startDate: '2024-11-10', endDate: '2024-11-12' }
-    ];
-    setEvents(mockEvents);
+    // TODO: Fetch events from API
+    // fetchEvents();
   }, []);
 
   const loadSessions = (eventId) => {
-    // Mock sessions data
-    const mockSessions = [
-      {
-        id: 1,
-        eventId: 1,
-        title: 'Introduction to Machine Learning',
-        date: '2024-11-15',
-        time: '10:00 AM'
-      },
-      {
-        id: 2,
-        eventId: 1,
-        title: 'Deep Learning Basics',
-        date: '2024-11-16',
-        time: '2:00 PM'
-      },
-      {
-        id: 3,
-        eventId: 1,
-        title: 'Neural Networks',
-        date: '2024-11-17',
-        time: '10:00 AM'
-      }
-    ];
-    const filtered = mockSessions.filter(s => s.eventId === eventId);
-    setSessions(filtered);
+    // TODO: Fetch sessions from API
+    // fetchSessions(eventId);
+    setSessions([]);
   };
 
   const loadMaterials = (sessionId) => {
-    // Mock materials data
-    const mockMaterials = [
-      {
-        id: 1,
-        sessionId: 1,
-        fileName: 'ML_Introduction.pdf',
-        type: 'pdf',
-        size: '2.5 MB',
-        uploadedOn: '2024-11-14 10:30 AM',
-        uploadedBy: 'Dr. Smith'
-      },
-      {
-        id: 2,
-        sessionId: 1,
-        fileName: 'ML_Presentation.pptx',
-        type: 'pptx',
-        size: '5.8 MB',
-        uploadedOn: '2024-11-14 11:00 AM',
-        uploadedBy: 'Dr. Smith'
-      },
-      {
-        id: 3,
-        sessionId: 1,
-        fileName: 'Sample_Code.zip',
-        type: 'zip',
-        size: '1.2 MB',
-        uploadedOn: '2024-11-14 02:15 PM',
-        uploadedBy: 'Dr. Smith'
-      }
-    ];
-    const filtered = mockMaterials.filter(m => m.sessionId === sessionId);
-    setMaterials(filtered);
+    // TODO: Fetch materials from API
+    // fetchMaterials(sessionId);
+    setMaterials([]);
   };
 
   const showToast = (message, type = 'success') => {

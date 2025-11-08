@@ -39,10 +39,10 @@ const Register = () => {
   const roles = [
     { value: 'student', label: 'Student' },
     { value: 'faculty', label: 'Faculty' },
-    { value: 'hod', label: 'Head of Department (HOD)' },
-    { value: 'placement', label: 'Training & Placement Head' },
-    { value: 'faculty_head', label: 'Student Body - Faculty Head' },
-    { value: 'team_rep', label: 'Student Body - Team Representative' },
+    { value: 'academic_admin_hod', label: 'Head of Department (HOD)' },
+    { value: 'academic_admin_tp', label: 'Training & Placement Head' },
+    { value: 'non_academic_faculty_head', label: 'Student Body - Faculty Head' },
+    { value: 'non_academic_team_rep', label: 'Student Body - Team Representative' },
     { value: 'sports', label: 'Sports Administrator' },
     { value: 'trainer', label: 'Trainer' }
   ];
@@ -92,19 +92,33 @@ const Register = () => {
   // Fetch student bodies for non-academic roles
   useEffect(() => {
     const fetchStudentBodies = async () => {
-      if ((formData.role === 'faculty_head' || formData.role === 'team_rep') && formData.university) {
+      if ((formData.role === 'non_academic_faculty_head' || formData.role === 'non_academic_team_rep') && formData.university) {
+        console.log('🔍 Fetching student bodies for role:', formData.role, 'university:', formData.university);
         try {
           setLoadingData(true);
           const response = await setupService.getStudentBodies(formData.university);
+          console.log('📦 Student Bodies Response:', response);
+          
           if (response.success && response.data) {
-            setStudentBodies(response.data.studentBodies || []);
+            const bodies = response.data.studentBodies || [];
+            console.log('✅ Setting student bodies:', bodies.length, 'items');
+            console.log('Student bodies array:', bodies);
+            setStudentBodies(bodies);
+          } else {
+            console.warn('⚠️ Response structure unexpected:', response);
+            setStudentBodies([]);
           }
         } catch (error) {
-          console.error('Error fetching student bodies:', error);
+          console.error('❌ Error fetching student bodies:', error);
           showToast('Failed to load student bodies', 'error');
+          setStudentBodies([]);
         } finally {
           setLoadingData(false);
         }
+      } else {
+        console.log('🚫 Clearing student bodies - role:', formData.role, 'university:', formData.university);
+        // Clear student bodies when role changes
+        setStudentBodies([]);
       }
     };
     
@@ -145,19 +159,19 @@ const Register = () => {
       if (!formData.university) newErrors.university = 'Please select university';
       
       // Department required for academic roles
-      if (['student', 'faculty', 'hod', 'placement'].includes(formData.role)) {
+      if (['student', 'faculty', 'academic_admin_hod', 'academic_admin_tp'].includes(formData.role)) {
         if (!formData.department) newErrors.department = 'Please select department';
       }
       
       // Student body required for non-academic roles
-      if (['faculty_head', 'team_rep'].includes(formData.role)) {
+      if (['non_academic_faculty_head', 'non_academic_team_rep'].includes(formData.role)) {
         if (!formData.studentBody) newErrors.studentBody = 'Please select student body';
       }
       
       if (formData.role === 'student' && !formData.rollNumber) {
         newErrors.rollNumber = 'Roll number is required for students';
       }
-      if ((formData.role === 'faculty' || formData.role === 'hod') && !formData.employeeId) {
+      if (['faculty', 'academic_admin_hod', 'academic_admin_tp', 'sports'].includes(formData.role) && !formData.employeeId) {
         newErrors.employeeId = 'Employee ID is required';
       }
     }
@@ -215,16 +229,16 @@ const Register = () => {
             case 'faculty':
               navigate('/faculty/dashboard');
               break;
-            case 'hod':
+            case 'academic_admin_hod':
               navigate('/hod/dashboard');
               break;
-            case 'placement':
+            case 'academic_admin_tp':
               navigate('/placement/dashboard');
               break;
-            case 'faculty_head':
+            case 'non_academic_faculty_head':
               navigate('/student-body/faculty-head/dashboard');
               break;
-            case 'team_rep':
+            case 'non_academic_team_rep':
               navigate('/teamrep/dashboard');
               break;
             case 'sports':
@@ -542,7 +556,7 @@ const Register = () => {
               </div>
 
               {/* Show department for academic roles */}
-              {['student', 'faculty', 'hod', 'placement'].includes(formData.role) && (
+              {['student', 'faculty', 'academic_admin_hod', 'academic_admin_tp'].includes(formData.role) && (
                 <div style={styles.formGroup}>
                   <label style={styles.label}>Department *</label>
                   <select
@@ -562,9 +576,12 @@ const Register = () => {
               )}
 
               {/* Show student body for non-academic roles */}
-              {['faculty_head', 'team_rep'].includes(formData.role) && (
+              {['non_academic_faculty_head', 'non_academic_team_rep'].includes(formData.role) && (
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>Student Body *</label>
+                  <label style={styles.label}>
+                    Student Body * {loadingData && <span style={{fontSize: '12px', color: '#6B7280'}}>(Loading...)</span>}
+                    {!loadingData && studentBodies.length > 0 && <span style={{fontSize: '12px', color: '#10B981'}}>({studentBodies.length} available)</span>}
+                  </label>
                   <select
                     name="studentBody"
                     value={formData.studentBody}
@@ -572,12 +589,21 @@ const Register = () => {
                     style={{...styles.select, ...(errors.studentBody && styles.inputError)}}
                     disabled={!formData.university || loadingData}
                   >
-                    <option value="">Select student body</option>
+                    <option value="">
+                      {loadingData ? 'Loading student bodies...' : 
+                       studentBodies.length === 0 ? 'No student bodies found' : 
+                       'Select student body'}
+                    </option>
                     {studentBodies.map(body => (
-                      <option key={body._id} value={body._id}>{body.name}</option>
+                      <option key={body._id} value={body._id}>{body.name} ({body.code})</option>
                     ))}
                   </select>
                   {errors.studentBody && <p style={styles.error}>{errors.studentBody}</p>}
+                  {!loadingData && studentBodies.length === 0 && formData.university && (
+                    <p style={{fontSize: '12px', color: '#F59E0B', marginTop: '4px'}}>
+                      No student bodies found for this university. Please contact admin.
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -596,7 +622,7 @@ const Register = () => {
                 </div>
               )}
 
-              {(formData.role === 'faculty' || formData.role === 'hod') && (
+              {['faculty', 'academic_admin_hod', 'academic_admin_tp', 'sports'].includes(formData.role) && (
                 <div style={styles.formGroup}>
                   <label style={styles.label}>Employee ID *</label>
                   <input

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   FiBarChart2, 
@@ -19,46 +19,16 @@ import {
 
 const HODAnalytics = () => {
   const navigate = useNavigate();
+  const [stats, setStats] = useState({});
+  const [facultyWorkload, setFacultyWorkload] = useState([]);
+  const [monthlyEvents, setMonthlyEvents] = useState([]);
+  const [studentPerformance, setStudentPerformance] = useState([]);
+  const [departmentMetrics, setDepartmentMetrics] = useState([]);
 
-  // Mock data for HOD
-  const stats = {
-    totalFaculty: 28,
-    totalStudents: 680,
-    departmentEvents: 42,
-    attendanceRate: 88,
-    placementRate: 76,
-    activeProjects: 15
-  };
-
-  const facultyWorkload = [
-    { name: 'Dr. Kumar', events: 8, percentage: 32, color: '#4F46E5' },
-    { name: 'Prof. Sharma', events: 7, percentage: 28, color: '#10B981' },
-    { name: 'Dr. Patel', events: 6, percentage: 24, color: '#F59E0B' },
-    { name: 'Others', events: 4, percentage: 16, color: '#8B5CF6' }
-  ];
-
-  const monthlyEvents = [
-    { month: 'Jan', events: 5 },
-    { month: 'Feb', events: 8 },
-    { month: 'Mar', events: 6 },
-    { month: 'Apr', events: 10 },
-    { month: 'May', events: 7 },
-    { month: 'Jun', events: 9 }
-  ];
-
-  const studentPerformance = [
-    { year: '1st Year', attendance: 85, color: '#4F46E5' },
-    { year: '2nd Year', attendance: 88, color: '#10B981' },
-    { year: '3rd Year', attendance: 90, color: '#F59E0B' },
-    { year: '4th Year', attendance: 87, color: '#EF4444' }
-  ];
-
-  const departmentMetrics = [
-    { label: 'Faculty Satisfaction', value: 92, color: '#4F46E5' },
-    { label: 'Student Engagement', value: 85, color: '#10B981' },
-    { label: 'Event Success Rate', value: 94, color: '#F59E0B' },
-    { label: 'Resource Utilization', value: 88, color: '#EF4444' }
-  ];
+  useEffect(() => {
+    // TODO: Fetch HOD analytics data from API
+    // fetchHODAnalytics();
+  }, []);
 
   const styles = {
     container: {

@@ -9,52 +9,8 @@ const EventDetails = () => {
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
 
   useEffect(() => {
-    // Mock event details
-    const mockEvent = {
-      id: 1,
-      name: 'Tech Fest 2024',
-      type: 'technical',
-      department: 'Computer Science',
-      date: '2024-11-10',
-      endDate: '2024-11-12',
-      time: '10:00 AM',
-      venue: 'Main Auditorium',
-      organizer: 'Technical Club',
-      organizerContact: 'techclub@jntu.ac.in',
-      coordinators: [
-        { name: 'Dr. Ramesh Kumar', role: 'Faculty Coordinator', contact: 'ramesh@jntu.ac.in' },
-        { name: 'Amit Sharma', role: 'Student Coordinator', contact: 'amit.cs21@jntu.ac.in' }
-      ],
-      description: 'Annual technical festival featuring coding competitions, hackathons, tech talks, and project exhibitions.',
-      fullDescription: 'Tech Fest 2024 is the premier technical event bringing together students, industry experts, and innovators. Features cutting-edge technologies including AI, Blockchain, IoT, and Cloud Computing.',
-      seatsTotal: 500,
-      seatsAvailable: 45,
-      registrationDeadline: '2024-11-08',
-      fee: 0,
-      prizes: ['1st Prize: ₹50,000', '2nd Prize: ₹30,000', '3rd Prize: ₹20,000', 'Participation Certificates'],
-      schedule: [
-        { day: 'Day 1 - Nov 10', time: '10:00 AM', activity: 'Inauguration Ceremony', venue: 'Main Auditorium' },
-        { day: 'Day 1 - Nov 10', time: '12:30 PM', activity: 'Hackathon Round 1', venue: 'CS Lab Block' },
-        { day: 'Day 2 - Nov 11', time: '9:00 AM', activity: 'Project Exhibition', venue: 'Exhibition Hall' },
-        { day: 'Day 3 - Nov 12', time: '10:00 AM', activity: 'Hackathon Finals', venue: 'Main Auditorium' }
-      ],
-      rules: [
-        'Participants must carry valid college ID card',
-        'Teams of 2-4 members for hackathon',
-        'Individual participation for coding competitions',
-        'Laptops mandatory for technical events',
-        'Follow code of conduct'
-      ],
-      eligibility: [
-        'Open to all undergraduate and postgraduate students',
-        'Prior programming experience recommended',
-        'Team members from same institution'
-      ],
-      requirements: ['Laptop with required software', 'College ID card', 'GitHub account', 'Valid email ID'],
-      tags: ['coding', 'hackathon', 'AI'],
-      status: 'open'
-    };
-    setEvent(mockEvent);
+    // TODO: Fetch event details from API
+    // fetchEventDetails(eventId);
   }, [eventId]);
 
   const showToast = (msg, type = 'success') => { setToast({ show: true, message: msg, type }); setTimeout(() => setToast({ show: false, message: '', type: '' }), 3000); };

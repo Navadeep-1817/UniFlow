@@ -21,8 +21,8 @@ const SuperAdminDashboard = () => {
     
     const fetchRemote = async () => {
       if (!token) {
-        console.warn('No token found, loading mock data');
-        return loadMock();
+        console.warn('No token found');
+        return;
       }
       
       try {
@@ -48,8 +48,6 @@ const SuperAdminDashboard = () => {
           const totalAdmins = (data.byRole || []).filter(r => ['academic_admin_hod','academic_admin_tp','non_academic_faculty_head','non_academic_team_rep','superadmin'].includes(r._id)).reduce((s, r) => s + r.count, 0);
           setStats({ totalUsers, totalStudents, totalFaculty, totalAdmins });
           console.log('Stats loaded:', { totalUsers, totalStudents, totalFaculty, totalAdmins });
-        } else {
-          loadMock();
         }
 
         const usersRes = await fetch(`${API_BASE_URL}/superadmin/users?limit=50`, { 
@@ -77,25 +75,8 @@ const SuperAdminDashboard = () => {
         }
       } catch (err) {
         console.error('Error fetching superadmin data:', err);
-        loadMock();
+        // TODO: Show error message to user
       }
-    };
-
-    const loadMock = () => {
-      const mockUsers = [
-        { id: 1, name: 'John Doe', email: 'john@university.edu', role: 'student', department: 'Computer Science', university: 'JNTU Hyderabad', status: 'Active' },
-        { id: 2, name: 'Jane Smith', email: 'jane@university.edu', role: 'faculty', department: 'Electronics', university: 'JNTU Hyderabad', status: 'Active' },
-        { id: 3, name: 'Dr. Kumar', email: 'kumar@university.edu', role: 'hod', department: 'Computer Science', university: 'JNTU Kakinada', status: 'Active' },
-        { id: 4, name: 'Prof. Sharma', email: 'sharma@university.edu', role: 'placement', department: 'Training & Placement', university: 'Osmania University', status: 'Active' },
-        { id: 5, name: 'Student Rep', email: 'rep@university.edu', role: 'student_body', department: 'Student Affairs', university: 'JNTU Hyderabad', status: 'Active' },
-      ];
-      setUsers(mockUsers);
-      setStats({
-        totalUsers: mockUsers.length,
-        totalStudents: mockUsers.filter(u => u.role === 'student').length,
-        totalFaculty: mockUsers.filter(u => u.role === 'faculty').length,
-        totalAdmins: mockUsers.filter(u => ['hod', 'placement', 'student_body', 'sports', 'superadmin'].includes(u.role)).length
-      });
     };
 
     fetchRemote();
@@ -113,9 +94,10 @@ const SuperAdminDashboard = () => {
     const roleMap = {
       'student': 'Student',
       'faculty': 'Faculty',
-      'hod': 'HOD',
-      'placement': 'T&P Head',
-      'student_body': 'Student Body Rep',
+      'academic_admin_hod': 'HOD',
+      'academic_admin_tp': 'T&P Head',
+      'non_academic_faculty_head': 'Faculty Head',
+      'non_academic_team_rep': 'Team Rep',
       'sports': 'Sports Admin',
       'superadmin': 'Super Admin'
     };
@@ -569,7 +551,7 @@ const SuperAdminDashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {users.filter(u => ['hod', 'placement', 'student_body', 'sports', 'superadmin'].includes(u.role)).map(user => (
+                  {users.filter(u => ['academic_admin_hod', 'academic_admin_tp', 'non_academic_faculty_head', 'non_academic_team_rep', 'sports', 'superadmin'].includes(u.role)).map(user => (
                     <tr key={user.id}>
                       <td style={styles.td}>{user.name}</td>
                       <td style={styles.td}>{user.email}</td>
@@ -582,7 +564,7 @@ const SuperAdminDashboard = () => {
                       <td style={styles.td}>{user.university}</td>
                     </tr>
                   ))}
-                  {users.filter(u => ['hod', 'placement', 'student_body', 'sports', 'superadmin'].includes(u.role)).length === 0 && (
+                  {users.filter(u => ['academic_admin_hod', 'academic_admin_tp', 'non_academic_faculty_head', 'non_academic_team_rep', 'sports', 'superadmin'].includes(u.role)).length === 0 && (
                     <tr>
                       <td colSpan="5" style={{...styles.td, ...styles.emptyState}}>
                         No administrative users found

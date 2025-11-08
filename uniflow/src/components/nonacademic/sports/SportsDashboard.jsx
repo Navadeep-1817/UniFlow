@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
-import { FiHome, FiAward, FiTrendingUp, FiCalendar, FiMapPin, FiUsers } from 'react-icons/fi';
+import SportsTopNav from './SportsTopNav';
+import { FiUsers, FiCalendar, FiTrendingUp, FiAward } from 'react-icons/fi';
 
 const SportsDashboard = () => {
   const navigate = useNavigate();
@@ -51,42 +52,83 @@ const SportsDashboard = () => {
   }, []);
 
   return (
-    <div className="sports-dashboard">
-      {/* Top Navigation */}
-      <div style={{
-        backgroundColor: 'white',
-        borderBottom: '1px solid #E5E7EB',
-        padding: '0 40px',
-        display: 'flex',
-        gap: '4px',
-        overflowX: 'auto',
-        whiteSpace: 'nowrap'
-      }}>
-        <button onClick={() => navigate('/sports/dashboard')} style={{padding: '14px 16px', backgroundColor: 'transparent', border: 'none', borderBottom: '3px solid #4F46E5', fontSize: '13px', fontWeight: '600', color: '#4F46E5', cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '6px'}}><FiHome size={16} /> Dashboard</button>
-        <button onClick={() => navigate('/sports/athletics-report')} style={{padding: '14px 16px', backgroundColor: 'transparent', border: 'none', borderBottom: '3px solid transparent', fontSize: '13px', fontWeight: '600', color: '#6B7280', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.3s', display: 'flex', alignItems: 'center', gap: '6px'}} onMouseOver={(e) => { e.target.style.color = '#4F46E5'; e.target.style.borderBottomColor = '#4F46E5'; }} onMouseOut={(e) => { e.target.style.color = '#6B7280'; e.target.style.borderBottomColor = 'transparent'; }}><FiAward size={14} /> Athletics Report</button>
-        <button onClick={() => navigate('/sports/results-management')} style={{padding: '14px 16px', backgroundColor: 'transparent', border: 'none', borderBottom: '3px solid transparent', fontSize: '13px', fontWeight: '600', color: '#6B7280', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.3s', display: 'flex', alignItems: 'center', gap: '6px'}} onMouseOver={(e) => { e.target.style.color = '#4F46E5'; e.target.style.borderBottomColor = '#4F46E5'; }} onMouseOut={(e) => { e.target.style.color = '#6B7280'; e.target.style.borderBottomColor = 'transparent'; }}><FiTrendingUp size={14} /> Results Management</button>
-        <button onClick={() => navigate('/sports/event-management')} style={{padding: '14px 16px', backgroundColor: 'transparent', border: 'none', borderBottom: '3px solid transparent', fontSize: '13px', fontWeight: '600', color: '#6B7280', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.3s', display: 'flex', alignItems: 'center', gap: '6px'}} onMouseOver={(e) => { e.target.style.color = '#4F46E5'; e.target.style.borderBottomColor = '#4F46E5'; }} onMouseOut={(e) => { e.target.style.color = '#6B7280'; e.target.style.borderBottomColor = 'transparent'; }}><FiCalendar size={14} /> Event Management</button>
-        <button onClick={() => navigate('/sports/venue-booking')} style={{padding: '14px 16px', backgroundColor: 'transparent', border: 'none', borderBottom: '3px solid transparent', fontSize: '13px', fontWeight: '600', color: '#6B7280', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.3s', display: 'flex', alignItems: 'center', gap: '6px'}} onMouseOver={(e) => { e.target.style.color = '#4F46E5'; e.target.style.borderBottomColor = '#4F46E5'; }} onMouseOut={(e) => { e.target.style.color = '#6B7280'; e.target.style.borderBottomColor = 'transparent'; }}><FiMapPin size={14} /> Venue Booking</button>
-        <button onClick={() => navigate('/sports/team-selection')} style={{padding: '14px 16px', backgroundColor: 'transparent', border: 'none', borderBottom: '3px solid transparent', fontSize: '13px', fontWeight: '600', color: '#6B7280', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.3s', display: 'flex', alignItems: 'center', gap: '6px'}} onMouseOver={(e) => { e.target.style.color = '#4F46E5'; e.target.style.borderBottomColor = '#4F46E5'; }} onMouseOut={(e) => { e.target.style.color = '#6B7280'; e.target.style.borderBottomColor = 'transparent'; }}><FiUsers size={14} /> Team Selection</button>
-      </div>
+    <div style={{minHeight: '100vh', backgroundColor: '#F9FAFB', fontFamily: 'system-ui'}}>
+      <SportsTopNav />
 
-      <h1>Sports Department Dashboard</h1>
-      <div className="stats-grid">
-        <div className="stat-card">
-          <h3>Total Events</h3>
-          <p>{sportsStats.totalEvents}</p>
+      {/* Dashboard Content */}
+      <div style={{padding: '40px'}}>
+        <div style={{marginBottom: '32px'}}>
+          <h1 style={{fontSize: '28px', fontWeight: 'bold', color: '#1F2937', margin: '0 0 8px 0'}}>Sports Dashboard</h1>
+          <p style={{fontSize: '16px', color: '#6B7280', margin: 0}}>Welcome back, {sportsCoordinatorInfo.name}!</p>
         </div>
-        <div className="stat-card">
-          <h3>Active Teams</h3>
-          <p>{sportsStats.activeTeams}</p>
+        {/* Stats Grid */}
+        <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px', marginBottom: '32px'}}>
+          <div style={{backgroundColor: 'white', borderRadius: '12px', padding: '24px', border: '1px solid #E5E7EB', boxShadow: '0 1px 3px rgba(0,0,0,0.05)'}}>
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px'}}>
+              <div style={{padding: '12px', backgroundColor: '#EFF6FF', borderRadius: '12px'}}>
+                <FiCalendar size={24} color="#1E40AF" />
+              </div>
+            </div>
+            <h3 style={{fontSize: '32px', fontWeight: 'bold', color: '#1F2937', margin: '0 0 4px 0'}}>{sportsStats.totalEvents}</h3>
+            <p style={{fontSize: '14px', color: '#6B7280', margin: 0}}>Total Events</p>
+          </div>
+
+          <div style={{backgroundColor: 'white', borderRadius: '12px', padding: '24px', border: '1px solid #E5E7EB', boxShadow: '0 1px 3px rgba(0,0,0,0.05)'}}>
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px'}}>
+              <div style={{padding: '12px', backgroundColor: '#F0FDF4', borderRadius: '12px'}}>
+                <FiUsers size={24} color="#065F46" />
+              </div>
+            </div>
+            <h3 style={{fontSize: '32px', fontWeight: 'bold', color: '#1F2937', margin: '0 0 4px 0'}}>{sportsStats.activeTeams}</h3>
+            <p style={{fontSize: '14px', color: '#6B7280', margin: 0}}>Active Teams</p>
+          </div>
+
+          <div style={{backgroundColor: 'white', borderRadius: '12px', padding: '24px', border: '1px solid #E5E7EB', boxShadow: '0 1px 3px rgba(0,0,0,0.05)'}}>
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px'}}>
+              <div style={{padding: '12px', backgroundColor: '#FEF3C7', borderRadius: '12px'}}>
+                <FiTrendingUp size={24} color="#92400E" />
+              </div>
+            </div>
+            <h3 style={{fontSize: '32px', fontWeight: 'bold', color: '#1F2937', margin: '0 0 4px 0'}}>{sportsStats.upcomingMatches}</h3>
+            <p style={{fontSize: '14px', color: '#6B7280', margin: 0}}>Upcoming Matches</p>
+          </div>
+
+          <div style={{backgroundColor: 'white', borderRadius: '12px', padding: '24px', border: '1px solid #E5E7EB', boxShadow: '0 1px 3px rgba(0,0,0,0.05)'}}>
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px'}}>
+              <div style={{padding: '12px', backgroundColor: '#FCE7F3', borderRadius: '12px'}}>
+                <FiAward size={24} color="#9F1239" />
+              </div>
+            </div>
+            <h3 style={{fontSize: '32px', fontWeight: 'bold', color: '#1F2937', margin: '0 0 4px 0'}}>{sportsStats.totalAthletes}</h3>
+            <p style={{fontSize: '14px', color: '#6B7280', margin: 0}}>Total Athletes</p>
+          </div>
         </div>
-        <div className="stat-card">
-          <h3>Upcoming Matches</h3>
-          <p>{sportsStats.upcomingMatches}</p>
+
+        {/* Quick Actions */}
+        <div style={{backgroundColor: 'white', borderRadius: '12px', padding: '24px', border: '1px solid #E5E7EB', marginBottom: '32px'}}>
+          <h2 style={{fontSize: '20px', fontWeight: '600', color: '#1F2937', marginBottom: '20px'}}>Quick Actions</h2>
+          <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px'}}>
+            <button onClick={() => navigate('/sports/event-management')} style={{padding: '16px', backgroundColor: '#4F46E5', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', textAlign: 'left'}}>
+              Create New Event
+            </button>
+            <button onClick={() => navigate('/sports/venue-booking')} style={{padding: '16px', backgroundColor: '#10B981', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', textAlign: 'left'}}>
+              Book Venue
+            </button>
+            <button onClick={() => navigate('/sports/team-selection')} style={{padding: '16px', backgroundColor: '#F59E0B', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', textAlign: 'left'}}>
+              Select Team
+            </button>
+            <button onClick={() => navigate('/sports/results-management')} style={{padding: '16px', backgroundColor: '#8B5CF6', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', textAlign: 'left'}}>
+              Add Results
+            </button>
+          </div>
         </div>
-        <div className="stat-card">
-          <h3>Total Athletes</h3>
-          <p>{sportsStats.totalAthletes}</p>
+
+        {/* Recent Activity */}
+        <div style={{backgroundColor: 'white', borderRadius: '12px', padding: '24px', border: '1px solid #E5E7EB'}}>
+          <h2 style={{fontSize: '20px', fontWeight: '600', color: '#1F2937', marginBottom: '20px'}}>Recent Activity</h2>
+          <div style={{textAlign: 'center', padding: '40px', color: '#6B7280'}}>
+            <p>No recent activity to display</p>
+          </div>
         </div>
       </div>
     </div>

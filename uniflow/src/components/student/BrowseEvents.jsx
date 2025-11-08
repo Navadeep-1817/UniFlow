@@ -12,17 +12,8 @@ const BrowseEvents = () => {
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
 
   useEffect(() => {
-    const mockEvents = [
-      { id: 1, name: 'Tech Fest 2024', type: 'technical', department: 'Computer Science', date: '2024-11-10', time: '10:00 AM', venue: 'Main Auditorium', organizer: 'Technical Club', description: 'Annual technical festival with coding competitions, hackathons, and tech talks', seatsTotal: 500, seatsAvailable: 45, registrationDeadline: '2024-11-08', fee: 0, status: 'open', tags: ['coding', 'hackathon', 'competition'] },
-      { id: 2, name: 'Workshop on AI/ML', type: 'workshop', department: 'Computer Science', date: '2024-11-07', time: '2:00 PM', venue: 'CS Lab Block', organizer: 'Tech Club', description: 'Hands-on workshop on Artificial Intelligence and Machine Learning basics', seatsTotal: 50, seatsAvailable: 12, registrationDeadline: '2024-11-06', fee: 100, status: 'open', tags: ['AI', 'ML', 'workshop'] },
-      { id: 3, name: 'Annual Sports Meet', type: 'sports', department: 'Sports', date: '2024-11-08', time: '9:00 AM', venue: 'Sports Complex', organizer: 'Sports Committee', description: 'Inter-departmental sports competition including cricket, football, and athletics', seatsTotal: 300, seatsAvailable: 28, registrationDeadline: '2024-11-07', fee: 50, status: 'open', tags: ['sports', 'competition', 'athletics'] },
-      { id: 4, name: 'Cultural Night', type: 'cultural', department: 'Student Affairs', date: '2024-11-15', time: '6:00 PM', venue: 'Open Air Theater', organizer: 'Cultural Committee', description: 'Evening of music, dance, and drama performances by students', seatsTotal: 1000, seatsAvailable: 250, registrationDeadline: '2024-11-13', fee: 0, status: 'open', tags: ['cultural', 'music', 'dance'] },
-      { id: 5, name: 'Entrepreneurship Summit', type: 'seminar', department: 'MBA', date: '2024-11-20', time: '10:00 AM', venue: 'Convention Center', organizer: 'E-Cell', description: 'Summit featuring startup founders, investors, and industry experts', seatsTotal: 400, seatsAvailable: 85, registrationDeadline: '2024-11-18', fee: 200, status: 'open', tags: ['business', 'startup', 'seminar'] },
-      { id: 6, name: 'Blood Donation Camp', type: 'social', department: 'Student Affairs', date: '2024-11-12', time: '9:00 AM', venue: 'Medical Center', organizer: 'NSS', description: 'Blood donation drive in collaboration with Red Cross', seatsTotal: 200, seatsAvailable: 45, registrationDeadline: '2024-11-11', fee: 0, status: 'open', tags: ['social service', 'health', 'donation'] },
-      { id: 7, name: 'Web Development Bootcamp', type: 'workshop', department: 'Computer Science', date: '2024-11-25', time: '10:00 AM', venue: 'IT Lab', organizer: 'Tech Club', description: 'Intensive 3-day bootcamp on modern web development technologies', seatsTotal: 30, seatsAvailable: 5, registrationDeadline: '2024-11-22', fee: 500, status: 'open', tags: ['web dev', 'coding', 'workshop'] },
-      { id: 8, name: 'Placement Drive - TCS', type: 'placement', department: 'Training & Placement', date: '2024-11-16', time: '8:00 AM', venue: 'Seminar Hall', organizer: 'T&P Cell', description: 'Campus recruitment drive by Tata Consultancy Services', seatsTotal: 250, seatsAvailable: 68, registrationDeadline: '2024-11-14', fee: 0, status: 'open', tags: ['placement', 'job', 'TCS'] }
-    ];
-    setEvents(mockEvents);
+    // TODO: Fetch events from API
+    // fetchEvents();
   }, []);
 
   const showToast = (message, type = 'success') => { setToast({ show: true, message, type }); setTimeout(() => setToast({ show: false, message: '', type: '' }), 3000); };

@@ -90,3 +90,47 @@ exports.getUniversities = asyncHandler(async (req, res) => {
   const univs = await University.find({ isActive: true }).select('name code');
   res.status(200).json({ success: true, count: univs.length, data: univs });
 });
+
+// GET /api/superadmin/events
+exports.getAllEvents = asyncHandler(async (req, res) => {
+  const Event = require('../models/Event');
+  
+  const { startDate, endDate, type, subType, status, university } = req.query;
+  const query = {};
+  
+  // Filter by date range if provided
+  if (startDate || endDate) {
+    if (startDate) query['date.startDate'] = { $gte: new Date(startDate) };
+    if (endDate) query['date.endDate'] = { $lte: new Date(endDate) };
+  }
+  
+  // Filter by event type (Academic/NonAcademic)
+  if (type) query.type = type;
+  
+  // Filter by subType
+  if (subType) query.subType = subType;
+  
+  // Filter by status
+  if (status) query.status = status;
+  
+  // Filter by university
+  if (university) query.university = university;
+  
+  const events = await Event.find(query)
+    .select('title description date type subType venue mode status createdBy university organizer organizerModel registration eventCode')
+    .populate('university', 'name code')
+    .populate({
+      path: 'organizer',
+      select: 'name code'
+    })
+    .populate('venue', 'name location')
+    .populate('createdBy', 'name email role')
+    .sort({ 'date.startDate': 1 })
+    .lean();
+  
+  res.status(200).json({ 
+    success: true, 
+    count: events.length, 
+    data: events 
+  });
+});

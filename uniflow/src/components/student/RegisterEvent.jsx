@@ -28,21 +28,8 @@ const RegisterEvent = () => {
   });
 
   useEffect(() => {
-    // Mock event data - in real app, fetch from API using eventId
-    setEvent({
-      id: eventId || 1,
-      name: 'Annual Tech Fest 2024',
-      type: 'both', // individual, team, or both
-      description: 'A comprehensive technical festival featuring coding competitions, workshops, and tech talks',
-      date: '2024-11-15',
-      venue: 'Main Auditorium',
-      maxTeamSize: 4,
-      minTeamSize: 2,
-      registrationDeadline: '2024-11-10',
-      fee: 500,
-      category: 'Technical',
-      organizer: 'CSE Department'
-    });
+    // TODO: Fetch event data from API using eventId
+    // fetchEventDetails(eventId);
   }, [eventId]);
 
   const showToast = (msg, type = 'success') => {

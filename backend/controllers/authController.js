@@ -6,6 +6,7 @@ const Faculty = require('../models/Faculty');
 const AcademicAdmin = require('../models/AcademicAdmin');
 const NonAcademicAdmin = require('../models/NonAcademicAdmin');
 const SuperAdmin = require('../models/SuperAdmin');
+const SportsAdmin = require('../models/SportsAdmin');
 const Trainer = require('../models/Trainer');
 const AuditLog = require('../models/AuditLog');
 const { ROLES, hasPermission } = require('../config/roles');
@@ -62,6 +63,14 @@ const getUserWithProfile = async (userId) => {
         user.position = roleProfile.position;
       }
       break;
+    case ROLES.SPORTS_ADMIN:
+      roleProfile = await SportsAdmin.findOne({ userId: user._id }).lean();
+      if (roleProfile) {
+        user.employeeId = roleProfile.employeeId;
+        user.designation = roleProfile.designation;
+        user.specialization = roleProfile.specialization;
+      }
+      break;
     case ROLES.TRAINER:
       roleProfile = await Trainer.findOne({ userId: user._id }).lean();
       if (roleProfile) {
@@ -107,7 +116,19 @@ const createSendToken = async (user, statusCode, res, message = 'Success') => {
 // @access  Public
 exports.register = async (req, res, next) => {
   try {
-    const { name, email, password, phone, role, ...roleSpecificData } = req.body;
+    console.log('📝 Registration request received:', {
+      body: req.body,
+      role: req.body.role
+    });
+    
+    let { name, email, password, phone, role, ...roleSpecificData } = req.body;
+
+    console.log('📋 After destructuring - roleSpecificData:', roleSpecificData);
+
+    // Normalize fullName to name if needed
+    if (!name && req.body.fullName) {
+      name = req.body.fullName;
+    }
 
     // Validate required fields
     if (!name || !email || !password || !phone || !role) {
@@ -129,9 +150,11 @@ exports.register = async (req, res, next) => {
     // Validate role
     const validRoles = Object.values(ROLES);
     if (!validRoles.includes(role)) {
+      console.error('Invalid role received:', role);
+      console.error('Valid roles:', validRoles);
       return res.status(400).json({
         success: false,
-        message: 'Invalid role specified',
+        message: `Invalid role specified: ${role}. Valid roles are: ${validRoles.join(', ')}`,
       });
     }
 
@@ -221,6 +244,27 @@ exports.register = async (req, res, next) => {
       userData.isApproved = false; // Requires approval
     }
 
+    if (role === ROLES.SPORTS_ADMIN) {
+      if (!roleSpecificData.university || !roleSpecificData.employeeId) {
+        return res.status(400).json({
+          success: false,
+          message: 'University and employee ID are required for sports administrators',
+        });
+      }
+
+      // Check if employee ID already exists
+      const existingSportsAdmin = await SportsAdmin.findOne({ employeeId: roleSpecificData.employeeId });
+      if (existingSportsAdmin) {
+        return res.status(400).json({
+          success: false,
+          message: 'Employee ID already exists',
+        });
+      }
+
+      userData.university = roleSpecificData.university;
+      userData.isApproved = false; // Requires approval
+    }
+
     // Create user
     const user = await User.create(userData);
 
@@ -286,9 +330,31 @@ case ROLES.NON_ACADEMIC_TEAM_REP:
     ...roleSpecificData,
   });
   break;
+
+        case ROLES.SPORTS_ADMIN:
+          console.log('🏃 Creating SportsAdmin profile with data:', {
+            userId: user._id,
+            university: roleSpecificData.university,
+            employeeId: roleSpecificData.employeeId,
+            designation: roleSpecificData.designation || 'Sports Administrator',
+            specialization: roleSpecificData.specialization,
+            experience: roleSpecificData.experience || 0,
+          });
+          roleProfile = await SportsAdmin.create({
+            userId: user._id,
+            university: roleSpecificData.university,
+            employeeId: roleSpecificData.employeeId,
+            designation: roleSpecificData.designation || 'Sports Administrator',
+            specialization: roleSpecificData.specialization,
+            experience: roleSpecificData.experience || 0,
+          });
+          break;
       }
     } catch (profileError) {
       // If role profile creation fails, delete the user
+      console.error('❌ Profile creation failed:', profileError);
+      console.error('Profile error details:', profileError.message);
+      console.error('Profile error stack:', profileError.stack);
       await User.findByIdAndDelete(user._id);
       throw profileError;
     }
@@ -384,6 +450,11 @@ exports.login = async (req, res, next) => {
 
     // Check if role matches
     if (user.role !== role) {
+      console.error('❌ Role mismatch during login:');
+      console.error('  - Attempted role:', role);
+      console.error('  - User\'s actual role:', user.role);
+      console.error('  - User email:', user.email);
+      
       await AuditLog.log({
         userId: user._id,
         userName: user.name,
@@ -949,6 +1020,12 @@ exports.rejectUser = async (req, res, next) => {
       case ROLES.NON_ACADEMIC_FACULTY_HEAD:
       case ROLES.NON_ACADEMIC_TEAM_REP:
         await NonAcademicAdmin.findOneAndDelete({ userId: user._id });
+        break;
+      case ROLES.SPORTS_ADMIN:
+        await SportsAdmin.findOneAndDelete({ userId: user._id });
+        break;
+      case ROLES.TRAINER:
+        await Trainer.findOneAndDelete({ userId: user._id });
         break;
     }
 

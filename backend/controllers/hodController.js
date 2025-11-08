@@ -377,10 +377,40 @@ const getDepartmentFaculty = asyncHandler(async (req, res) => {
     .select('firstName lastName email phone specialization qualification experience profilePicture')
     .sort('firstName');
 
+  // Calculate workload for each faculty member
+  const facultyWithWorkload = await Promise.all(
+    faculty.map(async (fac) => {
+      // Count events where this faculty is a coordinator
+      const assignedEvents = await Event.countDocuments({
+        coordinators: fac._id,
+        status: { $nin: ['Cancelled', 'Completed'] }
+      });
+
+      // Calculate workload points (each event = 10 points by default)
+      const currentWorkload = assignedEvents * 10;
+      const maxWorkload = 100; // Default max workload
+
+      return {
+        _id: fac._id,
+        firstName: fac.firstName,
+        lastName: fac.lastName,
+        email: fac.email,
+        phone: fac.phone,
+        specialization: fac.specialization || 'General',
+        qualification: fac.qualification,
+        experience: fac.experience,
+        profilePicture: fac.profilePicture,
+        currentWorkload,
+        maxWorkload,
+        allocatedEvents: assignedEvents
+      };
+    })
+  );
+
   res.status(200).json({
     success: true,
-    count: faculty.length,
-    data: faculty
+    count: facultyWithWorkload.length,
+    data: facultyWithWorkload
   });
 });
 
@@ -464,6 +494,65 @@ const allocateTrainerToEvent = asyncHandler(async (req, res) => {
   res.status(200).json({
     success: true,
     message: trainerId ? 'Trainer allocated successfully' : 'Trainer removed successfully',
+    data: event
+  });
+});
+
+// @desc    Allocate faculty to event
+// @route   POST /api/hod/events/:id/allocate-faculty
+// @access  Private (HOD only)
+const allocateFacultyToEvent = asyncHandler(async (req, res) => {
+  const { facultyIds } = req.body;
+
+  if (!facultyIds || !Array.isArray(facultyIds) || facultyIds.length === 0) {
+    return res.status(400).json({
+      success: false,
+      message: 'Please provide at least one faculty member'
+    });
+  }
+
+  const event = await Event.findById(req.params.id);
+
+  if (!event) {
+    return res.status(404).json({
+      success: false,
+      message: 'Event not found'
+    });
+  }
+
+  // Check if event belongs to HOD's department
+  const hod = await User.findById(req.user._id).populate('department');
+  if (event.organizer.toString() !== hod.department._id.toString()) {
+    return res.status(403).json({
+      success: false,
+      message: 'Not authorized to allocate faculty for this event'
+    });
+  }
+
+  // Verify all faculty members exist and are active
+  const faculty = await User.find({ 
+    _id: { $in: facultyIds }, 
+    role: 'faculty',
+    department: hod.department._id
+  });
+
+  if (faculty.length !== facultyIds.length) {
+    return res.status(400).json({
+      success: false,
+      message: 'One or more faculty members not found or not in your department'
+    });
+  }
+
+  // Update event coordinators
+  event.coordinators = facultyIds;
+  event.updatedBy = req.user._id;
+  await event.save();
+
+  await event.populate('coordinators', 'firstName lastName email department');
+
+  res.status(200).json({
+    success: true,
+    message: 'Faculty allocated successfully',
     data: event
   });
 });
@@ -570,6 +659,7 @@ module.exports = {
   getDepartmentFaculty,
   getDepartmentStudents,
   allocateTrainerToEvent,
+  allocateFacultyToEvent,
   getVerifiedTrainers,
   getDashboardStats
 };

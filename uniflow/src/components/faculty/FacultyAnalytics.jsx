@@ -20,47 +20,20 @@ import {
 const FacultyAnalytics = () => {
   const navigate = useNavigate();
 
-  // Mock data for faculty
+  // TODO: Fetch analytics data from API
   const stats = {
-    assignedEvents: 18,
-    studentsManaged: 245,
-    sessionsCompleted: 42,
-    attendanceMarked: 38,
-    materialsUploaded: 25,
-    averageFeedback: 4.6
+    assignedEvents: 0,
+    studentsManaged: 0,
+    sessionsCompleted: 0,
+    attendanceMarked: 0,
+    materialsUploaded: 0,
+    averageFeedback: 0
   };
 
-  const eventTypeData = [
-    { type: 'Workshops', count: 8, percentage: 44, color: '#4F46E5' },
-    { type: 'Seminars', count: 5, percentage: 28, color: '#10B981' },
-    { type: 'Technical', count: 3, percentage: 17, color: '#F59E0B' },
-    { type: 'Training', count: 2, percentage: 11, color: '#8B5CF6' }
-  ];
-
-  const monthlySessionData = [
-    { month: 'Jan', sessions: 5 },
-    { month: 'Feb', sessions: 8 },
-    { month: 'Mar', sessions: 6 },
-    { month: 'Apr', sessions: 10 },
-    { month: 'May', sessions: 7 },
-    { month: 'Jun', sessions: 9 }
-  ];
-
-  const performanceMetrics = [
-    { label: 'Session Completion Rate', value: 93, color: '#4F46E5' },
-    { label: 'Student Engagement', value: 87, color: '#10B981' },
-    { label: 'Material Quality', value: 91, color: '#F59E0B' },
-    { label: 'Feedback Rating', value: 92, color: '#EF4444' }
-  ];
-
-  const attendanceTrend = [
-    { week: 'Week 1', rate: 85 },
-    { week: 'Week 2', rate: 88 },
-    { week: 'Week 3', rate: 90 },
-    { week: 'Week 4', rate: 87 },
-    { week: 'Week 5', rate: 92 },
-    { week: 'Week 6', rate: 89 }
-  ];
+  const eventTypeData = [];
+  const monthlySessionData = [];
+  const performanceMetrics = [];
+  const attendanceTrend = [];
 
   const styles = {
     container: {

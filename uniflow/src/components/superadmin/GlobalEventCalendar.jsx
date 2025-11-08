@@ -3,49 +3,64 @@ import { useNavigate } from 'react-router-dom';
 
 const GlobalEventCalendar = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('upcoming');
+  const [activeTab, setActiveTab] = useState('all');
   const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
-    department: 'all',
-    studentBody: 'all',
-    university: 'all',
-    eventType: 'all',
+    organizer: 'all',
+    type: 'all',
+    subType: 'all',
+    status: 'all',
     dateFrom: '',
     dateTo: ''
   });
+  const [organizers, setOrganizers] = useState([]);
+  const [subTypes, setSubTypes] = useState([]);
 
   useEffect(() => {
-    // Fetch real events from backend API
-    const fetchEvents = async () => {
-      // Check both localStorage and sessionStorage for token
-      const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-      
-      if (!token) {
-        console.error('No authentication token found in localStorage or sessionStorage');
-        return;
-      }
-
-      try {
-        // TODO: Implement events API endpoint in backend
-        // const response = await fetch(`${API_BASE_URL}/superadmin/events`, {
-        //   headers: {
-        //     'Authorization': `Bearer ${token}`,
-        //     'Content-Type': 'application/json'
-        //   }
-        // });
-        
-        // For now, set empty array until events API is implemented
-        setEvents([]);
-        console.log('Events data ready for API integration');
-      } catch (error) {
-        console.error('Error fetching events:', error);
-        setEvents([]);
-      }
-    };
-
     fetchEvents();
   }, []);
+
+  const fetchEvents = async () => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    
+    if (!token) {
+      console.error('No authentication token found');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_BASE_URL}/superadmin/events`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Fetched events:', data.count, data.data);
+        setEvents(data.data || []);
+        
+        // Extract unique organizers and subTypes
+        const uniqueOrganizers = [...new Set(data.data.map(e => e.organizer?.name).filter(Boolean))];
+        const uniqueSubTypes = [...new Set(data.data.map(e => e.subType).filter(Boolean))];
+        setOrganizers(uniqueOrganizers);
+        setSubTypes(uniqueSubTypes);
+      } else {
+        console.error('Failed to fetch events:', response.status);
+        setEvents([]);
+      }
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      setEvents([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLogout = () => {
     sessionStorage.clear();
@@ -59,56 +74,91 @@ const GlobalEventCalendar = () => {
     setFilters(prev => ({ ...prev, [filterName]: value }));
   };
 
-  const getEventTypeColor = (type) => {
+  const getEventStatus = (event) => {
+    const now = new Date();
+    const startDate = new Date(event.date.startDate);
+    const endDate = new Date(event.date.endDate);
+    
+    if (event.status === 'Cancelled' || event.status === 'Rejected') {
+      return event.status;
+    }
+    
+    if (now < startDate) return 'Upcoming';
+    if (now > endDate) return 'Completed';
+    if (now >= startDate && now <= endDate) return 'Ongoing';
+    return event.status || 'Upcoming';
+  };
+
+  const getEventTypeColor = (type, subType) => {
     const colors = {
-      technical: { bg: '#DBEAFE', color: '#1E40AF', icon: '💻' },
-      sports: { bg: '#FEF3C7', color: '#92400E', icon: '⚽' },
-      cultural: { bg: '#FCE7F3', color: '#9F1239', icon: '🎭' },
-      placement: { bg: '#D1FAE5', color: '#065F46', icon: '💼' },
-      workshop: { bg: '#E0E7FF', color: '#3730A3', icon: '📚' },
-      social: { bg: '#FED7AA', color: '#9A3412', icon: '🤝' },
-      seminar: { bg: '#F3E8FF', color: '#6B21A8', icon: '🎤' }
+      Academic: { bg: '#DBEAFE', color: '#1E40AF', icon: '�' },
+      NonAcademic: { bg: '#FCE7F3', color: '#9F1239', icon: '🎭' },
+      Sports: { bg: '#FEF3C7', color: '#92400E', icon: '⚽' },
+      Placement: { bg: '#D1FAE5', color: '#065F46', icon: '💼' }
     };
-    return colors[type] || { bg: '#F3F4F6', color: '#374151', icon: '📅' };
+    
+    if (subType === 'Sports') return colors.Sports;
+    if (type === 'Academic') return colors.Academic;
+    return colors.NonAcademic;
   };
 
   const getStatusBadge = (status) => {
     const badges = {
-      upcoming: { bg: '#DBEAFE', color: '#1E40AF', text: 'Upcoming' },
-      ongoing: { bg: '#D1FAE5', color: '#065F46', text: 'Ongoing' },
-      completed: { bg: '#F3F4F6', color: '#6B7280', text: 'Completed' }
+      Upcoming: { bg: '#DBEAFE', color: '#1E40AF', text: 'Upcoming' },
+      Ongoing: { bg: '#D1FAE5', color: '#065F46', text: 'Ongoing' },
+      Completed: { bg: '#F3F4F6', color: '#6B7280', text: 'Completed' },
+      Cancelled: { bg: '#FEE2E2', color: '#991B1B', text: 'Cancelled' },
+      Rejected: { bg: '#FEE2E2', color: '#991B1B', text: 'Rejected' },
+      Pending: { bg: '#FEF3C7', color: '#92400E', text: 'Pending Approval' },
+      Draft: { bg: '#F3F4F6', color: '#6B7280', text: 'Draft' }
     };
-    return badges[status] || badges.upcoming;
+    return badges[status] || badges.Upcoming;
   };
 
   const filteredEvents = events.filter(event => {
-    // Status filter (tab)
-    if (event.status !== activeTab) return false;
+    const eventStatus = getEventStatus(event);
+    
+    // Tab filter
+    if (activeTab !== 'all') {
+      if (eventStatus.toLowerCase() !== activeTab.toLowerCase()) return false;
+    }
 
-    // Department filter
-    if (filters.department !== 'all' && event.department !== filters.department) return false;
+    // Organizer filter
+    if (filters.organizer !== 'all') {
+      const eventOrganizer = event.organizer?.name || '';
+      if (eventOrganizer !== filters.organizer) return false;
+    }
 
-    // Student Body filter
-    if (filters.studentBody !== 'all' && event.studentBody !== filters.studentBody) return false;
+    // Type filter (Academic/NonAcademic)
+    if (filters.type !== 'all' && event.type !== filters.type) return false;
 
-    // University filter
-    if (filters.university !== 'all' && event.university !== filters.university) return false;
+    // SubType filter
+    if (filters.subType !== 'all' && event.subType !== filters.subType) return false;
 
-    // Event Type filter
-    if (filters.eventType !== 'all' && event.eventType !== filters.eventType) return false;
+    // Status filter
+    if (filters.status !== 'all' && event.status !== filters.status) return false;
 
     // Date range filter
-    if (filters.dateFrom && event.startDate < filters.dateFrom) return false;
-    if (filters.dateTo && event.endDate > filters.dateTo) return false;
+    if (filters.dateFrom) {
+      const eventStart = new Date(event.date.startDate);
+      const filterStart = new Date(filters.dateFrom);
+      if (eventStart < filterStart) return false;
+    }
+    
+    if (filters.dateTo) {
+      const eventEnd = new Date(event.date.endDate);
+      const filterEnd = new Date(filters.dateTo);
+      if (eventEnd > filterEnd) return false;
+    }
 
     return true;
   });
 
   const stats = {
-    upcoming: events.filter(e => e.status === 'upcoming').length,
-    ongoing: events.filter(e => e.status === 'ongoing').length,
-    completed: events.filter(e => e.status === 'completed').length,
-    total: events.length
+    total: events.length,
+    upcoming: events.filter(e => getEventStatus(e) === 'Upcoming').length,
+    ongoing: events.filter(e => getEventStatus(e) === 'Ongoing').length,
+    completed: events.filter(e => getEventStatus(e) === 'Completed').length
   };
 
   const styles = {
@@ -167,7 +217,8 @@ const GlobalEventCalendar = () => {
       border: '1px solid #E5E7EB',
       display: 'flex',
       justifyContent: 'space-around',
-      gap: '20px'
+      gap: '20px',
+      flexWrap: 'wrap'
     },
     statItem: {
       textAlign: 'center'
@@ -283,15 +334,17 @@ const GlobalEventCalendar = () => {
     },
     detailRow: {
       display: 'flex',
-      alignItems: 'center',
+      alignItems: 'flex-start',
       marginBottom: '8px',
       fontSize: '14px',
-      color: '#6B7280'
+      color: '#6B7280',
+      gap: '8px'
     },
     detailLabel: {
       fontWeight: '600',
       color: '#374151',
-      width: '120px'
+      minWidth: '120px',
+      flexShrink: 0
     },
     emptyState: {
       textAlign: 'center',
@@ -301,6 +354,25 @@ const GlobalEventCalendar = () => {
       border: '1px solid #E5E7EB'
     }
   };
+
+  if (loading) {
+    return (
+      <div style={styles.container}>
+        <div style={styles.header}>
+          <div style={styles.headerLeft}>
+            <div style={styles.logo}>UniFlow</div>
+            <h1 style={styles.title}>Super Admin - Global Event Calendar</h1>
+          </div>
+        </div>
+        <div style={styles.content}>
+          <div style={{...styles.emptyState, padding: '100px 20px'}}>
+            <div style={{fontSize: '48px', marginBottom: '16px'}}>⏳</div>
+            <h3 style={{fontSize: '18px', color: '#6B7280'}}>Loading events...</h3>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={styles.container}>
@@ -335,122 +407,44 @@ const GlobalEventCalendar = () => {
         gap: '8px',
         overflowX: 'auto'
       }}>
-        <button
-          onClick={() => navigate('/superadmin/dashboard')}
-          style={{
-            padding: '16px 24px',
-            backgroundColor: 'transparent',
-            border: 'none',
-            borderBottom: '3px solid transparent',
-            fontSize: '14px',
-            fontWeight: '600',
-            color: '#6B7280',
-            cursor: 'pointer',
-            whiteSpace: 'nowrap',
-            transition: 'all 0.3s'
-          }}
-          onMouseOver={(e) => {
-            e.target.style.color = '#4F46E5';
-            e.target.style.borderBottomColor = '#4F46E5';
-          }}
-          onMouseOut={(e) => {
-            e.target.style.color = '#6B7280';
-            e.target.style.borderBottomColor = 'transparent';
-          }}
-        >
-          📊 Dashboard
-        </button>
-        <button
-          onClick={() => navigate('/superadmin/approval-queue')}
-          style={{
-            padding: '16px 24px',
-            backgroundColor: 'transparent',
-            border: 'none',
-            borderBottom: '3px solid transparent',
-            fontSize: '14px',
-            fontWeight: '600',
-            color: '#6B7280',
-            cursor: 'pointer',
-            whiteSpace: 'nowrap',
-            transition: 'all 0.3s'
-          }}
-          onMouseOver={(e) => {
-            e.target.style.color = '#4F46E5';
-            e.target.style.borderBottomColor = '#4F46E5';
-          }}
-          onMouseOut={(e) => {
-            e.target.style.color = '#6B7280';
-            e.target.style.borderBottomColor = 'transparent';
-          }}
-        >
-          ✓ Approval Queue
-        </button>
-        <button
-          onClick={() => navigate('/superadmin/global-analytics')}
-          style={{
-            padding: '16px 24px',
-            backgroundColor: 'transparent',
-            border: 'none',
-            borderBottom: '3px solid transparent',
-            fontSize: '14px',
-            fontWeight: '600',
-            color: '#6B7280',
-            cursor: 'pointer',
-            whiteSpace: 'nowrap',
-            transition: 'all 0.3s'
-          }}
-          onMouseOver={(e) => {
-            e.target.style.color = '#4F46E5';
-            e.target.style.borderBottomColor = '#4F46E5';
-          }}
-          onMouseOut={(e) => {
-            e.target.style.color = '#6B7280';
-            e.target.style.borderBottomColor = 'transparent';
-          }}
-        >
-          📈 Global Analytics
-        </button>
-        <button
-          onClick={() => navigate('/superadmin/event-calendar')}
-          style={{
-            padding: '16px 24px',
-            backgroundColor: 'transparent',
-            border: 'none',
-            borderBottom: '3px solid #4F46E5',
-            fontSize: '14px',
-            fontWeight: '600',
-            color: '#4F46E5',
-            cursor: 'pointer',
-            whiteSpace: 'nowrap'
-          }}
-        >
-          📅 Event Calendar
-        </button>
-        <button
-          onClick={() => navigate('/superadmin/user-management')}
-          style={{
-            padding: '16px 24px',
-            backgroundColor: 'transparent',
-            border: 'none',
-            borderBottom: '3px solid transparent',
-            fontSize: '14px',
-            fontWeight: '600',
-            color: '#6B7280',
-            cursor: 'pointer',
-            whiteSpace: 'nowrap',
-            transition: 'all 0.3s'
-          }}
-          onMouseOver={(e) => {
-            e.target.style.color = '#4F46E5';
-            e.target.style.borderBottomColor = '#4F46E5';
-          }}
-          onMouseOut={(e) => {
-            e.target.style.color = '#6B7280';
-            e.target.style.borderBottomColor = 'transparent';
-          }}
-        >
-          👥 User Management
-        </button>
+        {[
+          { label: '📊 Dashboard', path: '/superadmin/dashboard' },
+          { label: '✓ Approval Queue', path: '/superadmin/approval-queue' },
+          { label: '📈 Global Analytics', path: '/superadmin/global-analytics' },
+          { label: '📅 Event Calendar', path: '/superadmin/event-calendar', active: true },
+          { label: '👥 User Management', path: '/superadmin/user-management' }
+        ].map((item, idx) => (
+          <button
+            key={idx}
+            onClick={() => navigate(item.path)}
+            style={{
+              padding: '16px 24px',
+              backgroundColor: 'transparent',
+              border: 'none',
+              borderBottom: item.active ? '3px solid #4F46E5' : '3px solid transparent',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: item.active ? '#4F46E5' : '#6B7280',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              transition: 'all 0.3s'
+            }}
+            onMouseOver={(e) => {
+              if (!item.active) {
+                e.target.style.color = '#4F46E5';
+                e.target.style.borderBottomColor = '#4F46E5';
+              }
+            }}
+            onMouseOut={(e) => {
+              if (!item.active) {
+                e.target.style.color = '#6B7280';
+                e.target.style.borderBottomColor = 'transparent';
+              }
+            }}
+          >
+            {item.label}
+          </button>
+        ))}
       </div>
 
       {/* Content */}
@@ -477,24 +471,20 @@ const GlobalEventCalendar = () => {
 
         {/* Status Tabs */}
         <div style={styles.tabs}>
-          <button
-            style={{...styles.tab, ...(activeTab === 'upcoming' && styles.activeTab)}}
-            onClick={() => setActiveTab('upcoming')}
-          >
-            🔜 Upcoming ({stats.upcoming})
-          </button>
-          <button
-            style={{...styles.tab, ...(activeTab === 'ongoing' && styles.activeTab)}}
-            onClick={() => setActiveTab('ongoing')}
-          >
-            ▶️ Ongoing ({stats.ongoing})
-          </button>
-          <button
-            style={{...styles.tab, ...(activeTab === 'completed' && styles.activeTab)}}
-            onClick={() => setActiveTab('completed')}
-          >
-            ✅ Completed ({stats.completed})
-          </button>
+          {[
+            { value: 'all', label: `🔍 All Events (${stats.total})` },
+            { value: 'upcoming', label: `🔜 Upcoming (${stats.upcoming})` },
+            { value: 'ongoing', label: `▶️ Ongoing (${stats.ongoing})` },
+            { value: 'completed', label: `✅ Completed (${stats.completed})` }
+          ].map(tab => (
+            <button
+              key={tab.value}
+              style={{...styles.tab, ...(activeTab === tab.value && styles.activeTab)}}
+              onClick={() => setActiveTab(tab.value)}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
 
         {/* Filters */}
@@ -504,51 +494,49 @@ const GlobalEventCalendar = () => {
           </h3>
           <div style={styles.filterGrid}>
             <div style={styles.filterGroup}>
-              <label style={styles.filterLabel}>University</label>
+              <label style={styles.filterLabel}>Organizer</label>
               <select 
                 style={styles.select}
-                value={filters.university}
-                onChange={(e) => handleFilterChange('university', e.target.value)}
+                value={filters.organizer}
+                onChange={(e) => handleFilterChange('organizer', e.target.value)}
               >
-                <option value="all">All Universities</option>
-                <option value="JNTU Hyderabad">JNTU Hyderabad</option>
-                <option value="JNTU Kakinada">JNTU Kakinada</option>
-                <option value="Osmania University">Osmania University</option>
-                <option value="Andhra University">Andhra University</option>
+                <option value="all">All Organizers</option>
+                {organizers.map(org => (
+                  <option key={org} value={org}>{org}</option>
+                ))}
               </select>
             </div>
 
             <div style={styles.filterGroup}>
-              <label style={styles.filterLabel}>Department</label>
+              <label style={styles.filterLabel}>Sub Type</label>
               <select 
                 style={styles.select}
-                value={filters.department}
-                onChange={(e) => handleFilterChange('department', e.target.value)}
+                value={filters.subType}
+                onChange={(e) => handleFilterChange('subType', e.target.value)}
               >
-                <option value="all">All Departments</option>
-                <option value="Computer Science">Computer Science</option>
-                <option value="Electronics">Electronics</option>
-                <option value="Sports">Sports</option>
-                <option value="Student Affairs">Student Affairs</option>
-                <option value="Training & Placement">Training & Placement</option>
-                <option value="MBA">MBA</option>
+                <option value="all">All Sub Types</option>
+                {subTypes.map(st => (
+                  <option key={st} value={st}>{st}</option>
+                ))}
               </select>
             </div>
 
             <div style={styles.filterGroup}>
-              <label style={styles.filterLabel}>Student Body</label>
+              <label style={styles.filterLabel}>Status</label>
               <select 
                 style={styles.select}
-                value={filters.studentBody}
-                onChange={(e) => handleFilterChange('studentBody', e.target.value)}
+                value={filters.status}
+                onChange={(e) => handleFilterChange('status', e.target.value)}
               >
-                <option value="all">All Student Bodies</option>
-                <option value="Technical Club">Technical Club</option>
-                <option value="Sports Committee">Sports Committee</option>
-                <option value="Cultural Committee">Cultural Committee</option>
-                <option value="T&P Cell">T&P Cell</option>
-                <option value="NSS">NSS</option>
-                <option value="E-Cell">E-Cell</option>
+                <option value="all">All Status</option>
+                <option value="Draft">Draft</option>
+                <option value="Pending">Pending Approval</option>
+                <option value="Approved">Approved</option>
+                <option value="Rejected">Rejected</option>
+                <option value="Upcoming">Upcoming</option>
+                <option value="Ongoing">Ongoing</option>
+                <option value="Completed">Completed</option>
+                <option value="Cancelled">Cancelled</option>
               </select>
             </div>
 
@@ -556,17 +544,12 @@ const GlobalEventCalendar = () => {
               <label style={styles.filterLabel}>Event Type</label>
               <select 
                 style={styles.select}
-                value={filters.eventType}
-                onChange={(e) => handleFilterChange('eventType', e.target.value)}
+                value={filters.type}
+                onChange={(e) => handleFilterChange('type', e.target.value)}
               >
                 <option value="all">All Types</option>
-                <option value="technical">💻 Technical</option>
-                <option value="sports">⚽ Sports</option>
-                <option value="cultural">🎭 Cultural</option>
-                <option value="placement">💼 Placement</option>
-                <option value="workshop">📚 Workshop</option>
-                <option value="social">🤝 Social</option>
-                <option value="seminar">🎤 Seminar</option>
+                <option value="Academic">📚 Academic</option>
+                <option value="NonAcademic">🎭 Non-Academic</option>
               </select>
             </div>
 
@@ -595,18 +578,28 @@ const GlobalEventCalendar = () => {
         {/* Events Grid */}
         {filteredEvents.length > 0 ? (
           <div style={styles.eventsGrid}>
-            {filteredEvents.map(event => {
-              const typeColors = getEventTypeColor(event.eventType);
-              const statusBadge = getStatusBadge(event.status);
+            {filteredEvents.map((event, idx) => {
+              const typeColors = getEventTypeColor(event.type, event.subType);
+              const eventStatus = getEventStatus(event);
+              const statusBadge = getStatusBadge(eventStatus);
               
               return (
-                <div key={event.id} style={styles.eventCard}>
+                <div 
+                  key={event._id || idx} 
+                  style={styles.eventCard}
+                  onMouseOver={(e) => {
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                  }}
+                  onMouseOut={(e) => {
+                    e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }}
+                >
                   <div style={styles.eventHeader}>
-                    <div>
-                      <h3 style={styles.eventTitle}>
-                        {typeColors.icon} {event.name}
-                      </h3>
-                    </div>
+                    <h3 style={styles.eventTitle}>
+                      {typeColors.icon} {event.title}
+                    </h3>
                     <span style={{
                       ...styles.badge,
                       backgroundColor: statusBadge.bg,
@@ -616,55 +609,74 @@ const GlobalEventCalendar = () => {
                     </span>
                   </div>
 
-                  <p style={{color: '#6B7280', fontSize: '14px', lineHeight: '1.6', margin: '12px 0'}}>
-                    {event.description}
+                  <p style={{color: '#6B7280', fontSize: '14px', lineHeight: '1.6', margin: '12px 0 0 0'}}>
+                    {event.description?.substring(0, 150)}{event.description?.length > 150 ? '...' : ''}
                   </p>
 
                   <div style={styles.eventDetails}>
                     <div style={styles.detailRow}>
-                      <span style={styles.detailLabel}>🏫 University:</span>
-                      <span>{event.university}</span>
-                    </div>
-                    <div style={styles.detailRow}>
-                      <span style={styles.detailLabel}>🎓 Department:</span>
-                      <span>{event.department}</span>
-                    </div>
-                    <div style={styles.detailRow}>
-                      <span style={styles.detailLabel}>👥 Organized by:</span>
-                      <span>{event.studentBody}</span>
-                    </div>
-                    <div style={styles.detailRow}>
                       <span style={styles.detailLabel}>📅 Start Date:</span>
-                      <span>{new Date(event.startDate).toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'})}</span>
+                      <span>{new Date(event.date.startDate).toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'})}</span>
                     </div>
                     <div style={styles.detailRow}>
                       <span style={styles.detailLabel}>📅 End Date:</span>
-                      <span>{new Date(event.endDate).toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'})}</span>
+                      <span>{new Date(event.date.endDate).toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'})}</span>
                     </div>
                     <div style={styles.detailRow}>
-                      <span style={styles.detailLabel}>📍 Venue:</span>
-                      <span>{event.venue}</span>
+                      <span style={styles.detailLabel}>🏛️ University:</span>
+                      <span>{event.university?.name || 'N/A'}</span>
                     </div>
                     <div style={styles.detailRow}>
-                      <span style={styles.detailLabel}>👤 Participants:</span>
-                      <span style={{fontWeight: '600', color: '#4F46E5'}}>{event.participants}</span>
+                      <span style={styles.detailLabel}>� Organized by:</span>
+                      <span>{event.organizer?.name || 'N/A'}</span>
+                    </div>
+                    <div style={styles.detailRow}>
+                      <span style={styles.detailLabel}>� Venue:</span>
+                      <span>{event.venue?.name || event.mode || 'N/A'}</span>
+                    </div>
+                    <div style={styles.detailRow}>
+                      <span style={styles.detailLabel}>� Created By:</span>
+                      <span>{event.createdBy?.name || 'N/A'} ({event.createdBy?.role || 'N/A'})</span>
+                    </div>
+                    <div style={styles.detailRow}>
+                      <span style={styles.detailLabel}>🎟️ Registrations:</span>
+                      <span style={{fontWeight: '600', color: '#4F46E5'}}>
+                        {event.registration?.currentParticipants || 0} / {event.registration?.maxParticipants || 'Unlimited'}
+                      </span>
                     </div>
                   </div>
 
-                  <div style={{
-                    marginTop: '16px',
-                    padding: '8px 12px',
-                    backgroundColor: typeColors.bg,
-                    borderRadius: '6px',
-                    display: 'inline-block'
-                  }}>
-                    <span style={{
+                  <div style={{marginTop: '16px', display: 'flex', gap: '8px', flexWrap: 'wrap'}}>
+                    <div style={{
+                      padding: '6px 12px',
+                      backgroundColor: typeColors.bg,
+                      borderRadius: '6px',
                       fontSize: '12px',
                       fontWeight: '600',
                       color: typeColors.color
                     }}>
-                      {event.eventType.toUpperCase()}
-                    </span>
+                      {event.type}
+                    </div>
+                    <div style={{
+                      padding: '6px 12px',
+                      backgroundColor: '#F3F4F6',
+                      borderRadius: '6px',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      color: '#374151'
+                    }}>
+                      {event.subType}
+                    </div>
+                    <div style={{
+                      padding: '6px 12px',
+                      backgroundColor: '#EEF2FF',
+                      borderRadius: '6px',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      color: '#4338CA'
+                    }}>
+                      {event.eventCode}
+                    </div>
                   </div>
                 </div>
               );
@@ -674,10 +686,10 @@ const GlobalEventCalendar = () => {
           <div style={styles.emptyState}>
             <div style={{fontSize: '48px', marginBottom: '16px'}}>📅</div>
             <h3 style={{fontSize: '18px', color: '#6B7280', marginBottom: '8px'}}>
-              No {activeTab} events found
+              No events found
             </h3>
             <p style={{color: '#9CA3AF', fontSize: '14px'}}>
-              Try adjusting your filters or check other tabs
+              {activeTab !== 'all' ? `No ${activeTab} events match your filters.` : 'No events match your filters.'} Try adjusting your search criteria.
             </p>
           </div>
         )}

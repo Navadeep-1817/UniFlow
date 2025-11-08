@@ -10,36 +10,8 @@ const Notifications = () => {
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
 
   useEffect(() => {
-    // Mock notifications data
-    setNotifications([
-      { id: 1, type: 'placement', category: 'placement', title: 'TCS Placement Drive Tomorrow', 
-        message: 'TCS campus drive scheduled for tomorrow at 9:00 AM in Auditorium. Please be on time with your resume.',
-        time: '2 hours ago', read: false, priority: 'high' },
-      { id: 2, type: 'event', category: 'event', title: 'Tech Fest Registration Approved', 
-        message: 'Your registration for Annual Tech Fest 2024 has been approved. Event starts on Nov 15, 2024.',
-        time: '5 hours ago', read: false, priority: 'medium' },
-      { id: 3, type: 'placement', category: 'placement', title: 'Interview Scheduled - Amazon', 
-        message: 'Your technical interview with Amazon is scheduled for Nov 8, 2024 at 2:00 PM. Check your email for details.',
-        time: '1 day ago', read: false, priority: 'high' },
-      { id: 4, type: 'reminder', category: 'event', title: 'Workshop Reminder: AI & ML', 
-        message: 'Workshop on AI & Machine Learning starts in 2 days. Venue: Lab 301. Duration: 3 hours.',
-        time: '1 day ago', read: true, priority: 'medium' },
-      { id: 5, type: 'approval', category: 'approval', title: 'Leave Application Approved', 
-        message: 'Your leave application for Nov 12-14 has been approved by the HOD.',
-        time: '2 days ago', read: true, priority: 'low' },
-      { id: 6, type: 'placement', category: 'placement', title: 'Offer Letter Received - Infosys', 
-        message: 'Congratulations! You have received an offer letter from Infosys. Package: ₹6.5 LPA. Please check your email.',
-        time: '3 days ago', read: false, priority: 'high' },
-      { id: 7, type: 'event', category: 'event', title: 'Hackathon Team Formation', 
-        message: 'Your team "Code Warriors" has been successfully formed for the upcoming hackathon.',
-        time: '3 days ago', read: true, priority: 'low' },
-      { id: 8, type: 'system', category: 'system', title: 'Profile Update Required', 
-        message: 'Please update your profile with your latest contact details and project information.',
-        time: '5 days ago', read: true, priority: 'medium' },
-      { id: 9, type: 'event', category: 'event', title: 'Certificate Available', 
-        message: 'Your participation certificate for Python Workshop is now available for download.',
-        time: '1 week ago', read: true, priority: 'low' }
-    ]);
+    // TODO: Fetch notifications from API
+    // fetchNotifications();
   }, []);
 
   const showToast = (msg, type = 'success') => {

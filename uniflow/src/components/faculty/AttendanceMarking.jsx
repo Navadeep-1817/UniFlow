@@ -33,41 +33,8 @@ const AttendanceMarking = () => {
   const [attendanceData, setAttendanceData] = useState({});
 
   useEffect(() => {
-    // Mock sessions data
-    const mockSessions = [
-      {
-        id: 1,
-        eventName: 'AI & ML Workshop',
-        sessionTitle: 'Introduction to Machine Learning',
-        date: '2024-11-15',
-        startTime: '10:00',
-        endTime: '12:00',
-        venue: 'Lab 301',
-        totalStudents: 45
-      },
-      {
-        id: 2,
-        eventName: 'Web Development SDP',
-        sessionTitle: 'React Fundamentals',
-        date: '2024-11-20',
-        startTime: '10:00',
-        endTime: '13:00',
-        venue: 'Computer Lab A',
-        totalStudents: 30
-      },
-      {
-        id: 3,
-        eventName: 'CRT Training',
-        sessionTitle: 'Aptitude Test Preparation',
-        date: '2024-11-10',
-        startTime: '09:00',
-        endTime: '12:00',
-        venue: 'Auditorium',
-        totalStudents: 120
-      }
-    ];
-
-    setSessions(mockSessions);
+    // TODO: Fetch sessions from API
+    // fetchSessions();
 
     // Check if session was passed from route state
     if (location.state?.session) {
@@ -77,29 +44,11 @@ const AttendanceMarking = () => {
   }, [location]);
 
   const loadStudents = (sessionId) => {
-    // Mock students data
-    const mockStudents = [
-      { id: 1, rollNo: '20CS001', name: 'Aarav Sharma', email: 'aarav@example.com', department: 'CSE', year: '3rd' },
-      { id: 2, rollNo: '20CS002', name: 'Aditi Patel', email: 'aditi@example.com', department: 'CSE', year: '3rd' },
-      { id: 3, rollNo: '20CS003', name: 'Arjun Kumar', email: 'arjun@example.com', department: 'CSE', year: '3rd' },
-      { id: 4, rollNo: '20CS004', name: 'Ananya Singh', email: 'ananya@example.com', department: 'CSE', year: '3rd' },
-      { id: 5, rollNo: '20CS005', name: 'Dhruv Verma', email: 'dhruv@example.com', department: 'CSE', year: '3rd' },
-      { id: 6, rollNo: '20CS006', name: 'Ishita Reddy', email: 'ishita@example.com', department: 'CSE', year: '3rd' },
-      { id: 7, rollNo: '20CS007', name: 'Kabir Mehta', email: 'kabir@example.com', department: 'CSE', year: '3rd' },
-      { id: 8, rollNo: '20CS008', name: 'Kavya Iyer', email: 'kavya@example.com', department: 'CSE', year: '3rd' },
-      { id: 9, rollNo: '20CS009', name: 'Nikhil Joshi', email: 'nikhil@example.com', department: 'CSE', year: '3rd' },
-      { id: 10, rollNo: '20CS010', name: 'Priya Nair', email: 'priya@example.com', department: 'CSE', year: '3rd' }
-    ];
-
-    setStudents(mockStudents);
-    setFilteredStudents(mockStudents);
-    
-    // Initialize attendance data
-    const initialAttendance = {};
-    mockStudents.forEach(student => {
-      initialAttendance[student.id] = { status: 'unmarked', timestamp: null };
-    });
-    setAttendanceData(initialAttendance);
+    // TODO: Fetch students from API
+    // fetchStudents(sessionId);
+    setStudents([]);
+    setFilteredStudents([]);
+    setAttendanceData({});
   };
 
   useEffect(() => {

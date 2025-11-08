@@ -4,6 +4,7 @@ const {
   createDepartment,
   getUniversities,
   getDepartments,
+  getStudentBodies,
   quickRegister,
 } = require('../controllers/setupController');
 
@@ -15,11 +16,14 @@ router.post('/init', initializeSystem);
 // Create department
 router.post('/department', createDepartment);
 
-// Get all universities
+// Get all universities (Public - for registration)
 router.get('/universities', getUniversities);
 
-// Get all departments
+// Get all departments (Public - for registration)
 router.get('/departments', getDepartments);
+
+// Get all student bodies (Public - for registration)
+router.get('/student-bodies', getStudentBodies);
 
 // Quick register for testing (development only)
 router.post('/quick-register', quickRegister);

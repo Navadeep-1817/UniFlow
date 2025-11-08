@@ -46,71 +46,8 @@ const SessionManagement = () => {
   });
 
   useEffect(() => {
-    // Mock data - Replace with API call
-    const mockSessions = [
-      {
-        id: 1,
-        eventName: 'AI & ML Workshop',
-        eventId: 1,
-        sessionTitle: 'Introduction to Machine Learning',
-        topic: 'ML Fundamentals & Algorithms',
-        date: '2024-11-15',
-        startTime: '10:00',
-        endTime: '12:00',
-        venue: 'Lab 301',
-        description: 'Comprehensive introduction to machine learning concepts and algorithms.',
-        objectives: 'Understanding ML basics, Types of ML, Common algorithms',
-        status: 'scheduled',
-        participants: 45,
-        materials: [
-          { id: 1, name: 'ML_Introduction.pdf', type: 'pdf', size: '2.5 MB' },
-          { id: 2, name: 'Sample_Code.zip', type: 'zip', size: '1.2 MB' }
-        ],
-        feedbackEnabled: true,
-        feedbackCollected: 0
-      },
-      {
-        id: 2,
-        eventName: 'AI & ML Workshop',
-        eventId: 1,
-        sessionTitle: 'Deep Learning Basics',
-        topic: 'Neural Networks & Deep Learning',
-        date: '2024-11-16',
-        startTime: '14:00',
-        endTime: '16:00',
-        venue: 'Lab 301',
-        description: 'Introduction to neural networks and deep learning frameworks.',
-        objectives: 'Understanding neural networks, Activation functions, Building first model',
-        status: 'scheduled',
-        participants: 45,
-        materials: [
-          { id: 3, name: 'Deep_Learning_Slides.pptx', type: 'pptx', size: '5.8 MB' }
-        ],
-        feedbackEnabled: true,
-        feedbackCollected: 0
-      },
-      {
-        id: 3,
-        eventName: 'Web Development SDP',
-        eventId: 2,
-        sessionTitle: 'React Fundamentals',
-        topic: 'Introduction to React Framework',
-        date: '2024-11-20',
-        startTime: '10:00',
-        endTime: '13:00',
-        venue: 'Computer Lab A',
-        description: 'Learn React basics including components, props, and state management.',
-        objectives: 'Component creation, Props & State, Event handling, Hooks introduction',
-        status: 'scheduled',
-        participants: 30,
-        materials: [],
-        feedbackEnabled: true,
-        feedbackCollected: 0
-      }
-    ];
-
-    setSessions(mockSessions);
-    setFilteredSessions(mockSessions);
+    // TODO: Fetch sessions from API
+    // fetchSessions();
   }, []);
 
   useEffect(() => {

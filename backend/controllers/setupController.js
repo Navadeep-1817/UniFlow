@@ -198,6 +198,44 @@ exports.getDepartments = async (req, res) => {
   }
 };
 
+// @desc    Get all student bodies
+// @route   GET /api/setup/student-bodies
+// @access  Public
+exports.getStudentBodies = async (req, res) => {
+  try {
+    const StudentBody = require('../models/StudentBody');
+    const { universityId } = req.query;
+    
+    console.log('📚 Fetching student bodies for university:', universityId);
+    
+    // Build query - if universityId is provided, filter by it
+    const query = universityId ? { university: universityId, isActive: true } : { isActive: true };
+    
+    console.log('Query:', JSON.stringify(query, null, 2));
+    
+    const studentBodies = await StudentBody.find(query)
+      .populate('university', 'name code')
+      .select('_id name code type description logo')
+      .sort('name');
+    
+    console.log(`Found ${studentBodies.length} student bodies`);
+    console.log('Student bodies data:', JSON.stringify(studentBodies, null, 2));
+    
+    res.status(200).json({
+      success: true,
+      count: studentBodies.length,
+      data: { studentBodies },
+    });
+  } catch (error) {
+    console.error('❌ Error fetching student bodies:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching student bodies',
+      error: error.message,
+    });
+  }
+};
+
 // @desc    Quick register for testing (no university/dept validation)
 // @route   POST /api/setup/quick-register
 // @access  Public (Development only)

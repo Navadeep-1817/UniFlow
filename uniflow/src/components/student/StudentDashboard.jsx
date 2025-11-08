@@ -55,99 +55,10 @@ const StudentDashboard = () => {
   }, [user]);
 
   useEffect(() => {
-    // Mock data - Replace with API calls later
-    const mockUpcomingEvents = [
-      {
-        id: 1,
-        name: 'Tech Fest 2024',
-        date: '2024-11-10',
-        time: '10:00 AM',
-        type: 'technical',
-        venue: 'Main Auditorium',
-        organizer: 'Technical Club',
-        registrationDeadline: '2024-11-08',
-        description: 'Annual technical festival with coding competitions and hackathons',
-        spotsLeft: 45
-      },
-      {
-        id: 2,
-        name: 'Workshop on AI/ML',
-        date: '2024-11-07',
-        time: '2:00 PM',
-        type: 'workshop',
-        venue: 'CS Lab Block',
-        organizer: 'Tech Club',
-        registrationDeadline: '2024-11-06',
-        description: 'Hands-on workshop on Artificial Intelligence and Machine Learning',
-        spotsLeft: 12
-      },
-      {
-        id: 3,
-        name: 'Annual Sports Meet',
-        date: '2024-11-08',
-        time: '9:00 AM',
-        type: 'sports',
-        venue: 'Sports Complex',
-        organizer: 'Sports Committee',
-        registrationDeadline: '2024-11-07',
-        description: 'Inter-departmental sports competition',
-        spotsLeft: 28
-      }
-    ];
-
-    const mockRegisteredEvents = [
-      {
-        id: 4,
-        name: 'Cultural Fest',
-        date: '2024-10-28',
-        time: '6:00 PM',
-        type: 'cultural',
-        venue: 'Open Air Theater',
-        status: 'confirmed',
-        registrationDate: '2024-10-15'
-      },
-      {
-        id: 5,
-        name: 'Hackathon 2024',
-        date: '2024-11-05',
-        time: '8:00 AM',
-        type: 'technical',
-        venue: 'Innovation Lab',
-        status: 'confirmed',
-        registrationDate: '2024-10-20'
-      }
-    ];
-
-    const mockNotifications = [
-      {
-        id: 1,
-        title: 'Registration Confirmed',
-        message: 'Your registration for Hackathon 2024 has been confirmed',
-        time: '2 hours ago',
-        type: 'success',
-        read: false
-      },
-      {
-        id: 2,
-        title: 'Event Reminder',
-        message: 'Workshop on AI/ML starts tomorrow at 2:00 PM',
-        time: '5 hours ago',
-        type: 'info',
-        read: false
-      },
-      {
-        id: 3,
-        title: 'New Event Alert',
-        message: 'Tech Fest 2024 registration is now open',
-        time: '1 day ago',
-        type: 'info',
-        read: true
-      }
-    ];
-
-    setUpcomingEvents(mockUpcomingEvents);
-    setRegisteredEvents(mockRegisteredEvents);
-    setNotifications(mockNotifications);
+    // TODO: Fetch data from API
+    // fetchUpcomingEvents();
+    // fetchRegisteredEvents();
+    // fetchNotifications();
   }, []);
 
   const showToast = (message, type = 'success') => {

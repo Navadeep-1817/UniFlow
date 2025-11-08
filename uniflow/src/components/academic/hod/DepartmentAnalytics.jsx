@@ -4,45 +4,17 @@ import { FiTrendingUp, FiUsers, FiCalendar, FiAward, FiTarget, FiActivity, FiBar
 
 const DepartmentAnalytics = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('month');
+  const [analytics, setAnalytics] = useState({});
+  const [eventTypes, setEventTypes] = useState([]);
+  const [monthlyTrends, setMonthlyTrends] = useState([]);
+  const [topPerformers, setTopPerformers] = useState([]);
 
-  const analytics = {
-    eventSuccessRate: 92,
-    studentParticipation: 87,
-    facultyEngagement: 95,
-    averageAttendance: 89,
-    totalEvents: 48,
-    completedEvents: 44,
-    activeStudents: 420,
-    totalStudents: 485,
-    activeFaculty: 19,
-    totalFaculty: 20
-  };
+  useEffect(() => {
+    // TODO: Fetch analytics data from API
+    // fetchDepartmentAnalytics();
+  }, []);
 
-  const eventTypes = [
-    { type: 'FDP', count: 18, percentage: 37.5, color: '#4F46E5' },
-    { type: 'SDP', count: 15, percentage: 31.25, color: '#10B981' },
-    { type: 'CRT', count: 10, percentage: 20.83, color: '#F59E0B' },
-    { type: 'Workshop', count: 5, percentage: 10.42, color: '#EF4444' }
-  ];
-
-  const monthlyTrends = [
-    { month: 'Jan', events: 5, participants: 280, attendance: 85 },
-    { month: 'Feb', events: 6, participants: 320, attendance: 88 },
-    { month: 'Mar', events: 8, participants: 390, attendance: 92 },
-    { month: 'Apr', events: 7, participants: 350, attendance: 87 },
-    { month: 'May', events: 9, participants: 420, attendance: 90 },
-    { month: 'Jun', events: 8, participants: 400, attendance: 89 }
-  ];
-
-  const topPerformers = [
-    { name: 'Priya Patel', participation: 15, attendance: 98, performance: 95 },
-    { name: 'Rahul Sharma', participation: 12, attendance: 96, performance: 92 },
-    { name: 'Sneha Reddy', participation: 11, attendance: 94, performance: 90 },
-    { name: 'Amit Kumar', participation: 10, attendance: 92, performance: 88 },
-    { name: 'Vikas Singh', participation: 10, attendance: 90, performance: 85 }
-  ];
-
-  const maxParticipants = Math.max(...monthlyTrends.map(m => m.participants));
+  const maxParticipants = monthlyTrends.length > 0 ? Math.max(...monthlyTrends.map(m => m.participants)) : 0;
 
   return (
     <div style={styles.container}>

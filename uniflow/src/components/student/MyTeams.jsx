@@ -15,63 +15,8 @@ const MyTeams = () => {
   const [inviteEmail, setInviteEmail] = useState('');
 
   useEffect(() => {
-    // Mock teams data
-    const mockTeams = [
-      {
-        id: 1,
-        name: 'Code Warriors',
-        eventId: 1,
-        eventName: 'Tech Fest 2024 - Hackathon',
-        teamCode: 'TF24-CW-5891',
-        myRole: 'leader',
-        createdDate: '2024-10-20',
-        maxMembers: 4,
-        currentMembers: 3,
-        members: [
-          { id: 1, name: 'Rajesh Kumar (You)', email: 'rajesh.kumar@jntu.ac.in', role: 'leader', joinedDate: '2024-10-20', rollNumber: 'CS21001' },
-          { id: 2, name: 'Amit Sharma', email: 'amit.sharma@jntu.ac.in', role: 'member', joinedDate: '2024-10-21', rollNumber: 'CS21015' },
-          { id: 3, name: 'Priya Singh', email: 'priya.singh@jntu.ac.in', role: 'member', joinedDate: '2024-10-22', rollNumber: 'CS21032' }
-        ],
-        status: 'active',
-        description: 'Team for hackathon competition focused on AI/ML solutions'
-      },
-      {
-        id: 2,
-        name: 'Tech Innovators',
-        eventId: 1,
-        eventName: 'Tech Fest 2024 - Project Exhibition',
-        teamCode: 'TF24-TI-2347',
-        myRole: 'member',
-        createdDate: '2024-10-18',
-        maxMembers: 3,
-        currentMembers: 3,
-        members: [
-          { id: 1, name: 'Sneha Reddy', email: 'sneha.reddy@jntu.ac.in', role: 'leader', joinedDate: '2024-10-18', rollNumber: 'CS21008' },
-          { id: 2, name: 'Rajesh Kumar (You)', email: 'rajesh.kumar@jntu.ac.in', role: 'member', joinedDate: '2024-10-19', rollNumber: 'CS21001' },
-          { id: 3, name: 'Karthik Nair', email: 'karthik.nair@jntu.ac.in', role: 'member', joinedDate: '2024-10-19', rollNumber: 'CS21045' }
-        ],
-        status: 'active',
-        description: 'IoT project team for smart campus solutions'
-      },
-      {
-        id: 3,
-        name: 'Sports Squad Alpha',
-        eventId: 3,
-        eventName: 'Annual Sports Meet - Cricket',
-        teamCode: 'SM24-SSA-8912',
-        myRole: 'member',
-        createdDate: '2024-10-25',
-        maxMembers: 11,
-        currentMembers: 9,
-        members: [
-          { id: 1, name: 'Vikram Patel', email: 'vikram.patel@jntu.ac.in', role: 'leader', joinedDate: '2024-10-25', rollNumber: 'ME21005' },
-          { id: 2, name: 'Rajesh Kumar (You)', email: 'rajesh.kumar@jntu.ac.in', role: 'member', joinedDate: '2024-10-26', rollNumber: 'CS21001' }
-        ],
-        status: 'active',
-        description: 'Cricket team representing CS department'
-      }
-    ];
-    setTeams(mockTeams);
+    // TODO: Fetch teams from API
+    // fetchTeams();
   }, []);
 
   const showToast = (message, type = 'success') => {

@@ -3,185 +3,6 @@ import FacultyHeadTopNav from './FacultyHeadTopNav';
 import { styles } from './StudentBodyEventsStyles';
 import { FiCalendar, FiMapPin, FiUsers, FiDollarSign, FiClock, FiEye, FiEdit, FiSearch, FiFilter, FiPlus, FiTrendingUp, FiCheckCircle, FiXCircle, FiActivity } from 'react-icons/fi';
 
-// Mock data for events
-const mockEvents = [
-  {
-    id: 1,
-    name: 'Tech Innovation Summit 2024',
-    category: 'Technical',
-    type: 'Conference',
-    date: '2024-02-15',
-    time: '10:00 AM - 4:00 PM',
-    venue: 'Main Auditorium',
-    budget: 75000,
-    spent: 65000,
-    organizer: 'Rahul Sharma',
-    teamName: 'Tech Club',
-    participants: 180,
-    expectedParticipants: 200,
-    status: 'Ongoing',
-    description: 'A full-day summit featuring keynote speakers from leading tech companies and panel discussions.',
-    objectives: 'Inspire students about latest tech trends and provide networking opportunities.',
-    schedule: [
-      { time: '10:00 AM', activity: 'Registration & Welcome' },
-      { time: '11:00 AM', activity: 'Keynote Speech' },
-      { time: '1:00 PM', activity: 'Lunch Break' },
-      { time: '2:00 PM', activity: 'Panel Discussion' },
-      { time: '4:00 PM', activity: 'Closing Ceremony' }
-    ],
-    teamMembers: [
-      { name: 'Rahul Sharma', role: 'Lead Organizer' },
-      { name: 'Priya Patel', role: 'Coordinator' },
-      { name: 'Amit Kumar', role: 'Logistics Head' }
-    ]
-  },
-  {
-    id: 2,
-    name: 'Annual Cultural Fest - Rang Manch',
-    category: 'Cultural',
-    type: 'Festival',
-    date: '2024-03-10',
-    time: '6:00 PM - 10:00 PM',
-    venue: 'Open Air Theatre',
-    budget: 120000,
-    spent: 45000,
-    organizer: 'Priya Patel',
-    teamName: 'Cultural Committee',
-    participants: 0,
-    expectedParticipants: 500,
-    status: 'Upcoming',
-    description: 'Annual cultural festival featuring dance, music, drama, and art exhibitions.',
-    objectives: 'Celebrate cultural diversity and provide platform for student performers.',
-    schedule: [
-      { time: '6:00 PM', activity: 'Opening Ceremony' },
-      { time: '6:30 PM', activity: 'Dance Performances' },
-      { time: '8:00 PM', activity: 'Music Concert' },
-      { time: '9:30 PM', activity: 'Awards & Closing' }
-    ],
-    teamMembers: [
-      { name: 'Priya Patel', role: 'Festival Director' },
-      { name: 'Sneha Reddy', role: 'Stage Manager' },
-      { name: 'Vikram Singh', role: 'Technical Head' }
-    ]
-  },
-  {
-    id: 3,
-    name: 'Sports Day Championship',
-    category: 'Sports',
-    type: 'Competition',
-    date: '2024-02-25',
-    time: '8:00 AM - 5:00 PM',
-    venue: 'Sports Complex',
-    budget: 50000,
-    spent: 30000,
-    organizer: 'Amit Kumar',
-    teamName: 'Sports Council',
-    participants: 0,
-    expectedParticipants: 300,
-    status: 'Upcoming',
-    description: 'Inter-department sports competition including athletics, cricket, football, and basketball.',
-    objectives: 'Promote physical fitness, team spirit, and healthy competition.',
-    schedule: [
-      { time: '8:00 AM', activity: 'Opening & March Past' },
-      { time: '9:00 AM', activity: 'Track Events' },
-      { time: '12:00 PM', activity: 'Lunch Break' },
-      { time: '1:00 PM', activity: 'Field Events' },
-      { time: '4:00 PM', activity: 'Awards Ceremony' }
-    ],
-    teamMembers: [
-      { name: 'Amit Kumar', role: 'Sports Secretary' },
-      { name: 'Rahul Sharma', role: 'Event Coordinator' },
-      { name: 'Priya Patel', role: 'Volunteer Head' }
-    ]
-  },
-  {
-    id: 4,
-    name: 'Entrepreneurship Workshop Series',
-    category: 'Workshop',
-    type: 'Educational',
-    date: '2024-02-20',
-    time: '2:00 PM - 5:00 PM',
-    venue: 'Seminar Hall B',
-    budget: 30000,
-    spent: 25000,
-    organizer: 'Sneha Reddy',
-    teamName: 'E-Cell',
-    participants: 85,
-    expectedParticipants: 100,
-    status: 'Ongoing',
-    description: 'Three-day workshop on entrepreneurship fundamentals, startup funding, and business planning.',
-    objectives: 'Develop entrepreneurial mindset and connect students with mentors.',
-    schedule: [
-      { time: '2:00 PM', activity: 'Introduction Session' },
-      { time: '3:00 PM', activity: 'Expert Talk' },
-      { time: '4:00 PM', activity: 'Interactive Q&A' },
-      { time: '4:45 PM', activity: 'Networking Session' }
-    ],
-    teamMembers: [
-      { name: 'Sneha Reddy', role: 'Workshop Lead' },
-      { name: 'Vikram Singh', role: 'Content Coordinator' }
-    ]
-  },
-  {
-    id: 5,
-    name: 'Blood Donation Camp',
-    category: 'Social Service',
-    type: 'Community Service',
-    date: '2024-01-15',
-    time: '9:00 AM - 3:00 PM',
-    venue: 'Medical Center',
-    budget: 15000,
-    spent: 15000,
-    organizer: 'Vikram Singh',
-    teamName: 'NSS Unit',
-    participants: 142,
-    expectedParticipants: 150,
-    status: 'Completed',
-    description: 'Blood donation drive in collaboration with local blood bank.',
-    objectives: 'Save lives through blood donation and create awareness.',
-    schedule: [
-      { time: '9:00 AM', activity: 'Setup & Registration' },
-      { time: '10:00 AM', activity: 'Donation Drive Begins' },
-      { time: '1:00 PM', activity: 'Lunch for Donors' },
-      { time: '3:00 PM', activity: 'Closing' }
-    ],
-    teamMembers: [
-      { name: 'Vikram Singh', role: 'Camp Coordinator' },
-      { name: 'Rahul Sharma', role: 'Volunteer Manager' }
-    ]
-  },
-  {
-    id: 6,
-    name: 'Hackathon 2024',
-    category: 'Technical',
-    type: 'Competition',
-    date: '2024-01-28',
-    time: '9:00 AM - 9:00 PM',
-    venue: 'Computer Lab Block',
-    budget: 60000,
-    spent: 60000,
-    organizer: 'Rahul Sharma',
-    teamName: 'Coding Club',
-    participants: 120,
-    expectedParticipants: 120,
-    status: 'Completed',
-    description: '12-hour coding marathon with exciting problem statements and prizes.',
-    objectives: 'Enhance coding skills and promote collaborative problem-solving.',
-    schedule: [
-      { time: '9:00 AM', activity: 'Registration & Briefing' },
-      { time: '10:00 AM', activity: 'Hackathon Begins' },
-      { time: '1:00 PM', activity: 'Lunch Break' },
-      { time: '6:00 PM', activity: 'Submission Deadline' },
-      { time: '8:00 PM', activity: 'Results & Awards' }
-    ],
-    teamMembers: [
-      { name: 'Rahul Sharma', role: 'Hackathon Lead' },
-      { name: 'Amit Kumar', role: 'Technical Support' },
-      { name: 'Sneha Reddy', role: 'Judging Coordinator' }
-    ]
-  }
-];
-
 const StudentBodyEvents = () => {
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
@@ -196,10 +17,15 @@ const StudentBodyEvents = () => {
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
-      setTimeout(() => {
-        setEvents(mockEvents);
+      try {
+        // TODO: Fetch events from API
+        // const data = await fetchStudentBodyEvents();
+        // setEvents(data);
         setIsLoading(false);
-      }, 800);
+      } catch (error) {
+        console.error('Error fetching events:', error);
+        setIsLoading(false);
+      }
     };
     fetchData();
   }, []);

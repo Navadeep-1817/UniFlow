@@ -9,6 +9,7 @@ const {
   getDepartmentFaculty,
   getDepartmentStudents,
   allocateTrainerToEvent,
+  allocateFacultyToEvent,
   getVerifiedTrainers,
   getDashboardStats
 } = require('../controllers/hodController');
@@ -42,5 +43,8 @@ router.get('/events/:id/participants', getEventParticipants);
 
 // Trainer allocation
 router.put('/events/:id/allocate-trainer', allocateTrainerToEvent);
+
+// Faculty allocation
+router.post('/events/:id/allocate-faculty', allocateFacultyToEvent);
 
 module.exports = router;

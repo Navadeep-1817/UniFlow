@@ -26,123 +26,14 @@ const GenerateReport = () => {
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
 
   useEffect(() => {
-    // Mock events data - only completed events
-    const mockEvents = [
-      { 
-        id: 1, 
-        name: 'AI & ML Workshop', 
-        startDate: '2024-11-15', 
-        endDate: '2024-11-17',
-        status: 'completed',
-        totalSessions: 6
-      },
-      { 
-        id: 2, 
-        name: 'Web Development SDP', 
-        startDate: '2024-11-20', 
-        endDate: '2024-11-22',
-        status: 'completed',
-        totalSessions: 4
-      },
-      { 
-        id: 3, 
-        name: 'CRT Training', 
-        startDate: '2024-11-10', 
-        endDate: '2024-11-12',
-        status: 'completed',
-        totalSessions: 3
-      }
-    ];
-    setEvents(mockEvents);
+    // TODO: Fetch completed events from API
+    // fetchCompletedEvents();
   }, []);
 
   const generateReportData = (eventId) => {
-    // Mock comprehensive report data
-    const mockReport = {
-      event: events.find(e => e.id === eventId),
-      overview: {
-        totalSessions: 6,
-        totalStudents: 45,
-        totalMaterials: 18,
-        averageAttendance: 91.5,
-        averageFeedback: 4.6,
-        completionRate: 95.5
-      },
-      attendance: {
-        total: 270, // 45 students * 6 sessions
-        present: 247,
-        absent: 23,
-        percentage: 91.5,
-        sessionWise: [
-          { session: 'Session 1', date: '2024-11-15', present: 43, absent: 2, percentage: 95.6 },
-          { session: 'Session 2', date: '2024-11-15', present: 42, absent: 3, percentage: 93.3 },
-          { session: 'Session 3', date: '2024-11-16', present: 40, absent: 5, percentage: 88.9 },
-          { session: 'Session 4', date: '2024-11-16', present: 41, absent: 4, percentage: 91.1 },
-          { session: 'Session 5', date: '2024-11-17', present: 39, absent: 6, percentage: 86.7 },
-          { session: 'Session 6', date: '2024-11-17', present: 42, absent: 3, percentage: 93.3 }
-        ]
-      },
-      feedback: {
-        totalResponses: 42,
-        responseRate: 93.3,
-        averageRating: 4.6,
-        distribution: { 5: 28, 4: 12, 3: 2, 2: 0, 1: 0 },
-        categories: {
-          content: 4.7,
-          delivery: 4.6,
-          materials: 4.5,
-          engagement: 4.6
-        },
-        topComments: [
-          'Excellent workshop with practical examples',
-          'Very informative and well-structured',
-          'Great hands-on experience'
-        ]
-      },
-      materials: {
-        total: 18,
-        byType: {
-          pdf: 8,
-          pptx: 6,
-          zip: 4
-        },
-        sessions: [
-          { session: 'Session 1', count: 3 },
-          { session: 'Session 2', count: 3 },
-          { session: 'Session 3', count: 3 },
-          { session: 'Session 4', count: 3 },
-          { session: 'Session 5', count: 3 },
-          { session: 'Session 6', count: 3 }
-        ]
-      },
-      performance: {
-        excellent: 32,
-        good: 10,
-        average: 3,
-        poor: 0
-      },
-      summary: {
-        strengths: [
-          'High student engagement throughout the event',
-          'Excellent attendance rate (91.5%)',
-          'Positive feedback with 4.6/5 rating',
-          'Comprehensive materials provided'
-        ],
-        improvements: [
-          'Consider more hands-on projects',
-          'Extend session duration for complex topics',
-          'Provide additional reference materials'
-        ],
-        outcomes: [
-          '95.5% students successfully completed the workshop',
-          'High satisfaction rate with 93.3% feedback response',
-          'Students gained practical ML implementation skills',
-          'All learning objectives were achieved'
-        ]
-      }
-    };
-
-    return mockReport;
+    // TODO: Fetch comprehensive report data from API
+    // return fetchReportData(eventId);
+    return null;
   };
 
   const showToast = (message, type = 'success') => {

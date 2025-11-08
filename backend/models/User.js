@@ -41,6 +41,7 @@ const userSchema = new mongoose.Schema(
         'non_academic_team_rep',
         'faculty',
         'student',
+        'sports',
       ],
       required: [true, 'Please specify a role'],
     },

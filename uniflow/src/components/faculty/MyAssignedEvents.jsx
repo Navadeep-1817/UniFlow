@@ -36,80 +36,82 @@ const MyAssignedEvents = () => {
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
 
   useEffect(() => {
-    // Mock data - Replace with API call
-    const mockEvents = [
-      {
-        id: 1,
-        name: 'Faculty Development Program - AI & ML',
-        type: 'FDP',
-        category: 'Technical',
-        startDate: '2024-11-15',
-        endDate: '2024-11-17',
-        venue: 'Conference Hall A',
-        assignedBy: 'Dr. Ramesh Kumar (HOD)',
-        role: 'Resource Person',
-        status: 'upcoming',
-        totalSessions: 6,
-        completedSessions: 0,
-        participants: 45,
-        description: 'A comprehensive program on Artificial Intelligence and Machine Learning fundamentals.',
-        sessions: [
-          { id: 1, title: 'Introduction to AI', date: '2024-11-15', time: '10:00 AM - 12:00 PM', status: 'pending' },
-          { id: 2, title: 'ML Algorithms', date: '2024-11-15', time: '02:00 PM - 04:00 PM', status: 'pending' },
-          { id: 3, title: 'Deep Learning Basics', date: '2024-11-16', time: '10:00 AM - 12:00 PM', status: 'pending' },
-          { id: 4, title: 'Neural Networks', date: '2024-11-16', time: '02:00 PM - 04:00 PM', status: 'pending' },
-          { id: 5, title: 'Practical Applications', date: '2024-11-17', time: '10:00 AM - 12:00 PM', status: 'pending' },
-          { id: 6, title: 'Project Presentations', date: '2024-11-17', time: '02:00 PM - 04:00 PM', status: 'pending' }
-        ]
-      },
-      {
-        id: 2,
-        name: 'Skill Development Program - Web Technologies',
-        type: 'SDP',
-        category: 'Technical',
-        startDate: '2024-11-20',
-        endDate: '2024-11-22',
-        venue: 'Lab 301',
-        assignedBy: 'Dr. Priya Singh (HOD)',
-        role: 'Coordinator',
-        status: 'upcoming',
-        totalSessions: 4,
-        completedSessions: 0,
-        participants: 30,
-        description: 'Hands-on skill development in modern web technologies.',
-        sessions: [
-          { id: 1, title: 'HTML5 & CSS3', date: '2024-11-20', time: '10:00 AM - 01:00 PM', status: 'pending' },
-          { id: 2, title: 'JavaScript ES6+', date: '2024-11-21', time: '10:00 AM - 01:00 PM', status: 'pending' },
-          { id: 3, title: 'React Framework', date: '2024-11-22', time: '10:00 AM - 01:00 PM', status: 'pending' },
-          { id: 4, title: 'Final Project', date: '2024-11-22', time: '02:00 PM - 05:00 PM', status: 'pending' }
-        ]
-      },
-      {
-        id: 3,
-        name: 'Campus Recruitment Training - Aptitude',
-        type: 'CRT',
-        category: 'Placement',
-        startDate: '2024-11-10',
-        endDate: '2024-11-12',
-        venue: 'Auditorium',
-        assignedBy: 'Mr. Anil Verma (Placement Head)',
-        role: 'Trainer',
-        status: 'ongoing',
-        totalSessions: 3,
-        completedSessions: 2,
-        participants: 120,
-        description: 'Training students for campus recruitment aptitude tests.',
-        sessions: [
-          { id: 1, title: 'Quantitative Aptitude', date: '2024-11-10', time: '09:00 AM - 12:00 PM', status: 'completed' },
-          { id: 2, title: 'Logical Reasoning', date: '2024-11-11', time: '09:00 AM - 12:00 PM', status: 'completed' },
-          { id: 3, title: 'Verbal Ability', date: '2024-11-12', time: '09:00 AM - 12:00 PM', status: 'pending' }
-        ]
-      }
-    ];
-
-    setEvents(mockEvents);
-    setFilteredEvents(mockEvents);
+    fetchMyEvents();
   }, []);
+
+  const fetchMyEvents = async () => {
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    
+    if (!token) {
+      showToast('Authentication required', 'error');
+      return;
+    }
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/faculty/my-events`, {
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch events');
+      }
+      
+      const data = await response.json();
+      
+      // Transform backend data to match frontend structure
+      const transformedEvents = (data.data || []).map(event => {
+        // Calculate real-time status based on dates
+        const now = new Date();
+        const startDate = new Date(event.date?.startDate);
+        const endDate = new Date(event.date?.endDate);
+        
+        let calculatedStatus = 'upcoming';
+        if (event.status === 'Completed' || now > endDate) {
+          calculatedStatus = 'completed';
+        } else if (event.status === 'Ongoing' || (now >= startDate && now <= endDate)) {
+          calculatedStatus = 'ongoing';
+        } else if (now < startDate) {
+          calculatedStatus = 'upcoming';
+        }
+
+        return {
+          id: event._id,
+          name: event.title || 'Untitled Event',
+          type: event.subType || 'FDP',
+          description: event.description || 'No description available',
+          startDate: event.date?.startDate ? new Date(event.date.startDate).toLocaleDateString() : 'TBD',
+          endDate: event.date?.endDate ? new Date(event.date.endDate).toLocaleDateString() : 'TBD',
+          venue: event.venue?.name || event.mode || 'TBD',
+          participants: event.registration?.currentParticipants || 0,
+          status: calculatedStatus,
+          category: event.category || 'Internal',
+          role: event.coordinators?.some(c => c._id === localStorage.getItem('userId')) ? 'Coordinator' : 'Participant',
+          assignedBy: event.createdBy ? `${event.createdBy.firstName || ''} ${event.createdBy.lastName || ''}`.trim() || 'HOD' : 'HOD',
+          totalSessions: event.sessions?.length || 0,
+          completedSessions: event.sessions?.filter(s => s.status === 'completed').length || 0,
+          sessions: (event.sessions || []).map(session => ({
+            id: session._id || session.id,
+            title: session.title || 'Session',
+            date: session.date ? new Date(session.date).toLocaleDateString() : 'TBD',
+            time: session.time || 'TBD',
+            status: session.status || 'pending'
+          }))
+        };
+      });
+      
+      setEvents(transformedEvents);
+      setFilteredEvents(transformedEvents);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      showToast(error.message || 'Failed to fetch events', 'error');
+      setEvents([]);
+      setFilteredEvents([]);
+    }
+  };
 
   const showToast = (message, type = 'success') => {
     setToast({ show: true, message, type });
@@ -139,6 +141,12 @@ const MyAssignedEvents = () => {
   useEffect(() => {
     applyFilters();
   }, [filterType, filterStatus, events]);
+
+  // Refresh events when filters change (optional - for server-side filtering)
+  useEffect(() => {
+    // You can uncomment this to fetch from server with filters
+    // fetchMyEvents();
+  }, [filterType, filterStatus]);
 
   const handleSessionStatusUpdate = (sessionId, newStatus) => {
     const updatedEvents = events.map(event => {
@@ -190,8 +198,8 @@ const MyAssignedEvents = () => {
       <div style={styles.mainContent}>
         <div style={styles.pageHeader}>
           <div>
-            <h1 style={styles.pageTitle}>My Assigned Events</h1>
-            <p style={styles.pageSubtitle}>Manage your FDP, SDP, and CRT sessions</p>
+            <h1 style={styles.pageTitle}>Department Events</h1>
+            <p style={styles.pageSubtitle}>All department events including FDP, SDP, and CRT sessions</p>
           </div>
         </div>
 
@@ -266,17 +274,26 @@ const MyAssignedEvents = () => {
             </div>
           ) : (
             filteredEvents.map(event => {
-              const progress = (event.completedSessions / event.totalSessions) * 100;
+              const progress = event.totalSessions > 0 ? (event.completedSessions / event.totalSessions) * 100 : 0;
               const statusColors = {
                 upcoming: { bg: '#DBEAFE', color: '#1E40AF' },
                 ongoing: { bg: '#FEF3C7', color: '#92400E' },
-                completed: { bg: '#D1FAE5', color: '#065F46' }
+                completed: { bg: '#D1FAE5', color: '#065F46' },
+                pending: { bg: '#F3F4F6', color: '#6B7280' }
               };
               const typeColors = {
                 FDP: { bg: '#E0E7FF', color: '#3730A3' },
                 SDP: { bg: '#FCE7F3', color: '#9F1239' },
-                CRT: { bg: '#DBEAFE', color: '#1E40AF' }
+                CRT: { bg: '#DBEAFE', color: '#1E40AF' },
+                Workshop: { bg: '#D1FAE5', color: '#065F46' },
+                Seminar: { bg: '#FED7AA', color: '#9A3412' },
+                Sports: { bg: '#FEF3C7', color: '#92400E' }
               };
+              
+              // Get colors with fallback
+              const eventStatus = event.status?.toLowerCase() || 'upcoming';
+              const statusColor = statusColors[eventStatus] || statusColors.upcoming;
+              const typeColor = typeColors[event.type] || typeColors.FDP;
 
               return (
                 <div 
@@ -301,17 +318,17 @@ const MyAssignedEvents = () => {
                       <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap'}}>
                         <span style={{
                           ...styles.badge,
-                          backgroundColor: typeColors[event.type].bg,
-                          color: typeColors[event.type].color
+                          backgroundColor: typeColor.bg,
+                          color: typeColor.color
                         }}>
                           {event.type}
                         </span>
                         <span style={{
                           ...styles.badge,
-                          backgroundColor: statusColors[event.status].bg,
-                          color: statusColors[event.status].color
+                          backgroundColor: statusColor.bg,
+                          color: statusColor.color
                         }}>
-                          {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
+                          {eventStatus.charAt(0).toUpperCase() + eventStatus.slice(1)}
                         </span>
                         <span style={{...styles.badge, backgroundColor: '#F3F4F6', color: '#6B7280'}}>
                           {event.role}

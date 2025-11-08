@@ -36,55 +36,8 @@ const LeaveRequest = () => {
   });
 
   useEffect(() => {
-    // Mock leave requests data
-    const mockRequests = [
-      {
-        id: 1,
-        leaveType: 'substitution',
-        fromDate: '2024-11-20',
-        toDate: '2024-11-20',
-        session: 'AI & ML Workshop - Session 3',
-        sessionTime: '10:00 AM - 12:00 PM',
-        substitute: 'Dr. Priya Sharma',
-        reason: 'Medical appointment',
-        status: 'approved',
-        requestedOn: '2024-11-15',
-        respondedOn: '2024-11-16',
-        respondedBy: 'HOD - Computer Science'
-      },
-      {
-        id: 2,
-        leaveType: 'leave',
-        fromDate: '2024-11-25',
-        toDate: '2024-11-27',
-        session: 'Multiple Sessions',
-        sessionTime: 'Full Days',
-        substitute: 'N/A',
-        reason: 'Family emergency',
-        status: 'pending',
-        requestedOn: '2024-11-18',
-        respondedOn: null,
-        respondedBy: null
-      },
-      {
-        id: 3,
-        leaveType: 'substitution',
-        fromDate: '2024-11-10',
-        toDate: '2024-11-10',
-        session: 'Web Development SDP - Session 2',
-        sessionTime: '2:00 PM - 4:00 PM',
-        substitute: 'Prof. Rajesh Kumar',
-        reason: 'Conference attendance',
-        status: 'rejected',
-        requestedOn: '2024-11-05',
-        respondedOn: '2024-11-06',
-        respondedBy: 'Admin',
-        rejectionReason: 'No substitute available for the requested date'
-      }
-    ];
-
-    setRequests(mockRequests);
-    setFilteredRequests(mockRequests);
+    // TODO: Fetch leave requests from API
+    // fetchLeaveRequests();
   }, []);
 
   useEffect(() => {

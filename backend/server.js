@@ -119,6 +119,31 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Debug route to check student bodies in DB
+app.get('/debug/student-bodies', async (req, res) => {
+  try {
+    const StudentBody = require('./models/StudentBody');
+    const all = await StudentBody.find();
+    const active = await StudentBody.find({ isActive: true });
+    
+    res.json({
+      success: true,
+      total: all.length,
+      active: active.length,
+      data: active.map(sb => ({
+        _id: sb._id,
+        name: sb.name,
+        code: sb.code,
+        type: sb.type,
+        university: sb.university,
+        isActive: sb.isActive
+      }))
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // API Routes
 // Setup and Authentication
 app.use('/api/setup', require('./routes/setupRoutes'));

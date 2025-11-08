@@ -7,6 +7,7 @@ const {
   getFacultyById,
   getDashboard,
   getMyProfile,
+  getMyEvents,
   updateFaculty,
   deleteFaculty,
   getFacultyEvents,
@@ -18,6 +19,7 @@ const {
 // Faculty dashboard and profile (for faculty themselves)
 router.get('/dashboard', protect, authorize(ROLES.FACULTY), getDashboard);
 router.get('/profile', protect, authorize(ROLES.FACULTY), getMyProfile);
+router.get('/my-events', protect, authorize(ROLES.FACULTY), getMyEvents);
 
 // Admin/HOD/TP routes for managing faculty
 router.get(

@@ -14,5 +14,6 @@ router.post('/reject/:id', superAdminController.rejectUser);
 router.get('/users', superAdminController.getUsers);
 router.get('/stats', superAdminController.getStats);
 router.get('/universities', superAdminController.getUniversities);
+router.get('/events', superAdminController.getAllEvents);
 
 module.exports = router;

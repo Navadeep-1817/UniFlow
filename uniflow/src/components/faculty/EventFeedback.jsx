@@ -27,78 +27,15 @@ const EventFeedback = () => {
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
 
   useEffect(() => {
-    // Mock events data
-    const mockEvents = [
-      { id: 1, name: 'AI & ML Workshop', startDate: '2024-11-15', endDate: '2024-11-17', totalStudents: 45 },
-      { id: 2, name: 'Web Development SDP', startDate: '2024-11-20', endDate: '2024-11-22', totalStudents: 30 },
-      { id: 3, name: 'CRT Training', startDate: '2024-11-10', endDate: '2024-11-12', totalStudents: 120 }
-    ];
-    setEvents(mockEvents);
+    // TODO: Fetch events from API
+    // fetchEvents();
   }, []);
 
   const loadFeedback = (eventId) => {
-    // Mock feedback data
-    const mockFeedback = [
-      {
-        id: 1,
-        eventId: 1,
-        studentName: 'Aarav Sharma',
-        rollNo: '20CS001',
-        rating: 5,
-        comment: 'Excellent workshop! The practical sessions were very helpful and the instructor explained complex concepts in a simple way.',
-        date: '2024-11-17',
-        session: 'Introduction to Machine Learning',
-        categories: { content: 5, delivery: 5, materials: 5, engagement: 5 }
-      },
-      {
-        id: 2,
-        eventId: 1,
-        studentName: 'Aditi Patel',
-        rollNo: '20CS002',
-        rating: 4,
-        comment: 'Great learning experience. Would have loved more hands-on projects. Overall very informative.',
-        date: '2024-11-17',
-        session: 'Deep Learning Basics',
-        categories: { content: 5, delivery: 4, materials: 4, engagement: 4 }
-      },
-      {
-        id: 3,
-        eventId: 1,
-        studentName: 'Arjun Kumar',
-        rollNo: '20CS003',
-        rating: 3,
-        comment: 'Good content but the pace was a bit fast. Some topics needed more time for explanation.',
-        date: '2024-11-17',
-        session: 'Neural Networks',
-        categories: { content: 4, delivery: 3, materials: 3, engagement: 3 }
-      },
-      {
-        id: 4,
-        eventId: 1,
-        studentName: 'Ananya Singh',
-        rollNo: '20CS004',
-        rating: 5,
-        comment: 'Outstanding workshop! The real-world examples made everything clear. Highly recommend!',
-        date: '2024-11-17',
-        session: 'Introduction to Machine Learning',
-        categories: { content: 5, delivery: 5, materials: 5, engagement: 5 }
-      },
-      {
-        id: 5,
-        eventId: 1,
-        studentName: 'Dhruv Verma',
-        rollNo: '20CS005',
-        rating: 4,
-        comment: 'Very useful workshop. The materials provided were excellent and well-organized.',
-        date: '2024-11-17',
-        session: 'Deep Learning Basics',
-        categories: { content: 4, delivery: 4, materials: 5, engagement: 4 }
-      }
-    ];
-
-    const filtered = mockFeedback.filter(f => f.eventId === eventId);
-    setFeedbackList(filtered);
-    setFilteredFeedback(filtered);
+    // TODO: Fetch feedback from API
+    // fetchFeedback(eventId);
+    setFeedbackList([]);
+    setFilteredFeedback([]);
   };
 
   useEffect(() => {

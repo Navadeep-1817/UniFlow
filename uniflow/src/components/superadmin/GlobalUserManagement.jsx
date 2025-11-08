@@ -5,7 +5,8 @@ const GlobalUserManagement = () => {
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filters, setFilters] = useState({ university: 'all', role: 'all', status: 'all', department: 'all' });
+  const [filters, setFilters] = useState({ role: 'all', status: 'all', department: 'all' });
+  const [departments, setDepartments] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -58,6 +59,10 @@ const GlobalUserManagement = () => {
           
           setUsers(mappedUsers);
           console.log(`Loaded ${mappedUsers.length} users from database`);
+          
+          // Extract unique departments
+          const uniqueDepts = [...new Set(mappedUsers.map(u => u.department).filter(d => d !== 'N/A'))];
+          setDepartments(uniqueDepts);
         } else {
           console.error('Invalid response format');
           setUsers([]);
@@ -76,21 +81,53 @@ const GlobalUserManagement = () => {
     setTimeout(() => setToast({ show: false, message: '', type: '' }), 3000);
   };
   const handleLogout = () => { sessionStorage.clear(); localStorage.removeItem('token'); localStorage.removeItem('userRole'); localStorage.removeItem('userEmail'); navigate('/login'); };
-  const getRoleBadgeColor = (role) => ({ student: { bg: '#DBEAFE', color: '#1E40AF' }, faculty: { bg: '#D1FAE5', color: '#065F46' }, academic_admin: { bg: '#FEF3C7', color: '#92400E' }, nonacademic_admin: { bg: '#FCE7F3', color: '#9F1239' }, superadmin: { bg: '#F3E8FF', color: '#6B21A8' } }[role] || { bg: '#F3F4F6', color: '#374151' });
-  const getRoleDisplayName = (role) => ({ student: 'Student', faculty: 'Faculty', academic_admin: 'HOD', nonacademic_admin: 'Admin', superadmin: 'Super Admin' }[role] || role);
+  
+  const getRoleBadgeColor = (role) => {
+    const colors = {
+      student: { bg: '#DBEAFE', color: '#1E40AF' },
+      faculty: { bg: '#D1FAE5', color: '#065F46' },
+      academic_admin_hod: { bg: '#FEF3C7', color: '#92400E' },
+      academic_admin_tp: { bg: '#FEF3C7', color: '#92400E' },
+      non_academic_faculty_head: { bg: '#FCE7F3', color: '#9F1239' },
+      non_academic_team_rep: { bg: '#FCE7F3', color: '#9F1239' },
+      sports: { bg: '#FED7AA', color: '#9A3412' },
+      superadmin: { bg: '#F3E8FF', color: '#6B21A8' }
+    };
+    return colors[role] || { bg: '#F3F4F6', color: '#374151' };
+  };
+  
+  const getRoleDisplayName = (role) => {
+    const names = {
+      student: 'Student',
+      faculty: 'Faculty',
+      academic_admin_hod: 'HOD',
+      academic_admin_tp: 'T&P Head',
+      non_academic_faculty_head: 'Faculty Head',
+      non_academic_team_rep: 'Team Rep',
+      sports: 'Sports Admin',
+      superadmin: 'Super Admin'
+    };
+    return names[role] || role;
+  };
 
   const filteredUsers = users.filter(user => {
     const searchLower = searchQuery.toLowerCase();
     const matchesSearch = user.firstName.toLowerCase().includes(searchLower) || user.lastName.toLowerCase().includes(searchLower) || user.email.toLowerCase().includes(searchLower) || (user.rollNumber && user.rollNumber.toLowerCase().includes(searchLower)) || (user.employeeId && user.employeeId.toLowerCase().includes(searchLower));
     if (!matchesSearch) return false;
-    if (filters.university !== 'all' && user.university !== filters.university) return false;
     if (filters.role !== 'all' && user.role !== filters.role) return false;
     if (filters.status !== 'all' && user.status !== filters.status) return false;
     if (filters.department !== 'all' && user.department !== filters.department) return false;
     return true;
   });
 
-  const stats = { total: users.length, active: users.filter(u => u.status === 'active').length, inactive: users.filter(u => u.status === 'inactive').length, students: users.filter(u => u.role === 'student').length, faculty: users.filter(u => u.role === 'faculty').length, admins: users.filter(u => u.role.includes('admin')).length };
+  const stats = { 
+    total: users.length, 
+    active: users.filter(u => u.status === 'active').length, 
+    inactive: users.filter(u => u.status === 'inactive').length, 
+    students: users.filter(u => u.role === 'student').length, 
+    faculty: users.filter(u => u.role === 'faculty').length, 
+    admins: users.filter(u => ['academic_admin_hod', 'academic_admin_tp', 'non_academic_faculty_head', 'non_academic_team_rep', 'sports', 'superadmin'].includes(u.role)).length 
+  };
   const handleEditClick = (user) => { setSelectedUser(user); setEditFormData({ ...user }); setShowEditModal(true); };
   const handleDeleteClick = (user) => { setSelectedUser(user); setShowDeleteModal(true); };
   const handleStatusToggle = (userId) => { setUsers(users.map(user => { if (user.id === userId) { const newStatus = user.status === 'active' ? 'inactive' : 'active'; showToast(`User ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully!`); return { ...user, status: newStatus }; } return user; })); };
@@ -121,7 +158,35 @@ const GlobalUserManagement = () => {
         <h3 style={{fontSize:'16px',fontWeight:'600',color:'#1F2937',marginBottom:'16px'}}>🔍 Search & Filter Users</h3>
         <input type="text" placeholder="Search by name, email, roll number, or employee ID..." value={searchQuery} onChange={(e)=>setSearchQuery(e.target.value)} style={{width:'100%',padding:'12px 16px',fontSize:'14px',border:'2px solid #E5E7EB',borderRadius:'8px',marginBottom:'20px',outline:'none'}}/>
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit, minmax(200px, 1fr))',gap:'16px'}}>
-          {[{label:'University',options:['All Universities','JNTU Hyderabad','JNTU Kakinada','Osmania University','Andhra University'],key:'university'},{label:'Role',options:['All Roles','Student','Faculty','HOD','Admin'],values:['all','student','faculty','academic_admin','nonacademic_admin'],key:'role'},{label:'Status',options:['All Status','Active','Inactive'],values:['all','active','inactive'],key:'status'},{label:'Department',options:['All Departments','Computer Science','Electronics','Mechanical','Civil Engineering','Training & Placement','Sports'],key:'department'}].map((f,i)=><div key={i}><label style={{fontSize:'13px',fontWeight:'600',color:'#374151'}}>{f.label}</label><select style={{width:'100%',padding:'10px 12px',fontSize:'14px',border:'2px solid #E5E7EB',borderRadius:'8px',backgroundColor:'white',cursor:'pointer'}} value={filters[f.key]} onChange={(e)=>setFilters({...filters,[f.key]:e.target.value})}>{f.options.map((opt,j)=><option key={j} value={f.values?f.values[j]:opt.toLowerCase().replace(/ /g,'').replace('alluniversities','all').replace('allroles','all').replace('allstatus','all').replace('alldepartments','all')}>{opt}</option>)}</select></div>)}
+          <div>
+            <label style={{fontSize:'13px',fontWeight:'600',color:'#374151'}}>Role</label>
+            <select style={{width:'100%',padding:'10px 12px',fontSize:'14px',border:'2px solid #E5E7EB',borderRadius:'8px',backgroundColor:'white',cursor:'pointer'}} value={filters.role} onChange={(e)=>setFilters({...filters,role:e.target.value})}>
+              <option value="all">All Roles</option>
+              <option value="student">Student</option>
+              <option value="faculty">Faculty</option>
+              <option value="academic_admin_hod">HOD</option>
+              <option value="academic_admin_tp">T&P Head</option>
+              <option value="non_academic_faculty_head">Faculty Head</option>
+              <option value="non_academic_team_rep">Team Rep</option>
+              <option value="sports">Sports Admin</option>
+              <option value="superadmin">Super Admin</option>
+            </select>
+          </div>
+          <div>
+            <label style={{fontSize:'13px',fontWeight:'600',color:'#374151'}}>Status</label>
+            <select style={{width:'100%',padding:'10px 12px',fontSize:'14px',border:'2px solid #E5E7EB',borderRadius:'8px',backgroundColor:'white',cursor:'pointer'}} value={filters.status} onChange={(e)=>setFilters({...filters,status:e.target.value})}>
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+          <div>
+            <label style={{fontSize:'13px',fontWeight:'600',color:'#374151'}}>Department</label>
+            <select style={{width:'100%',padding:'10px 12px',fontSize:'14px',border:'2px solid #E5E7EB',borderRadius:'8px',backgroundColor:'white',cursor:'pointer'}} value={filters.department} onChange={(e)=>setFilters({...filters,department:e.target.value})}>
+              <option value="all">All Departments</option>
+              {departments.map(dept => <option key={dept} value={dept}>{dept}</option>)}
+            </select>
+          </div>
         </div>
       </div>
       {filteredUsers.length > 0 ? <div style={{backgroundColor:'white',borderRadius:'12px',border:'1px solid #E5E7EB',overflow:'hidden'}}>
@@ -148,7 +213,7 @@ const GlobalUserManagement = () => {
       <div style={{backgroundColor:'white',borderRadius:'12px',padding:'32px',maxWidth:'600px',width:'90%',maxHeight:'90vh',overflowY:'auto'}} onClick={(e)=>e.stopPropagation()}>
         <h2 style={{fontSize:'20px',fontWeight:'600',color:'#1F2937',marginBottom:'24px'}}>✏️ Edit User Details</h2>
         {[{label:'First Name',key:'firstName'},{label:'Last Name',key:'lastName'},{label:'Email',key:'email'},{label:'Phone',key:'phone'},{label:'Department',key:'department'}].map((field,i)=><div key={i} style={{marginBottom:'20px'}}><label style={{display:'block',fontSize:'13px',fontWeight:'600',color:'#374151',marginBottom:'8px'}}>{field.label}</label><input type="text" value={editFormData[field.key]||''} onChange={(e)=>setEditFormData({...editFormData,[field.key]:e.target.value})} style={{width:'100%',padding:'10px 12px',fontSize:'14px',border:'2px solid #E5E7EB',borderRadius:'8px',outline:'none',boxSizing:'border-box'}}/></div>)}
-        <div style={{marginBottom:'20px'}}><label style={{display:'block',fontSize:'13px',fontWeight:'600',color:'#374151',marginBottom:'8px'}}>Role</label><select value={editFormData.role||''} onChange={(e)=>setEditFormData({...editFormData,role:e.target.value})} style={{width:'100%',padding:'10px 12px',fontSize:'14px',border:'2px solid #E5E7EB',borderRadius:'8px',outline:'none',boxSizing:'border-box'}}><option value="student">Student</option><option value="faculty">Faculty</option><option value="academic_admin">HOD</option><option value="nonacademic_admin">Admin</option></select></div>
+        <div style={{marginBottom:'20px'}}><label style={{display:'block',fontSize:'13px',fontWeight:'600',color:'#374151',marginBottom:'8px'}}>Role</label><select value={editFormData.role||''} onChange={(e)=>setEditFormData({...editFormData,role:e.target.value})} style={{width:'100%',padding:'10px 12px',fontSize:'14px',border:'2px solid #E5E7EB',borderRadius:'8px',outline:'none',boxSizing:'border-box'}}><option value="student">Student</option><option value="faculty">Faculty</option><option value="academic_admin_hod">HOD</option><option value="academic_admin_tp">T&P Head</option><option value="non_academic_faculty_head">Faculty Head</option><option value="non_academic_team_rep">Team Rep</option><option value="sports">Sports Admin</option></select></div>
         <div style={{display:'flex',gap:'12px',justifyContent:'flex-end',marginTop:'24px'}}>
           <button style={{padding:'10px 20px',backgroundColor:'#F3F4F6',color:'#374151',border:'none',borderRadius:'8px',fontWeight:'600',cursor:'pointer'}} onClick={()=>setShowEditModal(false)}>Cancel</button>
           <button style={{padding:'10px 20px',backgroundColor:'#4F46E5',color:'white',border:'none',borderRadius:'8px',fontWeight:'600',cursor:'pointer'}} onClick={handleEditSave}>Save Changes</button>

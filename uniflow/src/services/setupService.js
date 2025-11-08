@@ -39,11 +39,15 @@ const setupService = {
   getStudentBodies: async (universityId = null) => {
     try {
       const url = universityId 
-        ? `/student-bodies?university=${universityId}`
-        : '/student-bodies';
+        ? `/setup/student-bodies?universityId=${universityId}`
+        : '/setup/student-bodies';
+      console.log('🌐 API Call: GET', url);
       const response = await api.get(url);
+      console.log('📡 API Response:', response.data);
       return response.data;
     } catch (error) {
+      console.error('❌ setupService.getStudentBodies error:', error);
+      console.error('Error details:', error.response?.data);
       throw error.response?.data || { message: 'Failed to fetch student bodies' };
     }
   },

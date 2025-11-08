@@ -19,10 +19,10 @@ const Login = () => {
     { value: 'superadmin', label: 'Super Admin' },
     { value: 'student', label: 'Student' },
     { value: 'faculty', label: 'Faculty' },
-    { value: 'hod', label: 'Head of Department (HOD)' },
-    { value: 'placement', label: 'Training & Placement Head' },
-    { value: 'faculty_head', label: 'Student Body - Faculty Head' },
-    { value: 'team_rep', label: 'Student Body - Team Representative' },
+    { value: 'academic_admin_hod', label: 'Head of Department (HOD)' },
+    { value: 'academic_admin_tp', label: 'Training & Placement Head' },
+    { value: 'non_academic_faculty_head', label: 'Student Body - Faculty Head' },
+    { value: 'non_academic_team_rep', label: 'Student Body - Team Representative' },
     { value: 'sports', label: 'Sports Administrator' },
     { value: 'trainer', label: 'Trainer' }
   ];
@@ -63,7 +63,12 @@ const Login = () => {
 
     setIsLoading(true);
     try {
+      console.log('🔐 Attempting login with:', {
+        email: formData.email,
+        role: formData.role
+      });
       const response = await login(formData);
+      console.log('✅ Login successful:', response);
       
       showToast('Login successful! Redirecting...', 'success');
 
@@ -79,7 +84,7 @@ const Login = () => {
         'academic_admin_tp': '/placement/dashboard',
         'non_academic_faculty_head': '/student-body/faculty-head/dashboard',
         'non_academic_team_rep': '/teamrep/dashboard',
-        'trainer': '/sports/dashboard'
+        'sports': '/sports/dashboard'
       };
 
       setTimeout(() => {

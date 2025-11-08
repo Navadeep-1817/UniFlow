@@ -4,11 +4,11 @@ import api from './api';
 const ROLE_MAPPING = {
   'student': 'student',
   'faculty': 'faculty',
-  'hod': 'academic_admin_hod',
-  'placement': 'academic_admin_tp',
-  'faculty_head': 'non_academic_faculty_head',
-  'team_rep': 'non_academic_team_rep',
-  'sports': 'trainer',
+  'academic_admin_hod': 'academic_admin_hod',
+  'academic_admin_tp': 'academic_admin_tp',
+  'non_academic_faculty_head': 'non_academic_faculty_head',
+  'non_academic_team_rep': 'non_academic_team_rep',
+  'sports': 'sports',
   'superadmin': 'superadmin'
 };
 
@@ -16,11 +16,11 @@ const ROLE_MAPPING = {
 const ROLE_DISPLAY_MAPPING = {
   'student': 'student',
   'faculty': 'faculty',
-  'academic_admin_hod': 'hod',
-  'academic_admin_tp': 'placement',
-  'non_academic_faculty_head': 'faculty_head',
-  'non_academic_team_rep': 'team_rep',
-  'trainer': 'sports',
+  'academic_admin_hod': 'academic_admin_hod',
+  'academic_admin_tp': 'academic_admin_tp',
+  'non_academic_faculty_head': 'non_academic_faculty_head',
+  'non_academic_team_rep': 'non_academic_team_rep',
+  'sports': 'sports',
   'superadmin': 'superadmin'
 };
 
@@ -58,12 +58,15 @@ const authService = {
         payload.employeeId = userData.employeeId;
         payload.designation = userData.designation || 'Assistant Professor';
         payload.qualification = userData.qualification || 'M.Tech';
-      } else if (userData.role === 'hod' || userData.role === 'placement') {
+      } else if (userData.role === 'academic_admin_hod' || userData.role === 'academic_admin_tp') {
         payload.university = userData.university;
         payload.department = userData.department;
-      } else if (userData.role === 'faculty_head' || userData.role === 'team_rep') {
+      } else if (userData.role === 'non_academic_faculty_head' || userData.role === 'non_academic_team_rep') {
         payload.university = userData.university;
         payload.studentBody = userData.studentBody;
+      } else if (userData.role === 'sports') {
+        payload.university = userData.university;
+        payload.employeeId = userData.employeeId;
       }
 
       const response = await api.post('/auth/register', payload);

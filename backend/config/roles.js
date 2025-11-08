@@ -5,8 +5,10 @@ const ROLES = {
   ACADEMIC_ADMIN_TP: 'academic_admin_tp',
   NON_ACADEMIC_FACULTY_HEAD: 'non_academic_faculty_head',
   NON_ACADEMIC_TEAM_REP: 'non_academic_team_rep',
+  SPORTS_ADMIN: 'sports',
   FACULTY: 'faculty',
   STUDENT: 'student',
+  TRAINER: 'trainer',
 };
 
 // Role hierarchy levels (higher number = more privileges)
@@ -15,8 +17,10 @@ const ROLE_HIERARCHY = {
   [ROLES.ACADEMIC_ADMIN_HOD]: 6,
   [ROLES.ACADEMIC_ADMIN_TP]: 6,
   [ROLES.NON_ACADEMIC_FACULTY_HEAD]: 5,
+  [ROLES.SPORTS_ADMIN]: 5,
   [ROLES.NON_ACADEMIC_TEAM_REP]: 4,
   [ROLES.FACULTY]: 3,
+  [ROLES.TRAINER]: 2,
   [ROLES.STUDENT]: 1,
 };
 

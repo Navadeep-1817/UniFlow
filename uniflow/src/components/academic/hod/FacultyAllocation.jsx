@@ -14,26 +14,32 @@ import {
   FiTrendingUp,
   FiClock,
   FiTarget,
-  FiRefreshCw
+  FiRefreshCw,
+  FiInfo
 } from 'react-icons/fi';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const FacultyAllocation = () => {
   const [events, setEvents] = useState([]);
   const [faculty, setFaculty] = useState([]);
+  const [students, setStudents] = useState([]);
   const [trainers, setTrainers] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [showAllocationModal, setShowAllocationModal] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [selectedEventDetails, setSelectedEventDetails] = useState(null);
   const [selectedTrainer, setSelectedTrainer] = useState(null);
-  const [selectedFaculty, setSelectedFaculty] = useState(null);
+  const [selectedFaculty, setSelectedFaculty] = useState([]);
+  const [selectedStudents, setSelectedStudents] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [participantSearchQuery, setParticipantSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [filterEventType, setFilterEventType] = useState('all');
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [registrations, setRegistrations] = useState([]);
+  const [allocationType, setAllocationType] = useState('trainer'); // 'trainer' or 'faculty'
   const [allocations, setAllocations] = useState([]);
 
   useEffect(() => {
@@ -54,38 +60,58 @@ const FacultyAllocation = () => {
 
       const config = { headers: { Authorization: `Bearer ${token}` } };
 
-      // Fetch events, faculty, and trainers in parallel
+      // Fetch events, faculty, trainers, and students in parallel
       const [eventsRes, facultyRes, trainersRes] = await Promise.all([
         axios.get(`${API_BASE_URL}/hod/events`, config),
         axios.get(`${API_BASE_URL}/hod/faculty`, config),
-        axios.get(`${API_BASE_URL}/trainers`, config)
+        axios.get(`${API_BASE_URL}/hod/trainers`, config)
       ]);
+
+      console.log('Events Response:', eventsRes.data);
+      console.log('Faculty Response:', facultyRes.data);
+      console.log('Trainers Response:', trainersRes.data);
 
       const eventsData = (eventsRes.data.data || eventsRes.data || []).map(event => ({
         id: event._id,
         name: event.title,
-        type: event.subType,
+        type: event.type || 'Event',
+        subType: event.subType || 'General',
+        category: event.category || 'Department',
         startDate: new Date(event.date.startDate).toISOString().split('T')[0],
         endDate: new Date(event.date.endDate).toISOString().split('T')[0],
         venue: event.venue?.name || 'TBD',
         status: event.status.toLowerCase(),
         sessions: event.sessions?.length || 0,
-        workloadPoints: 10,
+        description: event.description || '',
         trainer: event.trainer,
-        trainerId: event.trainer?._id
+        trainerId: event.trainer?._id,
+        targetAudience: event.targetAudience || {},
+        registrations: event.registrations || [],
+        workloadPoints: event.workloadPoints || 10 // Default workload points per event
       }));
       
       const facultyData = (facultyRes.data.data || facultyRes.data || []).map(fac => ({
         id: fac._id,
         name: `${fac.firstName} ${fac.lastName}`,
         email: fac.email,
+        phone: fac.phone || fac.phoneNumber || 'N/A',
         specialization: fac.specialization || 'General',
-        currentWorkload: 30,
-        maxWorkload: 100,
-        allocatedEvents: 2
+        department: fac.department?.name || 'N/A',
+        currentWorkload: fac.currentWorkload || 0,
+        maxWorkload: fac.maxWorkload || 100,
+        allocatedEvents: fac.allocatedEvents || 0
       }));
       
-      const trainersData = trainersRes.data.data || trainersRes.data || [];
+      const trainersData = (trainersRes.data.data || trainersRes.data || []).map(trainer => ({
+        id: trainer._id,
+        name: trainer.name,
+        email: trainer.email,
+        phone: trainer.phone || 'N/A',
+        organization: trainer.organization || 'N/A',
+        expertise: trainer.expertise || [],
+        type: trainer.type || 'External',
+        isVerified: trainer.isVerified || false
+      }));
 
       setEvents(eventsData);
       setFaculty(facultyData);
@@ -109,7 +135,8 @@ const FacultyAllocation = () => {
     if (searchQuery) {
       filtered = filtered.filter(e =>
         e.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        e.venue.toLowerCase().includes(searchQuery.toLowerCase())
+        e.venue.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        e.subType.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
@@ -117,8 +144,19 @@ const FacultyAllocation = () => {
       filtered = filtered.filter(e => e.status === filterStatus);
     }
 
+    if (filterEventType !== 'all') {
+      filtered = filtered.filter(e => {
+        const eventSubType = e.subType.toLowerCase();
+        if (filterEventType === 'fdp') return eventSubType.includes('fdp') || eventSubType.includes('faculty development');
+        if (filterEventType === 'crt') return eventSubType.includes('crt') || eventSubType.includes('campus recruitment');
+        if (filterEventType === 'sdp') return eventSubType.includes('sdp') || eventSubType.includes('student development');
+        if (filterEventType === 'seminar') return eventSubType.includes('seminar') || eventSubType.includes('webinar') || eventSubType.includes('workshop');
+        return true;
+      });
+    }
+
     setFilteredEvents(filtered);
-  }, [searchQuery, filterStatus, events]);
+  }, [searchQuery, filterStatus, filterEventType, events]);
 
   const showToast = (message, type = 'success') => {
     setToast({ show: true, message, type });
@@ -126,11 +164,6 @@ const FacultyAllocation = () => {
   };
 
   const handleAllocate = async () => {
-    if (!selectedEvent || !selectedTrainer) {
-      showToast('Please select both event and trainer', 'error');
-      return;
-    }
-
     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     if (!token) {
       showToast('Authentication required', 'error');
@@ -140,18 +173,52 @@ const FacultyAllocation = () => {
     try {
       const config = { headers: { Authorization: `Bearer ${token}` } };
       
-      await axios.put(
-        `${API_BASE_URL}/hod/events/${selectedEvent}/allocate-trainer`,
-        { trainerId: selectedTrainer },
-        config
-      );
+      // Determine what needs to be allocated based on event type
+      const eventDetails = selectedEventDetails;
+      const eventSubType = eventDetails?.subType.toLowerCase() || '';
+      
+      // For FDP or CRT events - allocate trainer
+      if (eventSubType.includes('fdp') || eventSubType.includes('faculty development') || 
+          eventSubType.includes('crt') || eventSubType.includes('campus recruitment')) {
+        
+        if (!selectedTrainer) {
+          showToast('Please select a trainer', 'error');
+          return;
+        }
 
-      showToast('Trainer allocated successfully!', 'success');
+        await axios.put(
+          `${API_BASE_URL}/hod/events/${selectedEvent}/allocate-trainer`,
+          { trainerId: selectedTrainer },
+          config
+        );
+
+        showToast(`Trainer allocated to ${eventDetails.name} successfully!`, 'success');
+      } 
+      // For student-focused events (seminars, webinars, workshops, SDP) - allocate faculty
+      else {
+        if (selectedFaculty.length === 0) {
+          showToast('Please select at least one faculty member', 'error');
+          return;
+        }
+
+        // Create allocation records (you may need to create a backend endpoint for this)
+        await axios.post(
+          `${API_BASE_URL}/hod/events/${selectedEvent}/allocate-faculty`,
+          { 
+            facultyIds: selectedFaculty,
+            allocationType: 'coordinator'
+          },
+          config
+        );
+
+        showToast(`Faculty allocated to ${eventDetails.name} successfully!`, 'success');
+      }
+
       closeModal();
       await fetchAllData();
     } catch (error) {
-      console.error('Error allocating trainer:', error);
-      showToast(error.response?.data?.message || 'Failed to allocate trainer', 'error');
+      console.error('Error allocating:', error);
+      showToast(error.response?.data?.message || 'Failed to allocate', 'error');
     }
   };
 
@@ -181,14 +248,52 @@ const FacultyAllocation = () => {
 
   const openAllocationModal = (event) => {
     setSelectedEvent(event.id);
+    setSelectedEventDetails(event);
     setSelectedTrainer(event.trainerId || null);
+    setSelectedFaculty([]);
+    setSelectedStudents([]);
+    setParticipantSearchQuery('');
+    
+    // Determine allocation type based on event subType
+    const eventSubType = event.subType.toLowerCase();
+    if (eventSubType.includes('fdp') || eventSubType.includes('faculty development') ||
+        eventSubType.includes('crt') || eventSubType.includes('campus recruitment')) {
+      setAllocationType('trainer');
+    } else {
+      setAllocationType('faculty');
+    }
+    
     setShowAllocationModal(true);
   };
 
   const closeModal = () => {
     setShowAllocationModal(false);
     setSelectedEvent(null);
+    setSelectedEventDetails(null);
     setSelectedTrainer(null);
+    setSelectedFaculty([]);
+    setSelectedStudents([]);
+    setParticipantSearchQuery('');
+  };
+
+  const toggleFacultySelection = (facultyId) => {
+    setSelectedFaculty(prev => {
+      if (prev.includes(facultyId)) {
+        return prev.filter(id => id !== facultyId);
+      } else {
+        return [...prev, facultyId];
+      }
+    });
+  };
+
+  const toggleStudentSelection = (studentId) => {
+    setSelectedStudents(prev => {
+      if (prev.includes(studentId)) {
+        return prev.filter(id => id !== studentId);
+      } else {
+        return [...prev, studentId];
+      }
+    });
   };
 
   const getWorkloadColor = (workload) => {
@@ -232,36 +337,49 @@ const FacultyAllocation = () => {
         {/* Workload Overview */}
         <div style={styles.workloadSection}>
           <h3 style={styles.sectionTitle}><FiTrendingUp size={20} /> Faculty Workload Overview</h3>
-          <div style={styles.workloadGrid}>
-            {faculty.map(f => {
-              const workloadInfo = getWorkloadColor(f.currentWorkload);
-              return (
-                <div key={f.id} style={styles.workloadCard} onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.15)'; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)'; }}>
-                  <div style={styles.workloadHeader}>
-                    <div>
-                      <div style={styles.facultyName}>{f.name}</div>
-                      <div style={styles.facultySpec}>{f.specialization}</div>
+          {loading ? (
+            <div style={styles.emptyState}>
+              <FiRefreshCw size={48} color="#9CA3AF" style={{animation: 'spin 1s linear infinite'}} />
+              <p>Loading faculty workload...</p>
+            </div>
+          ) : faculty.length === 0 ? (
+            <div style={styles.emptyState}>
+              <FiUsers size={48} color="#9CA3AF" />
+              <p>No faculty members found in your department</p>
+              <p style={{fontSize: '14px', color: '#9CA3AF', marginTop: '8px'}}>Faculty members will appear here once they are added to your department</p>
+            </div>
+          ) : (
+            <div style={styles.workloadGrid}>
+              {faculty.map(f => {
+                const workloadInfo = getWorkloadColor(f.currentWorkload || 0);
+                return (
+                  <div key={f.id} style={styles.workloadCard} onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.15)'; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)'; }}>
+                    <div style={styles.workloadHeader}>
+                      <div>
+                        <div style={styles.facultyName}>{f.name}</div>
+                        <div style={styles.facultySpec}>{f.specialization}</div>
+                      </div>
+                      <div style={{...styles.workloadBadge, backgroundColor: workloadInfo.bg, color: workloadInfo.color}}>
+                        {workloadInfo.label}
+                      </div>
                     </div>
-                    <div style={{...styles.workloadBadge, backgroundColor: workloadInfo.bg, color: workloadInfo.color}}>
-                      {workloadInfo.label}
+                    <div style={styles.workloadProgress}>
+                      <div style={styles.workloadBar}>
+                        <div style={{...styles.workloadFill, width: `${Math.min((f.currentWorkload || 0), 100)}%`, backgroundColor: (f.currentWorkload || 0) >= 90 ? '#EF4444' : (f.currentWorkload || 0) >= 70 ? '#F59E0B' : '#10B981'}}></div>
+                      </div>
+                      <span style={styles.workloadText}>{f.currentWorkload || 0}/{f.maxWorkload || 100} points</span>
+                    </div>
+                    <div style={styles.workloadStats}>
+                      <div style={styles.workloadStatItem}>
+                        <FiCalendar size={16} color="#6B7280" />
+                        <span>{f.allocatedEvents || 0} events</span>
+                      </div>
                     </div>
                   </div>
-                  <div style={styles.workloadProgress}>
-                    <div style={styles.workloadBar}>
-                      <div style={{...styles.workloadFill, width: `${f.currentWorkload}%`, backgroundColor: f.currentWorkload >= 90 ? '#EF4444' : f.currentWorkload >= 70 ? '#F59E0B' : '#10B981'}}></div>
-                    </div>
-                    <span style={styles.workloadText}>{f.currentWorkload}/{f.maxWorkload} points</span>
-                  </div>
-                  <div style={styles.workloadStats}>
-                    <div style={styles.workloadStatItem}>
-                      <FiCalendar size={16} color="#6B7280" />
-                      <span>{f.allocatedEvents} events</span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Events & Allocations */}
@@ -276,11 +394,49 @@ const FacultyAllocation = () => {
                   <input type="text" placeholder="Search events..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} style={styles.searchInput} />
                 </div>
                 <div style={styles.filterButtons}>
-                  {['all', 'pending', 'allocated'].map(status => (
-                    <button key={status} onClick={() => setFilterStatus(status)} style={{ ...styles.filterBtn, backgroundColor: filterStatus === status ? '#4F46E5' : '#FFFFFF', color: filterStatus === status ? '#FFFFFF' : '#6B7280', border: filterStatus === status ? 'none' : '1px solid #E5E7EB' }} onMouseEnter={(e) => { if (filterStatus !== status) { e.currentTarget.style.backgroundColor = '#F3F4F6'; e.currentTarget.style.transform = 'scale(1.05)'; } }} onMouseLeave={(e) => { if (filterStatus !== status) { e.currentTarget.style.backgroundColor = '#FFFFFF'; e.currentTarget.style.transform = 'scale(1)'; } }}>
-                      {status.charAt(0).toUpperCase() + status.slice(1)}
-                    </button>
-                  ))}
+                  <div style={{marginBottom: '8px', fontSize: '12px', fontWeight: '600', color: '#6B7280'}}>Status:</div>
+                  <div style={{display: 'flex', gap: '8px', marginBottom: '16px'}}>
+                    {['all', 'pending', 'allocated'].map(status => (
+                      <button key={status} onClick={() => setFilterStatus(status)} style={{ ...styles.filterBtn, backgroundColor: filterStatus === status ? '#4F46E5' : '#FFFFFF', color: filterStatus === status ? '#FFFFFF' : '#6B7280', border: filterStatus === status ? 'none' : '1px solid #E5E7EB' }} onMouseEnter={(e) => { if (filterStatus !== status) { e.currentTarget.style.backgroundColor = '#F3F4F6'; e.currentTarget.style.transform = 'scale(1.05)'; } }} onMouseLeave={(e) => { if (filterStatus !== status) { e.currentTarget.style.backgroundColor = '#FFFFFF'; e.currentTarget.style.transform = 'scale(1)'; } }}>
+                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                  <div style={{marginBottom: '8px', fontSize: '12px', fontWeight: '600', color: '#6B7280'}}>Event Type:</div>
+                  <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap'}}>
+                    {[
+                      { value: 'all', label: 'All Types' },
+                      { value: 'fdp', label: 'FDP' },
+                      { value: 'crt', label: 'CRT' },
+                      { value: 'sdp', label: 'SDP' },
+                      { value: 'seminar', label: 'Seminar' }
+                    ].map(type => (
+                      <button 
+                        key={type.value} 
+                        onClick={() => setFilterEventType(type.value)} 
+                        style={{ 
+                          ...styles.filterBtn, 
+                          backgroundColor: filterEventType === type.value ? '#10B981' : '#FFFFFF', 
+                          color: filterEventType === type.value ? '#FFFFFF' : '#6B7280', 
+                          border: filterEventType === type.value ? 'none' : '1px solid #E5E7EB' 
+                        }} 
+                        onMouseEnter={(e) => { 
+                          if (filterEventType !== type.value) { 
+                            e.currentTarget.style.backgroundColor = '#F3F4F6'; 
+                            e.currentTarget.style.transform = 'scale(1.05)'; 
+                          } 
+                        }} 
+                        onMouseLeave={(e) => { 
+                          if (filterEventType !== type.value) { 
+                            e.currentTarget.style.backgroundColor = '#FFFFFF'; 
+                            e.currentTarget.style.transform = 'scale(1)'; 
+                          } 
+                        }}
+                      >
+                        {type.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -371,7 +527,9 @@ const FacultyAllocation = () => {
           <div style={styles.modalOverlay} onClick={closeModal}>
             <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
               <div style={styles.modalHeader}>
-                <h3 style={styles.modalTitle}>Allocate Trainer to Event</h3>
+                <h3 style={styles.modalTitle}>
+                  {allocationType === 'trainer' ? 'Allocate Trainer to Event' : 'Allocate Faculty to Event'}
+                </h3>
                 <button onClick={closeModal} style={styles.closeBtn} onMouseEnter={(e) => { e.currentTarget.style.transform = 'rotate(90deg) scale(1.1)'; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'rotate(0deg) scale(1)'; }}>
                   <FiX size={20} />
                 </button>
@@ -379,43 +537,136 @@ const FacultyAllocation = () => {
               <div style={styles.modalBody}>
                 <div style={styles.selectedEventInfo}>
                   <h4>Selected Event:</h4>
-                  <p style={{fontWeight: '600', color: '#1F2937', margin: '4px 0'}}>{events.find(e => e.id === selectedEvent)?.name}</p>
-                  <div style={{fontSize: '14px', color: '#6B7280'}}>
-                    <span>{events.find(e => e.id === selectedEvent)?.sessions} sessions</span> • 
-                    <span>{events.find(e => e.id === selectedEvent)?.workloadPoints} workload points</span>
+                  <p style={{fontWeight: '600', color: '#1F2937', margin: '4px 0'}}>{selectedEventDetails?.name}</p>
+                  <div style={{fontSize: '14px', color: '#6B7280', marginTop: '8px'}}>
+                    <span><strong>Type:</strong> {selectedEventDetails?.subType}</span> • 
+                    <span><strong>Duration:</strong> {selectedEventDetails?.startDate} to {selectedEventDetails?.endDate}</span>
+                  </div>
+                  <div style={{padding: '12px', backgroundColor: '#F3F4F6', borderRadius: '8px', marginTop: '12px', fontSize: '13px'}}>
+                    <FiInfo size={16} style={{display: 'inline', marginRight: '8px'}} />
+                    {allocationType === 'trainer' ? (
+                      <span><strong>Allocating Trainer:</strong> For FDP/CRT events, trainers provide expertise to faculty or students.</span>
+                    ) : (
+                      <span><strong>Allocating Faculty:</strong> For student events, faculty members coordinate and manage activities.</span>
+                    )}
                   </div>
                 </div>
-                <div style={styles.facultySelection}>
-                  <h4 style={{marginBottom: '16px'}}>Select Trainer:</h4>
-                  <div style={styles.facultyGrid}>
-                    {trainers.map(t => {
-                      const isSelected = selectedTrainer === t._id;
-                      return (
-                        <div key={t._id} onClick={() => setSelectedTrainer(t._id)} style={{ ...styles.facultyCard, borderColor: isSelected ? '#4F46E5' : '#E5E7EB', backgroundColor: isSelected ? '#EEF2FF' : '#FFFFFF', cursor: 'pointer' }} onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.12)'; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)'; }}>
-                          <div style={styles.facultyCardHeader}>
-                            <div>
-                              <div style={styles.facultyCardName}>{t.name}</div>
-                              <div style={styles.facultyCardSpec}>{t.organization || 'External Trainer'}</div>
-                              {t.expertise && t.expertise.length > 0 && (
-                                <div style={{fontSize: '11px', color: '#9CA3AF', marginTop: '4px'}}>
-                                  {t.expertise.slice(0, 2).join(', ')}
+
+                {allocationType === 'trainer' ? (
+                  <div style={styles.facultySelection}>
+                    <h4 style={{marginBottom: '16px'}}>Select Trainer:</h4>
+                    {trainers.length === 0 ? (
+                      <div style={{...styles.emptyState, padding: '20px'}}>
+                        <FiUsers size={32} color="#9CA3AF" />
+                        <p style={{fontSize: '14px'}}>No trainers available. Please register trainers first.</p>
+                      </div>
+                    ) : (
+                      <div style={styles.facultyGrid}>
+                        {trainers.map(t => {
+                          const isSelected = selectedTrainer === t.id;
+                          return (
+                            <div key={t.id} onClick={() => setSelectedTrainer(t.id)} style={{ ...styles.facultyCard, borderColor: isSelected ? '#4F46E5' : '#E5E7EB', backgroundColor: isSelected ? '#EEF2FF' : '#FFFFFF', cursor: 'pointer' }} onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.12)'; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)'; }}>
+                              <div style={styles.facultyCardHeader}>
+                                <div>
+                                  <div style={styles.facultyCardName}>{t.name}</div>
+                                  <div style={styles.facultyCardSpec}>{t.organization}</div>
+                                  {!t.isVerified && (
+                                    <div style={{fontSize: '11px', color: '#F59E0B', fontWeight: '600', marginTop: '4px'}}>
+                                      Pending Verification
+                                    </div>
+                                  )}
                                 </div>
-                              )}
+                                {isSelected && <FiCheckCircle size={20} color="#4F46E5" />}
+                              </div>
                             </div>
-                            {isSelected && <FiCheckCircle size={20} color="#4F46E5" />}
-                          </div>
-                        </div>
-                      );
-                    })}
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
-                </div>
+                ) : (
+                  <div style={styles.facultySelection}>
+                    <h4 style={{marginBottom: '16px'}}>Select Faculty Coordinators:</h4>
+                    <div style={styles.searchBox}>
+                      <FiSearch size={16} color="#6B7280" />
+                      <input 
+                        type="text" 
+                        placeholder="Search faculty by name..." 
+                        value={participantSearchQuery} 
+                        onChange={(e) => setParticipantSearchQuery(e.target.value)} 
+                        style={styles.searchInput} 
+                      />
+                    </div>
+                    {faculty.length === 0 ? (
+                      <div style={{...styles.emptyState, padding: '20px'}}>
+                        <FiUsers size={32} color="#9CA3AF" />
+                        <p style={{fontSize: '14px'}}>No faculty members found in your department.</p>
+                      </div>
+                    ) : (
+                      <div style={styles.facultyGrid}>
+                        {faculty
+                          .filter(f => f.name.toLowerCase().includes(participantSearchQuery.toLowerCase()))
+                          .map(f => {
+                            const isSelected = selectedFaculty.includes(f.id);
+                            return (
+                              <div 
+                                key={f.id} 
+                                onClick={() => toggleFacultySelection(f.id)} 
+                                style={{ ...styles.facultyCard, borderColor: isSelected ? '#10B981' : '#E5E7EB', backgroundColor: isSelected ? '#D1FAE5' : '#FFFFFF', cursor: 'pointer' }}
+                                onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.12)'; }} 
+                                onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)'; }}
+                              >
+                                <div style={styles.facultyCardHeader}>
+                                  <div>
+                                    <div style={styles.facultyCardName}>{f.name}</div>
+                                    <div style={styles.facultyCardSpec}>{f.specialization}</div>
+                                    <div style={{fontSize: '11px', color: '#9CA3AF', marginTop: '4px'}}>
+                                      {f.email}
+                                    </div>
+                                  </div>
+                                  {isSelected && <FiCheckCircle size={20} color="#10B981" />}
+                                </div>
+                              </div>
+                            );
+                          })}
+                      </div>
+                    )}
+                    {selectedFaculty.length > 0 && (
+                      <div style={{marginTop: '12px', padding: '12px', backgroundColor: '#D1FAE5', borderRadius: '8px', fontSize: '13px', color: '#065F46'}}>
+                        <strong>{selectedFaculty.length}</strong> faculty member(s) selected
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
               <div style={styles.modalFooter}>
                 <button onClick={closeModal} style={styles.cancelBtn} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#E5E7EB'; e.currentTarget.style.transform = 'scale(1.02)'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#F3F4F6'; e.currentTarget.style.transform = 'scale(1)'; }}>
                   Cancel
                 </button>
-                <button onClick={handleAllocate} disabled={!selectedTrainer} style={{...styles.submitBtn, opacity: !selectedTrainer ? 0.5 : 1, cursor: !selectedTrainer ? 'not-allowed' : 'pointer'}} onMouseEnter={(e) => { if (selectedTrainer) { e.currentTarget.style.backgroundColor = '#4338CA'; e.currentTarget.style.transform = 'scale(1.02)'; } }} onMouseLeave={(e) => { if (selectedTrainer) { e.currentTarget.style.backgroundColor = '#4F46E5'; e.currentTarget.style.transform = 'scale(1)'; } }}>
-                  <FiSave size={16} /> Allocate
+                <button 
+                  onClick={handleAllocate} 
+                  disabled={allocationType === 'trainer' ? !selectedTrainer : selectedFaculty.length === 0} 
+                  style={{
+                    ...styles.submitBtn, 
+                    opacity: (allocationType === 'trainer' ? !selectedTrainer : selectedFaculty.length === 0) ? 0.5 : 1, 
+                    cursor: (allocationType === 'trainer' ? !selectedTrainer : selectedFaculty.length === 0) ? 'not-allowed' : 'pointer'
+                  }} 
+                  onMouseEnter={(e) => { 
+                    const isDisabled = allocationType === 'trainer' ? !selectedTrainer : selectedFaculty.length === 0;
+                    if (!isDisabled) { 
+                      e.currentTarget.style.backgroundColor = '#4338CA'; 
+                      e.currentTarget.style.transform = 'scale(1.02)'; 
+                    } 
+                  }} 
+                  onMouseLeave={(e) => { 
+                    const isDisabled = allocationType === 'trainer' ? !selectedTrainer : selectedFaculty.length === 0;
+                    if (!isDisabled) { 
+                      e.currentTarget.style.backgroundColor = '#4F46E5'; 
+                      e.currentTarget.style.transform = 'scale(1)'; 
+                    } 
+                  }}
+                >
+                  <FiSave size={16} /> {allocationType === 'trainer' ? 'Allocate Trainer' : `Allocate ${selectedFaculty.length} Faculty`}
                 </button>
               </div>
             </div>

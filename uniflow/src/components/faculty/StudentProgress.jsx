@@ -33,82 +33,15 @@ const StudentProgress = () => {
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
 
   useEffect(() => {
-    // Mock events data
-    const mockEvents = [
-      { id: 1, name: 'AI & ML Workshop', totalSessions: 6, startDate: '2024-11-15', endDate: '2024-11-17' },
-      { id: 2, name: 'Web Development SDP', totalSessions: 4, startDate: '2024-11-20', endDate: '2024-11-22' },
-      { id: 3, name: 'CRT Training', totalSessions: 3, startDate: '2024-11-10', endDate: '2024-11-12' }
-    ];
-    setEvents(mockEvents);
+    // TODO: Fetch events from API
+    // fetchEvents();
   }, []);
 
   const loadStudentProgress = (eventId) => {
-    // Mock student progress data
-    const mockStudents = [
-      {
-        id: 1, rollNo: '20CS001', name: 'Aarav Sharma', department: 'CSE',
-        attendance: 100, attendedSessions: 6, totalSessions: 6,
-        assignments: { submitted: 5, total: 5, onTime: 5 },
-        participation: 95, performanceScore: 92,
-        assessments: [
-          { name: 'Quiz 1', score: 90, maxScore: 100 },
-          { name: 'Assignment 1', score: 95, maxScore: 100 },
-          { name: 'Project', score: 92, maxScore: 100 }
-        ],
-        engagement: 'Excellent', remarks: 'Outstanding participation and performance'
-      },
-      {
-        id: 2, rollNo: '20CS002', name: 'Aditi Patel', department: 'CSE',
-        attendance: 83.33, attendedSessions: 5, totalSessions: 6,
-        assignments: { submitted: 4, total: 5, onTime: 3 },
-        participation: 80, performanceScore: 78,
-        assessments: [
-          { name: 'Quiz 1', score: 75, maxScore: 100 },
-          { name: 'Assignment 1', score: 82, maxScore: 100 },
-          { name: 'Project', score: 78, maxScore: 100 }
-        ],
-        engagement: 'Good', remarks: 'Good performance, needs improvement in punctuality'
-      },
-      {
-        id: 3, rollNo: '20CS003', name: 'Arjun Kumar', department: 'CSE',
-        attendance: 50, attendedSessions: 3, totalSessions: 6,
-        assignments: { submitted: 2, total: 5, onTime: 1 },
-        participation: 45, performanceScore: 52,
-        assessments: [
-          { name: 'Quiz 1', score: 50, maxScore: 100 },
-          { name: 'Assignment 1', score: 60, maxScore: 100 },
-          { name: 'Project', score: 45, maxScore: 100 }
-        ],
-        engagement: 'Poor', remarks: 'Needs significant improvement in attendance and engagement'
-      },
-      {
-        id: 4, rollNo: '20CS004', name: 'Ananya Singh', department: 'CSE',
-        attendance: 100, attendedSessions: 6, totalSessions: 6,
-        assignments: { submitted: 5, total: 5, onTime: 5 },
-        participation: 98, performanceScore: 96,
-        assessments: [
-          { name: 'Quiz 1', score: 98, maxScore: 100 },
-          { name: 'Assignment 1', score: 95, maxScore: 100 },
-          { name: 'Project', score: 96, maxScore: 100 }
-        ],
-        engagement: 'Excellent', remarks: 'Exceptional student with consistent excellence'
-      },
-      {
-        id: 5, rollNo: '20CS005', name: 'Dhruv Verma', department: 'CSE',
-        attendance: 66.67, attendedSessions: 4, totalSessions: 6,
-        assignments: { submitted: 3, total: 5, onTime: 2 },
-        participation: 62, performanceScore: 68,
-        assessments: [
-          { name: 'Quiz 1', score: 65, maxScore: 100 },
-          { name: 'Assignment 1', score: 70, maxScore: 100 },
-          { name: 'Project', score: 68, maxScore: 100 }
-        ],
-        engagement: 'Average', remarks: 'Average performance, can do better with consistent effort'
-      }
-    ];
-
-    setStudents(mockStudents);
-    setFilteredStudents(mockStudents);
+    // TODO: Fetch student progress from API
+    // fetchStudentProgress(eventId);
+    setStudents([]);
+    setFilteredStudents([]);
   };
 
   useEffect(() => {

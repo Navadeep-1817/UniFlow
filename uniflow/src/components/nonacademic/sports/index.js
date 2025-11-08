@@ -5,3 +5,5 @@ export { default as FixtureScheduling } from './FixtureScheduling';
 export { default as ResultsManagement } from './ResultsManagement';
 export { default as SportsVenueBooking } from './SportsVenueBooking';
 export { default as AthleticsReport } from './AthleticsReport';
+export { default as SportsProfile } from './SportsProfile';
+export { default as SportsTopNav } from './SportsTopNav';

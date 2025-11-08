@@ -2,78 +2,6 @@ import React, { useState, useEffect } from 'react';
 import FacultyHeadTopNav from './FacultyHeadTopNav';
 import { styles } from './BudgetManagementStyles';
 
-// Mock data for budget allocations
-const mockAllocations = [
-  { 
-    id: 1, 
-    eventName: 'Annual Tech Fest', 
-    department: 'Computer Science',
-    allocated: 150000, 
-    spent: 120000, 
-    pending: 15000,
-    status: 'Active',
-    approvalLimit: 50000,
-    requestedBy: 'Dr. Sharma',
-    date: '2023-09-15',
-    expenses: [
-      { id: 1, description: 'Venue Booking', amount: 50000, status: 'Approved', date: '2023-09-20' },
-      { id: 2, description: 'Equipment Rental', amount: 40000, status: 'Approved', date: '2023-09-22' },
-      { id: 3, description: 'Marketing Materials', amount: 30000, status: 'Approved', date: '2023-09-25' },
-      { id: 4, description: 'Catering Services', amount: 15000, status: 'Pending', date: '2023-09-28' },
-    ]
-  },
-  { 
-    id: 2, 
-    eventName: 'Sports Championship', 
-    department: 'Physical Education',
-    allocated: 100000, 
-    spent: 75000, 
-    pending: 10000,
-    status: 'Active',
-    approvalLimit: 30000,
-    requestedBy: 'Prof. Kumar',
-    date: '2023-09-20',
-    expenses: [
-      { id: 1, description: 'Sports Equipment', amount: 45000, status: 'Approved', date: '2023-09-22' },
-      { id: 2, description: 'Trophy & Medals', amount: 30000, status: 'Approved', date: '2023-09-24' },
-      { id: 3, description: 'Refreshments', amount: 10000, status: 'Pending', date: '2023-09-26' },
-    ]
-  },
-  { 
-    id: 3, 
-    eventName: 'Cultural Week', 
-    department: 'Arts',
-    allocated: 80000, 
-    spent: 60000, 
-    pending: 5000,
-    status: 'Active',
-    approvalLimit: 25000,
-    requestedBy: 'Dr. Patel',
-    date: '2023-10-01',
-    expenses: [
-      { id: 1, description: 'Stage Setup', amount: 35000, status: 'Approved', date: '2023-10-03' },
-      { id: 2, description: 'Sound System', amount: 25000, status: 'Approved', date: '2023-10-05' },
-      { id: 3, description: 'Decorations', amount: 5000, status: 'Pending', date: '2023-10-07' },
-    ]
-  },
-  { 
-    id: 4, 
-    eventName: 'Research Symposium', 
-    department: 'Science',
-    allocated: 120000, 
-    spent: 90000, 
-    pending: 0,
-    status: 'Completed',
-    approvalLimit: 40000,
-    requestedBy: 'Dr. Singh',
-    date: '2023-08-10',
-    expenses: [
-      { id: 1, description: 'Conference Hall', amount: 40000, status: 'Approved', date: '2023-08-12' },
-      { id: 2, description: 'Guest Speakers', amount: 50000, status: 'Approved', date: '2023-08-15' },
-    ]
-  },
-];
-
 const BudgetManagement = () => {
   const [budget, setBudget] = useState({
     total: 500000,
@@ -103,22 +31,11 @@ const BudgetManagement = () => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        setTimeout(() => {
-          setAllocations(mockAllocations);
-          
-          const pending = mockAllocations.flatMap(allocation => 
-            allocation.expenses
-              .filter(expense => expense.status === 'Pending')
-              .map(expense => ({
-                ...expense,
-                eventName: allocation.eventName,
-                allocationId: allocation.id
-              }))
-          );
-          setPendingApprovals(pending);
-          
-          setIsLoading(false);
-        }, 500);
+        // TODO: Fetch budget allocations from API
+        // const data = await fetchBudgetAllocations();
+        // setAllocations(data);
+        // setPendingApprovals(data.pendingApprovals);
+        setIsLoading(false);
       } catch (error) {
         console.error('Error fetching budget data:', error);
         setIsLoading(false);

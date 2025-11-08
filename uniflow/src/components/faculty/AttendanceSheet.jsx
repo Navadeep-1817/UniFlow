@@ -27,129 +27,15 @@ const AttendanceSheet = () => {
   const [toast, setToast] = useState({ show: false, message: '', type: '' });
 
   useEffect(() => {
-    // Mock events data
-    const mockEvents = [
-      {
-        id: 1,
-        name: 'AI & ML Workshop',
-        startDate: '2024-11-15',
-        endDate: '2024-11-17',
-        totalSessions: 6,
-        totalStudents: 45
-      },
-      {
-        id: 2,
-        name: 'Web Development SDP',
-        startDate: '2024-11-20',
-        endDate: '2024-11-22',
-        totalSessions: 4,
-        totalStudents: 30
-      },
-      {
-        id: 3,
-        name: 'CRT Training',
-        startDate: '2024-11-10',
-        endDate: '2024-11-12',
-        totalSessions: 3,
-        totalStudents: 120
-      }
-    ];
-
-    setEvents(mockEvents);
+    // TODO: Fetch events from API
+    // fetchEvents();
   }, []);
 
   const loadAttendanceData = (eventId) => {
-    // Mock attendance data
-    const mockAttendance = [
-      {
-        id: 1,
-        rollNo: '20CS001',
-        name: 'Aarav Sharma',
-        department: 'CSE',
-        sessions: [
-          { id: 1, status: 'present', date: '2024-11-15' },
-          { id: 2, status: 'present', date: '2024-11-15' },
-          { id: 3, status: 'present', date: '2024-11-16' },
-          { id: 4, status: 'present', date: '2024-11-16' },
-          { id: 5, status: 'absent', date: '2024-11-17' },
-          { id: 6, status: 'present', date: '2024-11-17' }
-        ]
-      },
-      {
-        id: 2,
-        rollNo: '20CS002',
-        name: 'Aditi Patel',
-        department: 'CSE',
-        sessions: [
-          { id: 1, status: 'present', date: '2024-11-15' },
-          { id: 2, status: 'absent', date: '2024-11-15' },
-          { id: 3, status: 'present', date: '2024-11-16' },
-          { id: 4, status: 'present', date: '2024-11-16' },
-          { id: 5, status: 'present', date: '2024-11-17' },
-          { id: 6, status: 'present', date: '2024-11-17' }
-        ]
-      },
-      {
-        id: 3,
-        rollNo: '20CS003',
-        name: 'Arjun Kumar',
-        department: 'CSE',
-        sessions: [
-          { id: 1, status: 'present', date: '2024-11-15' },
-          { id: 2, status: 'present', date: '2024-11-15' },
-          { id: 3, status: 'absent', date: '2024-11-16' },
-          { id: 4, status: 'absent', date: '2024-11-16' },
-          { id: 5, status: 'present', date: '2024-11-17' },
-          { id: 6, status: 'absent', date: '2024-11-17' }
-        ]
-      },
-      {
-        id: 4,
-        rollNo: '20CS004',
-        name: 'Ananya Singh',
-        department: 'CSE',
-        sessions: [
-          { id: 1, status: 'present', date: '2024-11-15' },
-          { id: 2, status: 'present', date: '2024-11-15' },
-          { id: 3, status: 'present', date: '2024-11-16' },
-          { id: 4, status: 'present', date: '2024-11-16' },
-          { id: 5, status: 'present', date: '2024-11-17' },
-          { id: 6, status: 'present', date: '2024-11-17' }
-        ]
-      },
-      {
-        id: 5,
-        rollNo: '20CS005',
-        name: 'Dhruv Verma',
-        department: 'CSE',
-        sessions: [
-          { id: 1, status: 'absent', date: '2024-11-15' },
-          { id: 2, status: 'absent', date: '2024-11-15' },
-          { id: 3, status: 'present', date: '2024-11-16' },
-          { id: 4, status: 'present', date: '2024-11-16' },
-          { id: 5, status: 'absent', date: '2024-11-17' },
-          { id: 6, status: 'present', date: '2024-11-17' }
-        ]
-      }
-    ];
-
-    // Calculate totals and percentages
-    const processedData = mockAttendance.map(student => {
-      const presentCount = student.sessions.filter(s => s.status === 'present').length;
-      const totalSessions = student.sessions.length;
-      const percentage = ((presentCount / totalSessions) * 100).toFixed(2);
-
-      return {
-        ...student,
-        presentCount,
-        absentCount: totalSessions - presentCount,
-        totalSessions,
-        percentage: parseFloat(percentage)
-      };
-    });
-
-    setAttendanceData(processedData);
-    setFilteredData(processedData);
+    // TODO: Fetch attendance data from API
+    // fetchAttendanceData(eventId);
+    setAttendanceData([]);
+    setFilteredData([]);
   };
 
   useEffect(() => {

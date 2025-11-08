@@ -152,6 +152,45 @@ const getMyProfile = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Get my events (for faculty - includes assigned and department events)
+// @route   GET /api/faculty/my-events
+// @access  Private (Faculty)
+const getMyEvents = asyncHandler(async (req, res) => {
+  // First get the faculty profile by User ID
+  const user = await User.findById(req.user._id).populate('department');
+  
+  if (!user || !user.department) {
+    res.status(404);
+    throw new Error('User or department not found');
+  }
+
+  const { status, category, type } = req.query;
+  
+  // Build query to include department events (all events created by HOD for this department)
+  const query = {
+    organizer: user.department._id,
+    organizerModel: 'Department'
+  };
+
+  // Apply filters
+  if (status && status !== 'all') query.status = status.charAt(0).toUpperCase() + status.slice(1);
+  if (category && category !== 'all') query.category = category;
+  if (type && type !== 'all') query.subType = type;
+
+  const events = await Event.find(query)
+    .populate('venue', 'name building capacity')
+    .populate('trainer', 'name email organization')
+    .populate('coordinators', 'firstName lastName email')
+    .populate('createdBy', 'firstName lastName email')
+    .sort('-createdAt');
+
+  res.json({
+    success: true,
+    count: events.length,
+    data: events
+  });
+});
+
 // @desc    Update faculty profile
 // @route   PUT /api/faculty/:id
 // @access  Private (Admin, HOD, TP, Faculty themselves for limited fields)
@@ -267,7 +306,7 @@ const deleteFaculty = asyncHandler(async (req, res) => {
   });
 });
 
-// @desc    Get faculty events
+// @desc    Get faculty events (includes both assigned events and department events)
 // @route   GET /api/faculty/:id/events
 // @access  Private (Admin, HOD, TP, Faculty)
 const getFacultyEvents = asyncHandler(async (req, res) => {
@@ -279,7 +318,17 @@ const getFacultyEvents = asyncHandler(async (req, res) => {
   }
 
   const { status, category, startDate, endDate } = req.query;
-  const query = { _id: { $in: faculty.assignedEvents } };
+  
+  // Build query to include both assigned events AND department events
+  const query = {
+    $or: [
+      { _id: { $in: faculty.assignedEvents } }, // Explicitly assigned events
+      { 
+        organizer: faculty.department,
+        organizerModel: 'Department'
+      } // Department events
+    ]
+  };
 
   if (status) query.status = status;
   if (category) query.category = category;
@@ -422,6 +471,7 @@ module.exports = {
   getFacultyById,
   getDashboard,
   getMyProfile,
+  getMyEvents,
   updateFaculty,
   deleteFaculty,
   getFacultyEvents,
