@@ -44,6 +44,9 @@ require('./models/AuditLog');
 // Initialize Express app
 const app = express();
 
+// Trust proxy - Required for Render.com (behind reverse proxy)
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet());
 
@@ -63,6 +66,12 @@ app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps, Postman, or curl)
     if (!origin) return callback(null, true);
+    
+    // Allow all Vercel preview deployments (*.vercel.app)
+    if (origin && origin.match(/https:\/\/.*\.vercel\.app$/)) {
+      console.log('✅ CORS allowed for Vercel deployment:', origin);
+      return callback(null, true);
+    }
     
     if (allowedOrigins.indexOf(origin) !== -1) {
       console.log('✅ CORS allowed for origin:', origin);
@@ -123,6 +132,21 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
     database: 'Connected'
+  });
+});
+
+// API Health check route (for testing API prefix)
+app.get('/api/health', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'API endpoint is working!',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV,
+    endpoints: {
+      setup: '/api/setup/universities',
+      auth: '/api/auth/login',
+      health: '/api/health'
+    }
   });
 });
 

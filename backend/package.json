@@ -10,7 +10,8 @@
     "seed:force": "node seed.js --force",
     "seed:clear": "node seed.js --clear",
     "seed:vignan": "node seedVignanUniversity.js",
-    "seed:student-bodies": "node seedStudentBodies.js"
+    "seed:student-bodies": "node seedStudentBodies.js",
+    "migrate:fix-auditlog": "node migrations/fix-auditlog-index.js"
   },
   "keywords": [],
   "author": "",
