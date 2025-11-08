@@ -180,8 +180,8 @@ const getMyEvents = asyncHandler(async (req, res) => {
   const events = await Event.find(query)
     .populate('venue', 'name building capacity')
     .populate('trainer', 'name email organization')
-    .populate('coordinators', 'firstName lastName email')
-    .populate('createdBy', 'firstName lastName email')
+    .populate('coordinators', 'name email phone')
+    .populate('createdBy', 'name email phone')
     .sort('-createdAt');
 
   res.json({

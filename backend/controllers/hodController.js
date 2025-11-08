@@ -26,7 +26,7 @@ const getDepartmentEvents = asyncHandler(async (req, res) => {
   })
     .populate('venue', 'name building capacity')
     .populate('trainer', 'name email organization expertise')
-    .populate('coordinators', 'firstName lastName email')
+    .populate('coordinators', 'name email phone')
     .populate('targetAudience.departments', 'name code')
     .sort('-createdAt');
 
@@ -152,7 +152,7 @@ const createDepartmentEvent = asyncHandler(async (req, res) => {
     university: universityId,
     organizer: departmentId,
     organizerModel: 'Department',
-    coordinators: [req.user._id],
+    coordinators: [], // Start with empty coordinators - will be assigned later
     date: {
       startDate: new Date(req.body.startDate),
       endDate: new Date(req.body.endDate)

@@ -13,12 +13,14 @@ const {
   getAttendanceReport,
   getCertificates,
   getStudentBodies,
-  joinStudentBody
+  joinStudentBody,
+  browseEvents
 } = require('../controllers/studentController');
 
 // Student dashboard and profile (for students themselves)
 router.get('/dashboard', protect, authorize(ROLES.STUDENT), getDashboard);
 router.get('/profile', protect, authorize(ROLES.STUDENT), getMyProfile);
+router.get('/browse-events', protect, authorize(ROLES.STUDENT), browseEvents);
 
 // Admin/HOD/TP/Faculty routes for managing students
 router.get(

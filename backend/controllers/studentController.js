@@ -470,6 +470,69 @@ const joinStudentBody = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Browse all available events (Academic and Non-Academic)
+// @route   GET /api/students/browse-events
+// @access  Private (Student)
+const browseEvents = asyncHandler(async (req, res) => {
+  const { type, category, status, search, department } = req.query;
+  
+  // Get student info to filter by their department and university
+  const student = await Student.findOne({ userId: req.user._id })
+    .populate('department')
+    .populate('userId');
+  
+  if (!student) {
+    res.status(404);
+    throw new Error('Student profile not found');
+  }
+
+  // Build query - show events from student's department and university
+  const query = {
+    university: student.userId.university,
+    status: { $in: ['Approved', 'Upcoming', 'Ongoing'] } // Only show active events
+  };
+
+  // Apply filters
+  if (type && type !== 'all') {
+    query.type = type;
+  }
+  
+  if (category && category !== 'all') {
+    query.category = category;
+  }
+  
+  if (status && status !== 'all') {
+    query.status = status;
+  }
+  
+  if (department && department !== 'all') {
+    query.organizer = department;
+    query.organizerModel = 'Department';
+  }
+  
+  // Search by title or description
+  if (search) {
+    query.$or = [
+      { title: { $regex: search, $options: 'i' } },
+      { description: { $regex: search, $options: 'i' } }
+    ];
+  }
+
+  const events = await Event.find(query)
+    .populate('venue', 'name building capacity')
+    .populate('trainer', 'name email organization')
+    .populate('coordinators', 'name email phone')
+    .populate('organizer')
+    .sort('-date.startDate')
+    .limit(100);
+
+  res.json({
+    success: true,
+    count: events.length,
+    data: events
+  });
+});
+
 module.exports = {
   getAllStudents,
   getStudentById,
@@ -481,5 +544,6 @@ module.exports = {
   getAttendanceReport,
   getCertificates,
   getStudentBodies,
-  joinStudentBody
+  joinStudentBody,
+  browseEvents
 };
