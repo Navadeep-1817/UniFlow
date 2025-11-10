@@ -1,5 +1,7 @@
 {
   "version": 2,
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
   "builds": [
     {
       "src": "package.json",
@@ -58,8 +60,5 @@
         }
       ]
     }
-  ],
-  "env": {
-    "VITE_API_URL": "https://uniflow4895.onrender.com/api"
-  }
+  ]
 }

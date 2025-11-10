@@ -1,13 +1,19 @@
 import axios from 'axios';
+import API_CONFIG from '../config/api.config';
 
-// Create axios instance with base configuration
+// Create axios instance with base configuration using centralized config
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  baseURL: API_CONFIG.BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
   withCredentials: true, // Allow cookies to be sent with requests
 });
+
+// Log API configuration in development
+if (API_CONFIG.isDevelopment) {
+  console.log('🚀 Axios API initialized with baseURL:', API_CONFIG.BASE_URL);
+}
 
 // Request interceptor - Add auth token to requests
 api.interceptors.request.use(

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { FiUser, FiMail, FiLock, FiPhone, FiBriefcase, FiCheckCircle } from 'react-icons/fi';
+import API_CONFIG from '../../config/api.config';
 
 const TrainerRegister = () => {
   const navigate = useNavigate();
@@ -25,7 +26,7 @@ const TrainerRegister = () => {
   const [departments, setDepartments] = useState([]);
   const [loadingData, setLoadingData] = useState(false);
 
-  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  const API_BASE_URL = API_CONFIG.BASE_URL;
 
   // Fetch universities on component mount
   useEffect(() => {
