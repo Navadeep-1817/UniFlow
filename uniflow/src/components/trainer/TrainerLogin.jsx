@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { FiMail, FiLock, FiEye, FiEyeOff, FiAlertCircle } from 'react-icons/fi';
+import trainerService from '../../services/trainerService';
 
 const TrainerLogin = () => {
   const navigate = useNavigate();
@@ -22,28 +23,17 @@ const TrainerLogin = () => {
     setLoading(true);
     setError('');
 
-    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-
     try {
-      const response = await fetch(`${API_BASE_URL}/trainers/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-      });
+      const response = await trainerService.login(formData);
 
-      const data = await response.json();
-
-      if (response.ok) {
-        localStorage.setItem('trainerToken', data.data.token);
-        localStorage.setItem('trainerData', JSON.stringify(data.data));
+      if (response.success) {
         navigate('/trainer/dashboard');
       } else {
-        setError(data.message || 'Login failed. Please check your credentials.');
+        setError(response.message || 'Login failed. Please check your credentials.');
       }
     } catch (error) {
-      setError('Unable to connect to server. Please try again later.');
+      setError(error.message || 'Unable to connect to server. Please try again later.');
+      console.error('Trainer login error:', error);
     } finally {
       setLoading(false);
     }

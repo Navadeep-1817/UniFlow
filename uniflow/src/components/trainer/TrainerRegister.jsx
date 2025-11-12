@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { FiUser, FiMail, FiLock, FiPhone, FiBriefcase, FiCheckCircle } from 'react-icons/fi';
-import API_CONFIG from '../../config/api.config';
+import setupService from '../../services/setupService';
+import trainerService from '../../services/trainerService';
 
 const TrainerRegister = () => {
   const navigate = useNavigate();
@@ -26,17 +27,14 @@ const TrainerRegister = () => {
   const [departments, setDepartments] = useState([]);
   const [loadingData, setLoadingData] = useState(false);
 
-  const API_BASE_URL = API_CONFIG.BASE_URL;
-
   // Fetch universities on component mount
   useEffect(() => {
     const fetchUniversities = async () => {
       try {
         setLoadingData(true);
-        const response = await fetch(`${API_BASE_URL}/setup/universities`);
-        const data = await response.json();
-        if (data.success && data.data) {
-          setUniversities(data.data.universities || []);
+        const response = await setupService.getUniversities();
+        if (response.success && response.data) {
+          setUniversities(response.data.universities || []);
         }
       } catch (error) {
         console.error('Error fetching universities:', error);
@@ -54,10 +52,9 @@ const TrainerRegister = () => {
       if (formData.university) {
         try {
           setLoadingData(true);
-          const response = await fetch(`${API_BASE_URL}/setup/departments?universityId=${formData.university}`);
-          const data = await response.json();
-          if (data.success && data.data) {
-            setDepartments(data.data.departments || []);
+          const response = await setupService.getDepartments(formData.university);
+          if (response.success && response.data) {
+            setDepartments(response.data.departments || []);
           }
         } catch (error) {
           console.error('Error fetching departments:', error);
@@ -91,24 +88,17 @@ const TrainerRegister = () => {
     setError('');
 
     try {
-      const response = await fetch(`${API_BASE_URL}/trainers/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
+      const response = await trainerService.register(formData);
 
-      const data = await response.json();
-
-      if (response.ok) {
-        localStorage.setItem('trainerToken', data.data.token);
-        localStorage.setItem('trainerData', JSON.stringify(data.data));
+      if (response.success) {
         setStep(3); // Success step
         setTimeout(() => navigate('/trainer/dashboard'), 2000);
       } else {
-        setError(data.message || 'Registration failed');
+        setError(response.message || 'Registration failed');
       }
     } catch (error) {
-      setError('Unable to connect to server');
+      setError(error.message || 'Unable to connect to server');
+      console.error('Trainer registration error:', error);
     } finally {
       setLoading(false);
     }
