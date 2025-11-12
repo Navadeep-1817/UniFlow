@@ -224,6 +224,11 @@ app.use('/api/resources', require('./routes/resourceRoutes'));
 // app.use('/api/conflicts', require('./routes/conflictRoutes'));
 // app.use('/api/analytics', require('./routes/analyticsRoutes'));
 
+// Favicon route (prevent 404 errors in logs)
+app.get('/favicon.ico', (req, res) => {
+  res.status(204).end(); // No Content - suppress 404
+});
+
 // 404 Handler
 app.use((req, res) => {
   res.status(404).json({
