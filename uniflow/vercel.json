@@ -60,5 +60,8 @@
         }
       ]
     }
-  ]
+  ],
+  "env": {
+    "VITE_API_URL": "https://uniflow4895.onrender.com/api"
+  }
 }
