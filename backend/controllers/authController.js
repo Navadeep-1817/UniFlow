@@ -625,6 +625,44 @@ exports.logout = async (req, res, next) => {
   }
 };
 
+// @desc    Verify token and get current user (for frontend auth checks)
+// @route   GET /api/auth/verify
+// @access  Private
+exports.verifyToken = async (req, res, next) => {
+  try {
+    // req.user is set by protect middleware
+    const completeUser = await getUserWithProfile(req.user._id);
+
+    if (!completeUser) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    // Check if user is active
+    if (!completeUser.isActive) {
+      return res.status(403).json({
+        success: false,
+        message: 'Your account has been deactivated',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Token is valid',
+      user: completeUser,
+    });
+  } catch (error) {
+    console.error('Verify token error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error verifying token',
+      error: error.message,
+    });
+  }
+};
+
 // @desc    Get current logged in user
 // @route   GET /api/auth/me
 // @access  Private

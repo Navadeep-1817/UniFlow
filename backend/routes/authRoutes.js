@@ -4,6 +4,7 @@ const {
   login,
   logout,
   getMe,
+  verifyToken,
   updateDetails,
   updatePassword,
   forgotPassword,
@@ -29,6 +30,7 @@ router.put('/resetpassword/:resettoken', resetPassword);
 // Protected routes (require authentication)
 router.use(protect); // All routes after this require authentication
 
+router.get('/verify', verifyToken); // Verify token and get user
 router.post('/logout', logout);
 router.get('/me', getMe);
 router.put('/updatedetails', updateDetails);
